@@ -1,8 +1,8 @@
 import {Entity, PrimaryGeneratedColumn, Column, CreateDateColumn, OneToMany,Index,} from "typeorm";
 import { History } from "../../history/entities/history.entity";
 import { Playlist } from "../../playlist/entities/playlist.entity";
-@Entity({ name: "users" })
 
+@Entity({ name: "users" })
 export class User {
   @PrimaryGeneratedColumn("uuid")
   id!: string;
