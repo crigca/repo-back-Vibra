@@ -43,11 +43,10 @@ Se integra con **YouTube API** y servicios de IA (DALL·E, DeepAI, etc.).
 ---
 
 ## 👥 Autores
-
--Sergio Peckerle 
--Diego Ortino 
--Cristian Calvo 
--Sebastián Allende
+- Sergio Peckerle  
+- Diego Ortino  
+- Cristian Calvo  
+- Sebastián Allende  
 
 
 
