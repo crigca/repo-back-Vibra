@@ -1,19 +1,16 @@
 import { Module } from "@nestjs/common";
 import { ConfigModule, ConfigService } from "@nestjs/config";
-//import { TypeOrmModule } from "@nestjs/typeorm";
-//import { MongooseModule } from "@nestjs/mongoose";
-//import { UsersModule } from "./users/users.module";
+import { TypeOrmModule } from "@nestjs/typeorm";
+import { UsersModule } from "./users/users.module";
 
 @Module({
   imports: [
-    // Configuración de variables de entorno
     ConfigModule.forRoot({
-      isGlobal: true, // Hace que las variables estén disponibles en toda la app
+      isGlobal: true,
       envFilePath: '.env',
     }),
 
-    // PostgreSQL - para datos estructurados (users, playlists, songs)
-    /*TypeOrmModule.forRootAsync({
+    TypeOrmModule.forRootAsync({
       imports: [ConfigModule],
       inject: [ConfigService],
       useFactory: (configService: ConfigService) => ({
@@ -25,21 +22,11 @@ import { ConfigModule, ConfigService } from "@nestjs/config";
         database: configService.get('DB_NAME'),
         ssl: configService.get('DB_SSL') === 'true',
         autoLoadEntities: true,
-        synchronize: configService.get('NODE_ENV') !== 'production', // Solo en desarrollo
+        synchronize: configService.get('NODE_ENV') !== 'production',
       }),
-    }), */
+    }),
 
-    // MongoDB - para datos flexibles (imágenes generadas, prompts)
-    /*MongooseModule.forRootAsync({
-      imports: [ConfigModule],
-      inject: [ConfigService],
-      useFactory: (configService: ConfigService) => ({
-        uri: configService.get('MONGODB_URI'),
-      }),
-    }), */
-
-    // Módulos de la aplicación
-    //UsersModule,
+    UsersModule,
   ],
 })
 export class AppModule {}
