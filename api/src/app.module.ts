@@ -1,8 +1,8 @@
 import { Module } from "@nestjs/common";
 import { ConfigModule, ConfigService } from "@nestjs/config";
-import { TypeOrmModule } from "@nestjs/typeorm";
-import { MongooseModule } from "@nestjs/mongoose";
-import { UsersModule } from "./users/users.module";
+//import { TypeOrmModule } from "@nestjs/typeorm";
+//import { MongooseModule } from "@nestjs/mongoose";
+//import { UsersModule } from "./users/users.module";
 
 @Module({
   imports: [
@@ -13,7 +13,7 @@ import { UsersModule } from "./users/users.module";
     }),
 
     // PostgreSQL - para datos estructurados (users, playlists, songs)
-    TypeOrmModule.forRootAsync({
+    /*TypeOrmModule.forRootAsync({
       imports: [ConfigModule],
       inject: [ConfigService],
       useFactory: (configService: ConfigService) => ({
@@ -27,19 +27,19 @@ import { UsersModule } from "./users/users.module";
         autoLoadEntities: true,
         synchronize: configService.get('NODE_ENV') !== 'production', // Solo en desarrollo
       }),
-    }),
+    }), */
 
     // MongoDB - para datos flexibles (imágenes generadas, prompts)
-    MongooseModule.forRootAsync({
+    /*MongooseModule.forRootAsync({
       imports: [ConfigModule],
       inject: [ConfigService],
       useFactory: (configService: ConfigService) => ({
         uri: configService.get('MONGODB_URI'),
       }),
-    }),
+    }), */
 
     // Módulos de la aplicación
-    UsersModule,
+    //UsersModule,
   ],
 })
 export class AppModule {}
