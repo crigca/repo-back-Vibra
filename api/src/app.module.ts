@@ -3,6 +3,9 @@ import { ConfigModule, ConfigService } from "@nestjs/config";
 import { TypeOrmModule } from "@nestjs/typeorm";
 import { MongooseModule } from "@nestjs/mongoose";
 import { UsersModule } from "./users/users.module";
+import { MusicModule } from "./music/music.module";
+import { PlaylistsModule } from "./playlists/playlists.module";
+import { ImagesModule } from "./images/images.module";
 
 @Module({
   imports: [
@@ -37,7 +40,11 @@ import { UsersModule } from "./users/users.module";
       }),
     }),
 
+    // Módulos de la aplicación
     UsersModule,
+    MusicModule,
+    PlaylistsModule,
+    ImagesModule,
   ],
 })
 export class AppModule {}

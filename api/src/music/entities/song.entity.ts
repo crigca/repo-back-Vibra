@@ -1,11 +1,5 @@
-import { 
-  Entity, 
-  PrimaryGeneratedColumn, 
-  Column, 
-  CreateDateColumn, 
-  UpdateDateColumn,
-  Index 
-} from "typeorm";
+import { Entity, PrimaryGeneratedColumn, Column, CreateDateColumn, UpdateDateColumn,Index } from "typeorm";
+
 
 @Entity({ name: "songs" })
 export class Song {
