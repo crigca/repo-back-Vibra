@@ -3,28 +3,28 @@ import { Document } from 'mongoose';
 
 export type GeneratedImageDocument = GeneratedImage & Document;
 
-@Schema({ 
-  timestamps: true, // Agrega createdAt y updatedAt automáticamente
-  collection: 'generatedImages' 
+@Schema({
+  timestamps: true,
+  collection: 'generatedImages'
 })
 export class GeneratedImage {
   @Prop({ required: true, index: true })
-  songId!: string; // Referencia a Song de PostgreSQL
+  songId!: string;
 
   @Prop({ required: true })
-  imageUrl!: string; // URL de Cloudinary
+  imageUrl!: string;
 
   @Prop()
-  thumbnailUrl?: string; // Versión optimizada
+  thumbnailUrl?: string;
 
   @Prop({ required: true })
-  prompt!: string; // Texto usado para generar
+  prompt!: string;
 
   @Prop({ required: true, enum: ['primary', 'secondary'] })
-  generator!: string; // Qué IA generó la imagen
+  generator!: string;
 
-  @Prop({ required: true, index: true })
-  genre!: string; // Género musical
+  @Prop({ required: true })
+  genre!: string;
 
   @Prop({ type: Object, default: {} })
   metadata!: {
@@ -39,22 +39,20 @@ export class GeneratedImage {
   };
 
   @Prop()
-  processingTime?: number; // Segundos que tardó en generar
+  processingTime?: number;
 
   @Prop({ default: true })
-  isActive!: boolean; // Soft delete
+  isActive!: boolean;
 
   @Prop({ type: [String], default: [] })
-  userFavorites!: string[]; // Array de userIds que la favoritean
+  userFavorites!: string[];
 
-  // Timestamps automáticos por @Schema({ timestamps: true })
   createdAt?: Date;
   updatedAt?: Date;
 }
 
 export const GeneratedImageSchema = SchemaFactory.createForClass(GeneratedImage);
 
-// Índices para optimizar búsquedas
 GeneratedImageSchema.index({ songId: 1, createdAt: -1 });
 GeneratedImageSchema.index({ genre: 1 });
 GeneratedImageSchema.index({ generator: 1 });
