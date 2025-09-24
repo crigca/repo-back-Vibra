@@ -25,7 +25,7 @@ import { PlaylistsModule } from "./playlists/playlists.module";
         username: configService.get('DB_USERNAME'),
         password: configService.get('DB_PASSWORD'),
         database: configService.get('DB_NAME'),
-        ssl: configService.get('DB_SSL') === 'true',
+        ssl: configService.get('DB_SSL') === 'true' ? { rejectUnauthorized: false } : false,
         autoLoadEntities: true,
         synchronize: configService.get('NODE_ENV') !== 'production',
       }),
