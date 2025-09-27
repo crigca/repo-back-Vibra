@@ -211,6 +211,34 @@ export class MusicController {
     }
   }
 
+  // Búsqueda optimizada por artista y/o canción
+  @Get('search-optimized')
+  async searchByArtistAndSong(
+    @Query('artist') artist?: string,
+    @Query('song') song?: string,
+    @Query('limit') limit?: number,
+  ): Promise<Song[]> {
+    const parsedLimit = limit ? parseInt(limit.toString()) : 20;
+
+    this.logger.log(
+      `🔍 GET /music/search-optimized - Artista: "${artist || 'any'}", Canción: "${song || 'any'}"`
+    );
+
+    try {
+      const songs = await this.musicService.searchByArtistAndSong({
+        artist,
+        song,
+        limit: parsedLimit,
+      });
+
+      this.logger.log(`✅ Búsqueda optimizada exitosa: ${songs.length} resultados`);
+      return songs;
+    } catch (error) {
+      this.logger.error(`❌ Error en búsqueda optimizada: ${error.message}`);
+      throw error;
+    }
+  }
+
   // Búsqueda inteligente: BD primero, luego YouTube
   @Get('search-smart')
   async smartSearch(

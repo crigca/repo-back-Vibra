@@ -104,6 +104,66 @@ export class YoutubeService {
     }
   }
 
+  // Obtener detalles de un video específico por ID
+  async getVideoById(videoId: string): Promise<YouTubeSearchResult | null> {
+    try {
+      this.logger.log(`🔍 Obteniendo detalles del video: ${videoId}`);
+
+      // Obtener snippet y detalles del video
+      const videoResponse = await axios.get(`${this.baseUrl}/videos`, {
+        params: {
+          key: this.apiKey,
+          id: videoId,
+          part: 'snippet,contentDetails,statistics',
+        },
+      });
+
+      const videoData = videoResponse.data;
+
+      if (!videoData.items || videoData.items.length === 0) {
+        this.logger.warn(`⚠️ Video no encontrado: ${videoId}`);
+        return null;
+      }
+
+      const video = videoData.items[0];
+
+      const result: YouTubeSearchResult = {
+        id: video.id,
+        title: this.cleanTitle(video.snippet.title),
+        artist: this.extractArtist(video.snippet.title, video.snippet.channelTitle),
+        duration: this.parseDuration(video.contentDetails.duration),
+        publishedAt: video.snippet.publishedAt,
+        viewCount: parseInt(video.statistics?.viewCount || '0'),
+      };
+
+      this.logger.log(`✅ Video encontrado: "${result.title}" por ${result.artist}`);
+      return result;
+
+    } catch (error) {
+      this.logger.error(`❌ Error al obtener video ${videoId}: ${error.message}`);
+
+      if (error.response?.status === 403) {
+        throw new HttpException(
+          'API Key de YouTube inválida o sin permisos',
+          HttpStatus.FORBIDDEN,
+        );
+      } else if (error.response?.status === 404) {
+        this.logger.warn(`⚠️ Video no encontrado o privado: ${videoId}`);
+        return null;
+      } else if (error.response?.status === 429) {
+        throw new HttpException(
+          'Límite de cuota de YouTube API excedido',
+          HttpStatus.TOO_MANY_REQUESTS,
+        );
+      } else {
+        throw new HttpException(
+          'Error al conectar con YouTube API',
+          HttpStatus.BAD_GATEWAY,
+        );
+      }
+    }
+  }
+
   // Realizar petición de búsqueda
   private async makeSearchRequest(
     query: string,

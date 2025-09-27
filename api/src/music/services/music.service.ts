@@ -190,18 +190,66 @@ export class MusicService {
     return songs;
   }
 
-  // Busca canciones por artista
+  // Busca canciones por artista (optimizado)
   async findSongsByArtist(artist: string, limit: number = 20): Promise<Song[]> {
     this.logger.log(`👤 Buscando canciones de artista: ${artist}`);
 
-    const songs = await this.songRepository.find({
-      where: { artist },
-      take: limit,
-      order: { createdAt: 'DESC' },
-    });
+    const songs = await this.songRepository
+      .createQueryBuilder('song')
+      .where('LOWER(song.artist) LIKE LOWER(:artist)', { artist: `%${artist}%` })
+      .orderBy('song.viewCount', 'DESC')
+      .addOrderBy('song.createdAt', 'DESC')
+      .take(limit)
+      .getMany();
 
     this.logger.log(`✅ Encontradas ${songs.length} canciones de "${artist}"`);
     return songs;
+  }
+
+  // Búsqueda optimizada por artista y/o canción
+  async searchByArtistAndSong(params: {
+    artist?: string;
+    song?: string;
+    limit?: number;
+  }): Promise<Song[]> {
+    const { artist, song, limit = 20 } = params;
+
+    this.logger.log(`🔍 Búsqueda optimizada - Artista: "${artist || 'any'}", Canción: "${song || 'any'}"`);
+
+    const query = this.songRepository.createQueryBuilder('song');
+
+    if (artist) {
+      query.andWhere('LOWER(song.artist) LIKE LOWER(:artist)', {
+        artist: `%${artist}%`
+      });
+    }
+
+    if (song) {
+      query.andWhere('LOWER(song.title) LIKE LOWER(:song)', {
+        song: `%${song}%`
+      });
+    }
+
+    const songs = await query
+      .orderBy('song.viewCount', 'DESC')
+      .addOrderBy('song.createdAt', 'DESC')
+      .take(limit)
+      .getMany();
+
+    this.logger.log(`✅ Búsqueda optimizada: ${songs.length} resultados encontrados`);
+    return songs;
+  }
+
+  // Obtener detalles de video de YouTube por ID
+  async getYouTubeVideoById(videoId: string): Promise<YouTubeSearchResult | null> {
+    this.logger.log(`🔍 Obteniendo detalles de YouTube para video: ${videoId}`);
+
+    try {
+      return await this.youtubeService.getVideoById(videoId);
+    } catch (error) {
+      this.logger.error(`❌ Error al obtener video de YouTube: ${error.message}`);
+      throw error;
+    }
   }
 
   // Búsqueda inteligente: BD primero, luego YouTube
