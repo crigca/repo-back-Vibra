@@ -3,9 +3,9 @@ import { Document } from 'mongoose';
 
 export type PromptDocument = Prompt & Document;
 
-@Schema({ 
+@Schema({
   timestamps: true,
-  collection: 'prompts' 
+  collection: 'prompts',
 })
 export class Prompt {
   @Prop({ required: true })
@@ -14,10 +14,10 @@ export class Prompt {
   @Prop({ required: true, maxlength: 3000 })
   promptText!: string;
 
-  @Prop({ 
-    required: true, 
+  @Prop({
+    required: true,
     enum: ['base', 'variation', 'mood', 'style'],
-    index: true
+    index: true,
   })
   category!: string;
 
@@ -42,7 +42,7 @@ export class Prompt {
   @Prop({ type: Object, default: {} })
   aiCompatibility!: {
     'dall-e-3'?: { supported: boolean; modifications?: string };
-    'deepai'?: { supported: boolean; modifications?: string };
+    deepai?: { supported: boolean; modifications?: string };
     'stable-diffusion'?: { supported: boolean; reason?: string };
   };
 

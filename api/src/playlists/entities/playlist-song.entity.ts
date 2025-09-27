@@ -1,22 +1,22 @@
-import { 
-  Entity, 
-  PrimaryGeneratedColumn, 
-  Column, 
+import {
+  Entity,
+  PrimaryGeneratedColumn,
+  Column,
   CreateDateColumn,
   ManyToOne,
   JoinColumn,
   Index,
-  Unique
-} from "typeorm";
-import { Playlist } from "./playlist.entity";
-import { Song } from "../../music/entities/song.entity";
-import { User } from "../../users/users.entity";
+  Unique,
+} from 'typeorm';
+import { Playlist } from './playlist.entity';
+import { Song } from '../../music/entities/song.entity';
+import { User } from '../../users/users.entity';
 
-@Entity({ name: "playlist_songs" })
+@Entity({ name: 'playlist_songs' })
 @Unique(['playlistId', 'songId'])
 @Unique(['playlistId', 'position'])
 export class PlaylistSong {
-  @PrimaryGeneratedColumn("uuid") 
+  @PrimaryGeneratedColumn('uuid')
   id!: string;
 
   @Column({ type: 'uuid' })
@@ -36,7 +36,9 @@ export class PlaylistSong {
   @Column({ type: 'uuid', nullable: true })
   addedByUserId?: string;
 
-  @ManyToOne(() => Playlist, playlist => playlist.playlistSongs, { onDelete: 'CASCADE' })
+  @ManyToOne(() => Playlist, (playlist) => playlist.playlistSongs, {
+    onDelete: 'CASCADE',
+  })
   @JoinColumn({ name: 'playlistId' })
   playlist!: Playlist;
 

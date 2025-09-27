@@ -1,20 +1,20 @@
-import { 
-  Entity, 
-  PrimaryGeneratedColumn, 
-  Column, 
-  CreateDateColumn, 
+import {
+  Entity,
+  PrimaryGeneratedColumn,
+  Column,
+  CreateDateColumn,
   UpdateDateColumn,
   ManyToOne,
   OneToMany,
   JoinColumn,
-  Index
-} from "typeorm";
-import { User } from "../../users/users.entity";
-import { PlaylistSong } from "./playlist-song.entity";
+  Index,
+} from 'typeorm';
+import { User } from '../../users/users.entity';
+import { PlaylistSong } from './playlist-song.entity';
 
-@Entity({ name: "playlists" })
+@Entity({ name: 'playlists' })
 export class Playlist {
-  @PrimaryGeneratedColumn("uuid") 
+  @PrimaryGeneratedColumn('uuid')
   id!: string;
 
   @Column({ length: 200 })
@@ -50,7 +50,7 @@ export class Playlist {
   @JoinColumn({ name: 'userId' })
   user?: User;
 
-  @OneToMany(() => PlaylistSong, playlistSong => playlistSong.playlist)
+  @OneToMany(() => PlaylistSong, (playlistSong) => playlistSong.playlist)
   playlistSongs!: PlaylistSong[];
 
   getId(): string {

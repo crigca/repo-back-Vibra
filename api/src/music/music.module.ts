@@ -14,10 +14,10 @@ import { MusicController } from './controllers/music.controller';
   imports: [
     TypeOrmModule.forFeature([Song]),
     ConfigModule,
-    EventEmitterModule.forRoot()
+    EventEmitterModule.forRoot(),
   ],
   controllers: [MusicController],
   providers: [MusicService, YoutubeService],
-  exports: [MusicService, YoutubeService]
+  exports: [MusicService, YoutubeService],
 })
 export class MusicModule {}

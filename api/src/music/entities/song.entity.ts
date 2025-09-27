@@ -1,9 +1,15 @@
-import { Entity, PrimaryGeneratedColumn, Column, CreateDateColumn, UpdateDateColumn,Index } from "typeorm";
+import {
+  Entity,
+  PrimaryGeneratedColumn,
+  Column,
+  CreateDateColumn,
+  UpdateDateColumn,
+  Index,
+} from 'typeorm';
 
-
-@Entity({ name: "songs" })
+@Entity({ name: 'songs' })
 export class Song {
-  @PrimaryGeneratedColumn("uuid") 
+  @PrimaryGeneratedColumn('uuid')
   id!: string;
 
   @Column({ length: 500 })
@@ -18,9 +24,6 @@ export class Song {
 
   @Column()
   duration!: number; // En segundos
-
-  @Column({ length: 1000, nullable: true })
-  thumbnailUrl?: string;
 
   @Column({ length: 100, nullable: true })
   @Index()

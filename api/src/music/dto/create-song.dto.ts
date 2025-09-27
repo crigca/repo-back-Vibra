@@ -1,4 +1,11 @@
-import { IsString, IsNotEmpty, IsOptional, IsNumber, IsUrl, Min, IsDateString } from 'class-validator';
+import {
+  IsString,
+  IsNotEmpty,
+  IsOptional,
+  IsNumber,
+  Min,
+  IsDateString,
+} from 'class-validator';
 
 /**
  * DTO para crear nueva canción
@@ -19,10 +26,6 @@ export class CreateSongDto {
   @IsNumber()
   @Min(1, { message: 'La duración debe ser mayor a 0 segundos' })
   duration: number;
-
-  @IsOptional()
-  @IsUrl({}, { message: 'thumbnailUrl debe ser una URL válida' })
-  thumbnailUrl?: string;
 
   @IsOptional()
   @IsString()

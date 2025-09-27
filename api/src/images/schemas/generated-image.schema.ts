@@ -5,7 +5,7 @@ export type GeneratedImageDocument = GeneratedImage & Document;
 
 @Schema({
   timestamps: true,
-  collection: 'generatedImages'
+  collection: 'generatedImages',
 })
 export class GeneratedImage {
   @Prop({ required: true, index: true })
@@ -51,7 +51,8 @@ export class GeneratedImage {
   updatedAt?: Date;
 }
 
-export const GeneratedImageSchema = SchemaFactory.createForClass(GeneratedImage);
+export const GeneratedImageSchema =
+  SchemaFactory.createForClass(GeneratedImage);
 
 GeneratedImageSchema.index({ songId: 1, createdAt: -1 });
 GeneratedImageSchema.index({ genre: 1 });
