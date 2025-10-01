@@ -252,13 +252,13 @@ export class MusicService {
     }
   }
 
-  // Búsqueda inteligente: BD primero, luego YouTube
+  // Búsqueda inteligente: BD primero, luego YouTube (con auto-guardado)
   async smartSearch(searchDto: SearchSongsDto): Promise<{
     fromDatabase: Song[];
     fromYoutube: YouTubeSearchResult[];
     source: 'database' | 'youtube' | 'mixed';
   }> {
-    this.logger.log(`🧠 Búsqueda inteligente: "${searchDto.query}"`);
+    this.logger.log(`🧠 Búsqueda inteligente con auto-guardado: "${searchDto.query}"`);
 
     // 1. Buscar primero en la base de datos
     const dbResults = await this.songRepository
@@ -290,6 +290,9 @@ export class MusicService {
         searchDto.regionCode
       );
 
+      // 4. AUTO-GUARDAR resultados de YouTube en BD (en background)
+      this.autoSaveYouTubeResults(youtubeResults);
+
       this.logger.log(`✅ Búsqueda híbrida: ${dbResults.length} de BD + ${youtubeResults.length} de YouTube`);
 
       return {
@@ -306,6 +309,164 @@ export class MusicService {
         fromYoutube: [],
         source: 'database'
       };
+    }
+  }
+
+  // Auto-guardar resultados de YouTube en background (sin bloquear respuesta)
+  private async autoSaveYouTubeResults(youtubeResults: YouTubeSearchResult[]): Promise<void> {
+    // Ejecutar en background sin esperar
+    setImmediate(async () => {
+      this.logger.log(`🤖 Auto-guardando ${youtubeResults.length} resultados de YouTube...`);
+
+      for (const video of youtubeResults) {
+        try {
+          // Verificar si ya existe
+          const existing = await this.findSongByYoutubeId(video.id);
+          if (existing) {
+            continue; // Ya existe, omitir
+          }
+
+          // Guardar nueva canción
+          await this.saveFromYoutube(video.id);
+          this.logger.log(`✅ Auto-guardada: "${video.title}"`);
+
+        } catch (error) {
+          this.logger.warn(`⚠️ No se pudo auto-guardar "${video.title}": ${error.message}`);
+        }
+      }
+    });
+  }
+
+  // Guardar canción de YouTube automáticamente en BD
+  async saveFromYoutube(youtubeId: string): Promise<Song> {
+    this.logger.log(`💾 Guardando automáticamente desde YouTube ID: ${youtubeId}`);
+
+    // 1. Verificar si ya existe en BD
+    const existingSong = await this.findSongByYoutubeId(youtubeId);
+    if (existingSong) {
+      this.logger.warn(`⚠️ Canción ya existe en BD: "${existingSong.title}"`);
+      throw new ConflictException(`La canción ya existe en la base de datos`);
+    }
+
+    // 2. Obtener datos del video de YouTube
+    const youtubeVideo = await this.getYouTubeVideoById(youtubeId);
+    if (!youtubeVideo) {
+      throw new NotFoundException(`Video con ID ${youtubeId} no encontrado en YouTube`);
+    }
+
+    // 3. Crear objeto CreateSongDto desde datos de YouTube
+    const createSongDto: CreateSongDto = {
+      title: youtubeVideo.title,
+      artist: youtubeVideo.artist || 'Desconocido',
+      genre: 'Sin categoría',
+      duration: youtubeVideo.duration || 0,
+      youtubeId: youtubeVideo.id,
+      viewCount: youtubeVideo.viewCount,
+      publishedAt: youtubeVideo.publishedAt
+    };
+
+    // 4. Guardar en BD usando el método existente
+    return await this.createSong(createSongDto);
+  }
+
+  // Buscar en YouTube y guardar todo automáticamente
+  async searchAndSaveAll(searchDto: SearchSongsDto): Promise<{
+    saved: Song[];
+    skipped: string[];
+    total: number;
+  }> {
+    this.logger.log(`🤖 Búsqueda y guardado automático: "${searchDto.query}"`);
+
+    // 1. Buscar en YouTube
+    const youtubeResults = await this.youtubeService.searchVideos(
+      searchDto.query,
+      searchDto.maxResults,
+      searchDto.regionCode
+    );
+
+    const saved: Song[] = [];
+    const skipped: string[] = [];
+
+    // 2. Intentar guardar cada resultado
+    for (const video of youtubeResults) {
+      try {
+        // Verificar si ya existe
+        const existing = await this.findSongByYoutubeId(video.id);
+        if (existing) {
+          skipped.push(`${video.title} - Ya existe en BD`);
+          continue;
+        }
+
+        // Guardar nueva canción
+        const savedSong = await this.saveFromYoutube(video.id);
+        saved.push(savedSong);
+
+        this.logger.log(`✅ Guardada: "${savedSong.title}" por ${savedSong.artist}`);
+
+      } catch (error) {
+        this.logger.warn(`⚠️ No se pudo guardar "${video.title}": ${error.message}`);
+        skipped.push(`${video.title} - Error: ${error.message}`);
+      }
+    }
+
+    this.logger.log(`🎯 Resumen: ${saved.length} guardadas, ${skipped.length} omitidas de ${youtubeResults.length} encontradas`);
+
+    return {
+      saved,
+      skipped,
+      total: youtubeResults.length
+    };
+  }
+
+  // Actualizar canción
+  async updateSong(id: string, updateData: {
+    title?: string;
+    artist?: string;
+    genre?: string;
+    duration?: number;
+  }): Promise<Song> {
+    this.logger.log(`🔄 Actualizando canción con ID: ${id}`);
+
+    const song = await this.findSongById(id);
+
+    // Actualizar solo los campos proporcionados
+    if (updateData.title !== undefined) song.title = updateData.title;
+    if (updateData.artist !== undefined) song.artist = updateData.artist;
+    if (updateData.genre !== undefined) song.genre = updateData.genre;
+    if (updateData.duration !== undefined) song.duration = updateData.duration;
+
+    try {
+      const updatedSong = await this.songRepository.save(song);
+
+      this.logger.log(`✅ Canción actualizada exitosamente: "${updatedSong.title}"`);
+
+      // Emitir evento
+      this.eventEmitter.emit('song.updated', { song: updatedSong });
+
+      return updatedSong;
+    } catch (error) {
+      this.logger.error(`❌ Error al actualizar canción: ${error.message}`);
+      throw error;
+    }
+  }
+
+  // Eliminar canción
+  async deleteSong(id: string): Promise<void> {
+    this.logger.log(`🗑️ Eliminando canción con ID: ${id}`);
+
+    const song = await this.findSongById(id);
+
+    try {
+      await this.songRepository.remove(song);
+
+      this.logger.log(`✅ Canción eliminada exitosamente: "${song.title}"`);
+
+      // Emitir evento
+      this.eventEmitter.emit('song.deleted', { song });
+
+    } catch (error) {
+      this.logger.error(`❌ Error al eliminar canción: ${error.message}`);
+      throw error;
     }
   }
 }
