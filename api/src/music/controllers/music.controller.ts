@@ -16,6 +16,7 @@ import {
 
 import { MusicService } from '../services/music.service';
 import { SearchSongsDto } from '../dto/search-songs.dto';
+import { CreateSongDto } from '../dto/create-song.dto';
 import { Song } from '../entities/song.entity';
 import { YouTubeSearchResult } from '../services/youtube.service';
 
@@ -28,7 +29,23 @@ export class MusicController {
 
   constructor(private readonly musicService: MusicService) {}
 
+  // Buscar canciones en YouTube (solo búsqueda, no guarda en BD)
+  @Get('search')
+  async searchSongs(
+    @Query(new ValidationPipe({ transform: true })) searchDto: SearchSongsDto
+  ): Promise<YouTubeSearchResult[]> {
+    this.logger.log(`🔍 GET /music/search - Query: "${searchDto.query}"`);
 
+    try {
+      const results = await this.musicService.searchSongs(searchDto);
+
+      this.logger.log(`✅ Búsqueda exitosa: ${results.length} resultados`);
+      return results;
+    } catch (error) {
+      this.logger.error(`❌ Error en búsqueda: ${error.message}`);
+      throw error;
+    }
+  }
 
   // Obtener canciones con paginación
   @Get('songs')
@@ -198,6 +215,25 @@ export class MusicController {
       };
     } catch (error) {
       this.logger.error(`❌ Error en búsqueda inteligente: ${error.message}`);
+      throw error;
+    }
+  }
+
+  // Crear nueva canción en BD (usado por seed script)
+  @Post('songs')
+  @HttpCode(HttpStatus.CREATED)
+  async createSong(
+    @Body(ValidationPipe) createSongDto: CreateSongDto
+  ): Promise<Song> {
+    this.logger.log(`💾 POST /music/songs - Título: "${createSongDto.title}"`);
+
+    try {
+      const song = await this.musicService.createSong(createSongDto);
+
+      this.logger.log(`✅ Canción creada con ID: ${song.id}`);
+      return song;
+    } catch (error) {
+      this.logger.error(`❌ Error al crear canción: ${error.message}`);
       throw error;
     }
   }

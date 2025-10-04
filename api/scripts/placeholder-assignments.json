@@ -1,0 +1,569 @@
+[
+  {
+    "genre": "Afrobeat",
+    "publicId": "cld-sample",
+    "imageUrl": "https://res.cloudinary.com/dwafwm6uk/image/upload/c_fill,f_auto,h_1200,q_auto,w_1200/cld-sample?_a=BAMAK+Xw0",
+    "thumbnailUrl": "https://res.cloudinary.com/dwafwm6uk/image/upload/c_fill,f_auto,h_400,q_auto,w_400/cld-sample?_a=BAMAK+Xw0",
+    "folder": "root"
+  },
+  {
+    "genre": "Alternative",
+    "publicId": "main-sample",
+    "imageUrl": "https://res.cloudinary.com/dwafwm6uk/image/upload/c_fill,f_auto,h_1200,q_auto,w_1200/main-sample?_a=BAMAK+Xw0",
+    "thumbnailUrl": "https://res.cloudinary.com/dwafwm6uk/image/upload/c_fill,f_auto,h_400,q_auto,w_400/main-sample?_a=BAMAK+Xw0",
+    "folder": "root"
+  },
+  {
+    "genre": "Alternative Pop",
+    "publicId": "main-sample",
+    "imageUrl": "https://res.cloudinary.com/dwafwm6uk/image/upload/c_fill,f_auto,h_1200,q_auto,w_1200/main-sample?_a=BAMAK+Xw0",
+    "thumbnailUrl": "https://res.cloudinary.com/dwafwm6uk/image/upload/c_fill,f_auto,h_400,q_auto,w_400/main-sample?_a=BAMAK+Xw0",
+    "folder": "root"
+  },
+  {
+    "genre": "Alternative Rock",
+    "publicId": "cld-sample-2",
+    "imageUrl": "https://res.cloudinary.com/dwafwm6uk/image/upload/c_fill,f_auto,h_1200,q_auto,w_1200/cld-sample-2?_a=BAMAK+Xw0",
+    "thumbnailUrl": "https://res.cloudinary.com/dwafwm6uk/image/upload/c_fill,f_auto,h_400,q_auto,w_400/cld-sample-2?_a=BAMAK+Xw0",
+    "folder": "root"
+  },
+  {
+    "genre": "AlternativeRock",
+    "publicId": "cld-sample-2",
+    "imageUrl": "https://res.cloudinary.com/dwafwm6uk/image/upload/c_fill,f_auto,h_1200,q_auto,w_1200/cld-sample-2?_a=BAMAK+Xw0",
+    "thumbnailUrl": "https://res.cloudinary.com/dwafwm6uk/image/upload/c_fill,f_auto,h_400,q_auto,w_400/cld-sample-2?_a=BAMAK+Xw0",
+    "folder": "root"
+  },
+  {
+    "genre": "Bachata",
+    "publicId": "samples/radial_02",
+    "imageUrl": "https://res.cloudinary.com/dwafwm6uk/image/upload/c_fill,f_auto,h_1200,q_auto,w_1200/v1/samples/radial_02?_a=BAMAK+Xw0",
+    "thumbnailUrl": "https://res.cloudinary.com/dwafwm6uk/image/upload/c_fill,f_auto,h_400,q_auto,w_400/v1/samples/radial_02?_a=BAMAK+Xw0",
+    "folder": "samples"
+  },
+  {
+    "genre": "Balada",
+    "publicId": "cld-sample",
+    "imageUrl": "https://res.cloudinary.com/dwafwm6uk/image/upload/c_fill,f_auto,h_1200,q_auto,w_1200/cld-sample?_a=BAMAK+Xw0",
+    "thumbnailUrl": "https://res.cloudinary.com/dwafwm6uk/image/upload/c_fill,f_auto,h_400,q_auto,w_400/cld-sample?_a=BAMAK+Xw0",
+    "folder": "root"
+  },
+  {
+    "genre": "BlackMetal",
+    "publicId": "samples/radial",
+    "imageUrl": "https://res.cloudinary.com/dwafwm6uk/image/upload/c_fill,f_auto,h_1200,q_auto,w_1200/v1/samples/radial?_a=BAMAK+Xw0",
+    "thumbnailUrl": "https://res.cloudinary.com/dwafwm6uk/image/upload/c_fill,f_auto,h_400,q_auto,w_400/v1/samples/radial?_a=BAMAK+Xw0",
+    "folder": "samples"
+  },
+  {
+    "genre": "Bluegrass",
+    "publicId": "samples/paper",
+    "imageUrl": "https://res.cloudinary.com/dwafwm6uk/image/upload/c_fill,f_auto,h_1200,q_auto,w_1200/v1/samples/paper?_a=BAMAK+Xw0",
+    "thumbnailUrl": "https://res.cloudinary.com/dwafwm6uk/image/upload/c_fill,f_auto,h_400,q_auto,w_400/v1/samples/paper?_a=BAMAK+Xw0",
+    "folder": "samples"
+  },
+  {
+    "genre": "Blues",
+    "publicId": "cld-sample-5",
+    "imageUrl": "https://res.cloudinary.com/dwafwm6uk/image/upload/c_fill,f_auto,h_1200,q_auto,w_1200/cld-sample-5?_a=BAMAK+Xw0",
+    "thumbnailUrl": "https://res.cloudinary.com/dwafwm6uk/image/upload/c_fill,f_auto,h_400,q_auto,w_400/cld-sample-5?_a=BAMAK+Xw0",
+    "folder": "root"
+  },
+  {
+    "genre": "Bolero",
+    "publicId": "cld-sample",
+    "imageUrl": "https://res.cloudinary.com/dwafwm6uk/image/upload/c_fill,f_auto,h_1200,q_auto,w_1200/cld-sample?_a=BAMAK+Xw0",
+    "thumbnailUrl": "https://res.cloudinary.com/dwafwm6uk/image/upload/c_fill,f_auto,h_400,q_auto,w_400/cld-sample?_a=BAMAK+Xw0",
+    "folder": "root"
+  },
+  {
+    "genre": "BossaNova",
+    "publicId": "cld-sample",
+    "imageUrl": "https://res.cloudinary.com/dwafwm6uk/image/upload/c_fill,f_auto,h_1200,q_auto,w_1200/cld-sample?_a=BAMAK+Xw0",
+    "thumbnailUrl": "https://res.cloudinary.com/dwafwm6uk/image/upload/c_fill,f_auto,h_400,q_auto,w_400/cld-sample?_a=BAMAK+Xw0",
+    "folder": "root"
+  },
+  {
+    "genre": "Corrido",
+    "publicId": "cld-sample",
+    "imageUrl": "https://res.cloudinary.com/dwafwm6uk/image/upload/c_fill,f_auto,h_1200,q_auto,w_1200/cld-sample?_a=BAMAK+Xw0",
+    "thumbnailUrl": "https://res.cloudinary.com/dwafwm6uk/image/upload/c_fill,f_auto,h_400,q_auto,w_400/cld-sample?_a=BAMAK+Xw0",
+    "folder": "root"
+  },
+  {
+    "genre": "CorridosTumbados",
+    "publicId": "cld-sample",
+    "imageUrl": "https://res.cloudinary.com/dwafwm6uk/image/upload/c_fill,f_auto,h_1200,q_auto,w_1200/cld-sample?_a=BAMAK+Xw0",
+    "thumbnailUrl": "https://res.cloudinary.com/dwafwm6uk/image/upload/c_fill,f_auto,h_400,q_auto,w_400/cld-sample?_a=BAMAK+Xw0",
+    "folder": "root"
+  },
+  {
+    "genre": "Country",
+    "publicId": "samples/paper",
+    "imageUrl": "https://res.cloudinary.com/dwafwm6uk/image/upload/c_fill,f_auto,h_1200,q_auto,w_1200/v1/samples/paper?_a=BAMAK+Xw0",
+    "thumbnailUrl": "https://res.cloudinary.com/dwafwm6uk/image/upload/c_fill,f_auto,h_400,q_auto,w_400/v1/samples/paper?_a=BAMAK+Xw0",
+    "folder": "samples"
+  },
+  {
+    "genre": "Cuarteto",
+    "publicId": "cld-sample",
+    "imageUrl": "https://res.cloudinary.com/dwafwm6uk/image/upload/c_fill,f_auto,h_1200,q_auto,w_1200/cld-sample?_a=BAMAK+Xw0",
+    "thumbnailUrl": "https://res.cloudinary.com/dwafwm6uk/image/upload/c_fill,f_auto,h_400,q_auto,w_400/cld-sample?_a=BAMAK+Xw0",
+    "folder": "root"
+  },
+  {
+    "genre": "Cumbia",
+    "publicId": "samples/radial_02",
+    "imageUrl": "https://res.cloudinary.com/dwafwm6uk/image/upload/c_fill,f_auto,h_1200,q_auto,w_1200/v1/samples/radial_02?_a=BAMAK+Xw0",
+    "thumbnailUrl": "https://res.cloudinary.com/dwafwm6uk/image/upload/c_fill,f_auto,h_400,q_auto,w_400/v1/samples/radial_02?_a=BAMAK+Xw0",
+    "folder": "samples"
+  },
+  {
+    "genre": "Cumbia420",
+    "publicId": "samples/radial_02",
+    "imageUrl": "https://res.cloudinary.com/dwafwm6uk/image/upload/c_fill,f_auto,h_1200,q_auto,w_1200/v1/samples/radial_02?_a=BAMAK+Xw0",
+    "thumbnailUrl": "https://res.cloudinary.com/dwafwm6uk/image/upload/c_fill,f_auto,h_400,q_auto,w_400/v1/samples/radial_02?_a=BAMAK+Xw0",
+    "folder": "samples"
+  },
+  {
+    "genre": "CumbiaVillera",
+    "publicId": "samples/radial_02",
+    "imageUrl": "https://res.cloudinary.com/dwafwm6uk/image/upload/c_fill,f_auto,h_1200,q_auto,w_1200/v1/samples/radial_02?_a=BAMAK+Xw0",
+    "thumbnailUrl": "https://res.cloudinary.com/dwafwm6uk/image/upload/c_fill,f_auto,h_400,q_auto,w_400/v1/samples/radial_02?_a=BAMAK+Xw0",
+    "folder": "samples"
+  },
+  {
+    "genre": "Dancehall",
+    "publicId": "samples/waves",
+    "imageUrl": "https://res.cloudinary.com/dwafwm6uk/image/upload/c_fill,f_auto,h_1200,q_auto,w_1200/v1/samples/waves?_a=BAMAK+Xw0",
+    "thumbnailUrl": "https://res.cloudinary.com/dwafwm6uk/image/upload/c_fill,f_auto,h_400,q_auto,w_400/v1/samples/waves?_a=BAMAK+Xw0",
+    "folder": "samples"
+  },
+  {
+    "genre": "DeathMetal",
+    "publicId": "samples/radial",
+    "imageUrl": "https://res.cloudinary.com/dwafwm6uk/image/upload/c_fill,f_auto,h_1200,q_auto,w_1200/v1/samples/radial?_a=BAMAK+Xw0",
+    "thumbnailUrl": "https://res.cloudinary.com/dwafwm6uk/image/upload/c_fill,f_auto,h_400,q_auto,w_400/v1/samples/radial?_a=BAMAK+Xw0",
+    "folder": "samples"
+  },
+  {
+    "genre": "Disco",
+    "publicId": "cld-sample",
+    "imageUrl": "https://res.cloudinary.com/dwafwm6uk/image/upload/c_fill,f_auto,h_1200,q_auto,w_1200/cld-sample?_a=BAMAK+Xw0",
+    "thumbnailUrl": "https://res.cloudinary.com/dwafwm6uk/image/upload/c_fill,f_auto,h_400,q_auto,w_400/cld-sample?_a=BAMAK+Xw0",
+    "folder": "root"
+  },
+  {
+    "genre": "Drill",
+    "publicId": "cld-sample-4",
+    "imageUrl": "https://res.cloudinary.com/dwafwm6uk/image/upload/c_fill,f_auto,h_1200,q_auto,w_1200/cld-sample-4?_a=BAMAK+Xw0",
+    "thumbnailUrl": "https://res.cloudinary.com/dwafwm6uk/image/upload/c_fill,f_auto,h_400,q_auto,w_400/cld-sample-4?_a=BAMAK+Xw0",
+    "folder": "root"
+  },
+  {
+    "genre": "DrumAndBass",
+    "publicId": "cld-sample",
+    "imageUrl": "https://res.cloudinary.com/dwafwm6uk/image/upload/c_fill,f_auto,h_1200,q_auto,w_1200/cld-sample?_a=BAMAK+Xw0",
+    "thumbnailUrl": "https://res.cloudinary.com/dwafwm6uk/image/upload/c_fill,f_auto,h_400,q_auto,w_400/cld-sample?_a=BAMAK+Xw0",
+    "folder": "root"
+  },
+  {
+    "genre": "Dubstep",
+    "publicId": "cld-sample-3",
+    "imageUrl": "https://res.cloudinary.com/dwafwm6uk/image/upload/c_fill,f_auto,h_1200,q_auto,w_1200/cld-sample-3?_a=BAMAK+Xw0",
+    "thumbnailUrl": "https://res.cloudinary.com/dwafwm6uk/image/upload/c_fill,f_auto,h_400,q_auto,w_400/cld-sample-3?_a=BAMAK+Xw0",
+    "folder": "root"
+  },
+  {
+    "genre": "EdmActual",
+    "publicId": "cld-sample-3",
+    "imageUrl": "https://res.cloudinary.com/dwafwm6uk/image/upload/c_fill,f_auto,h_1200,q_auto,w_1200/cld-sample-3?_a=BAMAK+Xw0",
+    "thumbnailUrl": "https://res.cloudinary.com/dwafwm6uk/image/upload/c_fill,f_auto,h_400,q_auto,w_400/cld-sample-3?_a=BAMAK+Xw0",
+    "folder": "root"
+  },
+  {
+    "genre": "Electronic",
+    "publicId": "cld-sample-3",
+    "imageUrl": "https://res.cloudinary.com/dwafwm6uk/image/upload/c_fill,f_auto,h_1200,q_auto,w_1200/cld-sample-3?_a=BAMAK+Xw0",
+    "thumbnailUrl": "https://res.cloudinary.com/dwafwm6uk/image/upload/c_fill,f_auto,h_400,q_auto,w_400/cld-sample-3?_a=BAMAK+Xw0",
+    "folder": "root"
+  },
+  {
+    "genre": "Flamenco",
+    "publicId": "cld-sample",
+    "imageUrl": "https://res.cloudinary.com/dwafwm6uk/image/upload/c_fill,f_auto,h_1200,q_auto,w_1200/cld-sample?_a=BAMAK+Xw0",
+    "thumbnailUrl": "https://res.cloudinary.com/dwafwm6uk/image/upload/c_fill,f_auto,h_400,q_auto,w_400/cld-sample?_a=BAMAK+Xw0",
+    "folder": "root"
+  },
+  {
+    "genre": "Folk",
+    "publicId": "samples/paper",
+    "imageUrl": "https://res.cloudinary.com/dwafwm6uk/image/upload/c_fill,f_auto,h_1200,q_auto,w_1200/v1/samples/paper?_a=BAMAK+Xw0",
+    "thumbnailUrl": "https://res.cloudinary.com/dwafwm6uk/image/upload/c_fill,f_auto,h_400,q_auto,w_400/v1/samples/paper?_a=BAMAK+Xw0",
+    "folder": "samples"
+  },
+  {
+    "genre": "FolkloreArgentino",
+    "publicId": "cld-sample",
+    "imageUrl": "https://res.cloudinary.com/dwafwm6uk/image/upload/c_fill,f_auto,h_1200,q_auto,w_1200/cld-sample?_a=BAMAK+Xw0",
+    "thumbnailUrl": "https://res.cloudinary.com/dwafwm6uk/image/upload/c_fill,f_auto,h_400,q_auto,w_400/cld-sample?_a=BAMAK+Xw0",
+    "folder": "root"
+  },
+  {
+    "genre": "Funk",
+    "publicId": "cld-sample-5",
+    "imageUrl": "https://res.cloudinary.com/dwafwm6uk/image/upload/c_fill,f_auto,h_1200,q_auto,w_1200/cld-sample-5?_a=BAMAK+Xw0",
+    "thumbnailUrl": "https://res.cloudinary.com/dwafwm6uk/image/upload/c_fill,f_auto,h_400,q_auto,w_400/cld-sample-5?_a=BAMAK+Xw0",
+    "folder": "root"
+  },
+  {
+    "genre": "GlamMetal",
+    "publicId": "samples/radial",
+    "imageUrl": "https://res.cloudinary.com/dwafwm6uk/image/upload/c_fill,f_auto,h_1200,q_auto,w_1200/v1/samples/radial?_a=BAMAK+Xw0",
+    "thumbnailUrl": "https://res.cloudinary.com/dwafwm6uk/image/upload/c_fill,f_auto,h_400,q_auto,w_400/v1/samples/radial?_a=BAMAK+Xw0",
+    "folder": "samples"
+  },
+  {
+    "genre": "Gospel",
+    "publicId": "samples/paper",
+    "imageUrl": "https://res.cloudinary.com/dwafwm6uk/image/upload/c_fill,f_auto,h_1200,q_auto,w_1200/v1/samples/paper?_a=BAMAK+Xw0",
+    "thumbnailUrl": "https://res.cloudinary.com/dwafwm6uk/image/upload/c_fill,f_auto,h_400,q_auto,w_400/v1/samples/paper?_a=BAMAK+Xw0",
+    "folder": "samples"
+  },
+  {
+    "genre": "HardcorePunk",
+    "publicId": "main-sample",
+    "imageUrl": "https://res.cloudinary.com/dwafwm6uk/image/upload/c_fill,f_auto,h_1200,q_auto,w_1200/main-sample?_a=BAMAK+Xw0",
+    "thumbnailUrl": "https://res.cloudinary.com/dwafwm6uk/image/upload/c_fill,f_auto,h_400,q_auto,w_400/main-sample?_a=BAMAK+Xw0",
+    "folder": "root"
+  },
+  {
+    "genre": "Heavy Metal",
+    "publicId": "samples/radial",
+    "imageUrl": "https://res.cloudinary.com/dwafwm6uk/image/upload/c_fill,f_auto,h_1200,q_auto,w_1200/v1/samples/radial?_a=BAMAK+Xw0",
+    "thumbnailUrl": "https://res.cloudinary.com/dwafwm6uk/image/upload/c_fill,f_auto,h_400,q_auto,w_400/v1/samples/radial?_a=BAMAK+Xw0",
+    "folder": "samples"
+  },
+  {
+    "genre": "HeavyMetal",
+    "publicId": "samples/radial",
+    "imageUrl": "https://res.cloudinary.com/dwafwm6uk/image/upload/c_fill,f_auto,h_1200,q_auto,w_1200/v1/samples/radial?_a=BAMAK+Xw0",
+    "thumbnailUrl": "https://res.cloudinary.com/dwafwm6uk/image/upload/c_fill,f_auto,h_400,q_auto,w_400/v1/samples/radial?_a=BAMAK+Xw0",
+    "folder": "samples"
+  },
+  {
+    "genre": "HeavyMetalArgentino",
+    "publicId": "samples/radial",
+    "imageUrl": "https://res.cloudinary.com/dwafwm6uk/image/upload/c_fill,f_auto,h_1200,q_auto,w_1200/v1/samples/radial?_a=BAMAK+Xw0",
+    "thumbnailUrl": "https://res.cloudinary.com/dwafwm6uk/image/upload/c_fill,f_auto,h_400,q_auto,w_400/v1/samples/radial?_a=BAMAK+Xw0",
+    "folder": "samples"
+  },
+  {
+    "genre": "Highlife",
+    "publicId": "cld-sample",
+    "imageUrl": "https://res.cloudinary.com/dwafwm6uk/image/upload/c_fill,f_auto,h_1200,q_auto,w_1200/cld-sample?_a=BAMAK+Xw0",
+    "thumbnailUrl": "https://res.cloudinary.com/dwafwm6uk/image/upload/c_fill,f_auto,h_400,q_auto,w_400/cld-sample?_a=BAMAK+Xw0",
+    "folder": "root"
+  },
+  {
+    "genre": "Hiphop",
+    "publicId": "cld-sample-4",
+    "imageUrl": "https://res.cloudinary.com/dwafwm6uk/image/upload/c_fill,f_auto,h_1200,q_auto,w_1200/cld-sample-4?_a=BAMAK+Xw0",
+    "thumbnailUrl": "https://res.cloudinary.com/dwafwm6uk/image/upload/c_fill,f_auto,h_400,q_auto,w_400/cld-sample-4?_a=BAMAK+Xw0",
+    "folder": "root"
+  },
+  {
+    "genre": "House",
+    "publicId": "cld-sample-3",
+    "imageUrl": "https://res.cloudinary.com/dwafwm6uk/image/upload/c_fill,f_auto,h_1200,q_auto,w_1200/cld-sample-3?_a=BAMAK+Xw0",
+    "thumbnailUrl": "https://res.cloudinary.com/dwafwm6uk/image/upload/c_fill,f_auto,h_400,q_auto,w_400/cld-sample-3?_a=BAMAK+Xw0",
+    "folder": "root"
+  },
+  {
+    "genre": "Hyperpop",
+    "publicId": "cld-sample",
+    "imageUrl": "https://res.cloudinary.com/dwafwm6uk/image/upload/c_fill,f_auto,h_1200,q_auto,w_1200/cld-sample?_a=BAMAK+Xw0",
+    "thumbnailUrl": "https://res.cloudinary.com/dwafwm6uk/image/upload/c_fill,f_auto,h_400,q_auto,w_400/cld-sample?_a=BAMAK+Xw0",
+    "folder": "root"
+  },
+  {
+    "genre": "IndieRock",
+    "publicId": "cld-sample-2",
+    "imageUrl": "https://res.cloudinary.com/dwafwm6uk/image/upload/c_fill,f_auto,h_1200,q_auto,w_1200/cld-sample-2?_a=BAMAK+Xw0",
+    "thumbnailUrl": "https://res.cloudinary.com/dwafwm6uk/image/upload/c_fill,f_auto,h_400,q_auto,w_400/cld-sample-2?_a=BAMAK+Xw0",
+    "folder": "root"
+  },
+  {
+    "genre": "IndustrialMetal",
+    "publicId": "samples/radial",
+    "imageUrl": "https://res.cloudinary.com/dwafwm6uk/image/upload/c_fill,f_auto,h_1200,q_auto,w_1200/v1/samples/radial?_a=BAMAK+Xw0",
+    "thumbnailUrl": "https://res.cloudinary.com/dwafwm6uk/image/upload/c_fill,f_auto,h_400,q_auto,w_400/v1/samples/radial?_a=BAMAK+Xw0",
+    "folder": "samples"
+  },
+  {
+    "genre": "Jazz",
+    "publicId": "cld-sample-5",
+    "imageUrl": "https://res.cloudinary.com/dwafwm6uk/image/upload/c_fill,f_auto,h_1200,q_auto,w_1200/cld-sample-5?_a=BAMAK+Xw0",
+    "thumbnailUrl": "https://res.cloudinary.com/dwafwm6uk/image/upload/c_fill,f_auto,h_400,q_auto,w_400/cld-sample-5?_a=BAMAK+Xw0",
+    "folder": "root"
+  },
+  {
+    "genre": "Jpop",
+    "publicId": "cld-sample",
+    "imageUrl": "https://res.cloudinary.com/dwafwm6uk/image/upload/c_fill,f_auto,h_1200,q_auto,w_1200/cld-sample?_a=BAMAK+Xw0",
+    "thumbnailUrl": "https://res.cloudinary.com/dwafwm6uk/image/upload/c_fill,f_auto,h_400,q_auto,w_400/cld-sample?_a=BAMAK+Xw0",
+    "folder": "root"
+  },
+  {
+    "genre": "kpop",
+    "publicId": "cld-sample",
+    "imageUrl": "https://res.cloudinary.com/dwafwm6uk/image/upload/c_fill,f_auto,h_1200,q_auto,w_1200/cld-sample?_a=BAMAK+Xw0",
+    "thumbnailUrl": "https://res.cloudinary.com/dwafwm6uk/image/upload/c_fill,f_auto,h_400,q_auto,w_400/cld-sample?_a=BAMAK+Xw0",
+    "folder": "root"
+  },
+  {
+    "genre": "Kpop",
+    "publicId": "cld-sample",
+    "imageUrl": "https://res.cloudinary.com/dwafwm6uk/image/upload/c_fill,f_auto,h_1200,q_auto,w_1200/cld-sample?_a=BAMAK+Xw0",
+    "thumbnailUrl": "https://res.cloudinary.com/dwafwm6uk/image/upload/c_fill,f_auto,h_400,q_auto,w_400/cld-sample?_a=BAMAK+Xw0",
+    "folder": "root"
+  },
+  {
+    "genre": "Latin",
+    "publicId": "samples/radial_02",
+    "imageUrl": "https://res.cloudinary.com/dwafwm6uk/image/upload/c_fill,f_auto,h_1200,q_auto,w_1200/v1/samples/radial_02?_a=BAMAK+Xw0",
+    "thumbnailUrl": "https://res.cloudinary.com/dwafwm6uk/image/upload/c_fill,f_auto,h_400,q_auto,w_400/v1/samples/radial_02?_a=BAMAK+Xw0",
+    "folder": "samples"
+  },
+  {
+    "genre": "LatinIndie",
+    "publicId": "cld-sample",
+    "imageUrl": "https://res.cloudinary.com/dwafwm6uk/image/upload/c_fill,f_auto,h_1200,q_auto,w_1200/cld-sample?_a=BAMAK+Xw0",
+    "thumbnailUrl": "https://res.cloudinary.com/dwafwm6uk/image/upload/c_fill,f_auto,h_400,q_auto,w_400/cld-sample?_a=BAMAK+Xw0",
+    "folder": "root"
+  },
+  {
+    "genre": "Lofi",
+    "publicId": "cld-sample",
+    "imageUrl": "https://res.cloudinary.com/dwafwm6uk/image/upload/c_fill,f_auto,h_1200,q_auto,w_1200/cld-sample?_a=BAMAK+Xw0",
+    "thumbnailUrl": "https://res.cloudinary.com/dwafwm6uk/image/upload/c_fill,f_auto,h_400,q_auto,w_400/cld-sample?_a=BAMAK+Xw0",
+    "folder": "root"
+  },
+  {
+    "genre": "Mariachi",
+    "publicId": "cld-sample",
+    "imageUrl": "https://res.cloudinary.com/dwafwm6uk/image/upload/c_fill,f_auto,h_1200,q_auto,w_1200/cld-sample?_a=BAMAK+Xw0",
+    "thumbnailUrl": "https://res.cloudinary.com/dwafwm6uk/image/upload/c_fill,f_auto,h_400,q_auto,w_400/cld-sample?_a=BAMAK+Xw0",
+    "folder": "root"
+  },
+  {
+    "genre": "Merengue",
+    "publicId": "samples/radial_02",
+    "imageUrl": "https://res.cloudinary.com/dwafwm6uk/image/upload/c_fill,f_auto,h_1200,q_auto,w_1200/v1/samples/radial_02?_a=BAMAK+Xw0",
+    "thumbnailUrl": "https://res.cloudinary.com/dwafwm6uk/image/upload/c_fill,f_auto,h_400,q_auto,w_400/v1/samples/radial_02?_a=BAMAK+Xw0",
+    "folder": "samples"
+  },
+  {
+    "genre": "Metal",
+    "publicId": "samples/radial",
+    "imageUrl": "https://res.cloudinary.com/dwafwm6uk/image/upload/c_fill,f_auto,h_1200,q_auto,w_1200/v1/samples/radial?_a=BAMAK+Xw0",
+    "thumbnailUrl": "https://res.cloudinary.com/dwafwm6uk/image/upload/c_fill,f_auto,h_400,q_auto,w_400/v1/samples/radial?_a=BAMAK+Xw0",
+    "folder": "samples"
+  },
+  {
+    "genre": "Norteño",
+    "publicId": "cld-sample",
+    "imageUrl": "https://res.cloudinary.com/dwafwm6uk/image/upload/c_fill,f_auto,h_1200,q_auto,w_1200/cld-sample?_a=BAMAK+Xw0",
+    "thumbnailUrl": "https://res.cloudinary.com/dwafwm6uk/image/upload/c_fill,f_auto,h_400,q_auto,w_400/cld-sample?_a=BAMAK+Xw0",
+    "folder": "root"
+  },
+  {
+    "genre": "Opera",
+    "publicId": "cld-sample",
+    "imageUrl": "https://res.cloudinary.com/dwafwm6uk/image/upload/c_fill,f_auto,h_1200,q_auto,w_1200/cld-sample?_a=BAMAK+Xw0",
+    "thumbnailUrl": "https://res.cloudinary.com/dwafwm6uk/image/upload/c_fill,f_auto,h_400,q_auto,w_400/cld-sample?_a=BAMAK+Xw0",
+    "folder": "root"
+  },
+  {
+    "genre": "Pop",
+    "publicId": "cld-sample",
+    "imageUrl": "https://res.cloudinary.com/dwafwm6uk/image/upload/c_fill,f_auto,h_1200,q_auto,w_1200/cld-sample?_a=BAMAK+Xw0",
+    "thumbnailUrl": "https://res.cloudinary.com/dwafwm6uk/image/upload/c_fill,f_auto,h_400,q_auto,w_400/cld-sample?_a=BAMAK+Xw0",
+    "folder": "root"
+  },
+  {
+    "genre": "Pop90s",
+    "publicId": "cld-sample",
+    "imageUrl": "https://res.cloudinary.com/dwafwm6uk/image/upload/c_fill,f_auto,h_1200,q_auto,w_1200/cld-sample?_a=BAMAK+Xw0",
+    "thumbnailUrl": "https://res.cloudinary.com/dwafwm6uk/image/upload/c_fill,f_auto,h_400,q_auto,w_400/cld-sample?_a=BAMAK+Xw0",
+    "folder": "root"
+  },
+  {
+    "genre": "Pop Latino",
+    "publicId": "cld-sample",
+    "imageUrl": "https://res.cloudinary.com/dwafwm6uk/image/upload/c_fill,f_auto,h_1200,q_auto,w_1200/cld-sample?_a=BAMAK+Xw0",
+    "thumbnailUrl": "https://res.cloudinary.com/dwafwm6uk/image/upload/c_fill,f_auto,h_400,q_auto,w_400/cld-sample?_a=BAMAK+Xw0",
+    "folder": "root"
+  },
+  {
+    "genre": "PopLatinoActual",
+    "publicId": "cld-sample",
+    "imageUrl": "https://res.cloudinary.com/dwafwm6uk/image/upload/c_fill,f_auto,h_1200,q_auto,w_1200/cld-sample?_a=BAMAK+Xw0",
+    "thumbnailUrl": "https://res.cloudinary.com/dwafwm6uk/image/upload/c_fill,f_auto,h_400,q_auto,w_400/cld-sample?_a=BAMAK+Xw0",
+    "folder": "root"
+  },
+  {
+    "genre": "PopLatinoClasico",
+    "publicId": "cld-sample",
+    "imageUrl": "https://res.cloudinary.com/dwafwm6uk/image/upload/c_fill,f_auto,h_1200,q_auto,w_1200/cld-sample?_a=BAMAK+Xw0",
+    "thumbnailUrl": "https://res.cloudinary.com/dwafwm6uk/image/upload/c_fill,f_auto,h_400,q_auto,w_400/cld-sample?_a=BAMAK+Xw0",
+    "folder": "root"
+  },
+  {
+    "genre": "Punk",
+    "publicId": "main-sample",
+    "imageUrl": "https://res.cloudinary.com/dwafwm6uk/image/upload/c_fill,f_auto,h_1200,q_auto,w_1200/main-sample?_a=BAMAK+Xw0",
+    "thumbnailUrl": "https://res.cloudinary.com/dwafwm6uk/image/upload/c_fill,f_auto,h_400,q_auto,w_400/main-sample?_a=BAMAK+Xw0",
+    "folder": "root"
+  },
+  {
+    "genre": "Ranchera",
+    "publicId": "cld-sample",
+    "imageUrl": "https://res.cloudinary.com/dwafwm6uk/image/upload/c_fill,f_auto,h_1200,q_auto,w_1200/cld-sample?_a=BAMAK+Xw0",
+    "thumbnailUrl": "https://res.cloudinary.com/dwafwm6uk/image/upload/c_fill,f_auto,h_400,q_auto,w_400/cld-sample?_a=BAMAK+Xw0",
+    "folder": "root"
+  },
+  {
+    "genre": "Rap",
+    "publicId": "cld-sample-4",
+    "imageUrl": "https://res.cloudinary.com/dwafwm6uk/image/upload/c_fill,f_auto,h_1200,q_auto,w_1200/cld-sample-4?_a=BAMAK+Xw0",
+    "thumbnailUrl": "https://res.cloudinary.com/dwafwm6uk/image/upload/c_fill,f_auto,h_400,q_auto,w_400/cld-sample-4?_a=BAMAK+Xw0",
+    "folder": "root"
+  },
+  {
+    "genre": "Rb",
+    "publicId": "cld-sample-5",
+    "imageUrl": "https://res.cloudinary.com/dwafwm6uk/image/upload/c_fill,f_auto,h_1200,q_auto,w_1200/cld-sample-5?_a=BAMAK+Xw0",
+    "thumbnailUrl": "https://res.cloudinary.com/dwafwm6uk/image/upload/c_fill,f_auto,h_400,q_auto,w_400/cld-sample-5?_a=BAMAK+Xw0",
+    "folder": "root"
+  },
+  {
+    "genre": "Reggae",
+    "publicId": "samples/waves",
+    "imageUrl": "https://res.cloudinary.com/dwafwm6uk/image/upload/c_fill,f_auto,h_1200,q_auto,w_1200/v1/samples/waves?_a=BAMAK+Xw0",
+    "thumbnailUrl": "https://res.cloudinary.com/dwafwm6uk/image/upload/c_fill,f_auto,h_400,q_auto,w_400/v1/samples/waves?_a=BAMAK+Xw0",
+    "folder": "samples"
+  },
+  {
+    "genre": "Reggaeton",
+    "publicId": "samples/waves",
+    "imageUrl": "https://res.cloudinary.com/dwafwm6uk/image/upload/c_fill,f_auto,h_1200,q_auto,w_1200/v1/samples/waves?_a=BAMAK+Xw0",
+    "thumbnailUrl": "https://res.cloudinary.com/dwafwm6uk/image/upload/c_fill,f_auto,h_400,q_auto,w_400/v1/samples/waves?_a=BAMAK+Xw0",
+    "folder": "samples"
+  },
+  {
+    "genre": "Rock",
+    "publicId": "cld-sample-2",
+    "imageUrl": "https://res.cloudinary.com/dwafwm6uk/image/upload/c_fill,f_auto,h_1200,q_auto,w_1200/cld-sample-2?_a=BAMAK+Xw0",
+    "thumbnailUrl": "https://res.cloudinary.com/dwafwm6uk/image/upload/c_fill,f_auto,h_400,q_auto,w_400/cld-sample-2?_a=BAMAK+Xw0",
+    "folder": "root"
+  },
+  {
+    "genre": "RockArgentino",
+    "publicId": "cld-sample-2",
+    "imageUrl": "https://res.cloudinary.com/dwafwm6uk/image/upload/c_fill,f_auto,h_1200,q_auto,w_1200/cld-sample-2?_a=BAMAK+Xw0",
+    "thumbnailUrl": "https://res.cloudinary.com/dwafwm6uk/image/upload/c_fill,f_auto,h_400,q_auto,w_400/cld-sample-2?_a=BAMAK+Xw0",
+    "folder": "root"
+  },
+  {
+    "genre": "RockLatino",
+    "publicId": "cld-sample-2",
+    "imageUrl": "https://res.cloudinary.com/dwafwm6uk/image/upload/c_fill,f_auto,h_1200,q_auto,w_1200/cld-sample-2?_a=BAMAK+Xw0",
+    "thumbnailUrl": "https://res.cloudinary.com/dwafwm6uk/image/upload/c_fill,f_auto,h_400,q_auto,w_400/cld-sample-2?_a=BAMAK+Xw0",
+    "folder": "root"
+  },
+  {
+    "genre": "Rock Nacional",
+    "publicId": "cld-sample-2",
+    "imageUrl": "https://res.cloudinary.com/dwafwm6uk/image/upload/c_fill,f_auto,h_1200,q_auto,w_1200/cld-sample-2?_a=BAMAK+Xw0",
+    "thumbnailUrl": "https://res.cloudinary.com/dwafwm6uk/image/upload/c_fill,f_auto,h_400,q_auto,w_400/cld-sample-2?_a=BAMAK+Xw0",
+    "folder": "root"
+  },
+  {
+    "genre": "Salsa",
+    "publicId": "samples/radial_02",
+    "imageUrl": "https://res.cloudinary.com/dwafwm6uk/image/upload/c_fill,f_auto,h_1200,q_auto,w_1200/v1/samples/radial_02?_a=BAMAK+Xw0",
+    "thumbnailUrl": "https://res.cloudinary.com/dwafwm6uk/image/upload/c_fill,f_auto,h_400,q_auto,w_400/v1/samples/radial_02?_a=BAMAK+Xw0",
+    "folder": "samples"
+  },
+  {
+    "genre": "SambaPagode",
+    "publicId": "cld-sample",
+    "imageUrl": "https://res.cloudinary.com/dwafwm6uk/image/upload/c_fill,f_auto,h_1200,q_auto,w_1200/cld-sample?_a=BAMAK+Xw0",
+    "thumbnailUrl": "https://res.cloudinary.com/dwafwm6uk/image/upload/c_fill,f_auto,h_400,q_auto,w_400/cld-sample?_a=BAMAK+Xw0",
+    "folder": "root"
+  },
+  {
+    "genre": "Sin categoría",
+    "publicId": "cld-sample",
+    "imageUrl": "https://res.cloudinary.com/dwafwm6uk/image/upload/c_fill,f_auto,h_1200,q_auto,w_1200/cld-sample?_a=BAMAK+Xw0",
+    "thumbnailUrl": "https://res.cloudinary.com/dwafwm6uk/image/upload/c_fill,f_auto,h_400,q_auto,w_400/cld-sample?_a=BAMAK+Xw0",
+    "folder": "root"
+  },
+  {
+    "genre": "Ska",
+    "publicId": "samples/waves",
+    "imageUrl": "https://res.cloudinary.com/dwafwm6uk/image/upload/c_fill,f_auto,h_1200,q_auto,w_1200/v1/samples/waves?_a=BAMAK+Xw0",
+    "thumbnailUrl": "https://res.cloudinary.com/dwafwm6uk/image/upload/c_fill,f_auto,h_400,q_auto,w_400/v1/samples/waves?_a=BAMAK+Xw0",
+    "folder": "samples"
+  },
+  {
+    "genre": "SoftRock",
+    "publicId": "cld-sample-2",
+    "imageUrl": "https://res.cloudinary.com/dwafwm6uk/image/upload/c_fill,f_auto,h_1200,q_auto,w_1200/cld-sample-2?_a=BAMAK+Xw0",
+    "thumbnailUrl": "https://res.cloudinary.com/dwafwm6uk/image/upload/c_fill,f_auto,h_400,q_auto,w_400/cld-sample-2?_a=BAMAK+Xw0",
+    "folder": "root"
+  },
+  {
+    "genre": "Soul",
+    "publicId": "cld-sample-5",
+    "imageUrl": "https://res.cloudinary.com/dwafwm6uk/image/upload/c_fill,f_auto,h_1200,q_auto,w_1200/cld-sample-5?_a=BAMAK+Xw0",
+    "thumbnailUrl": "https://res.cloudinary.com/dwafwm6uk/image/upload/c_fill,f_auto,h_400,q_auto,w_400/cld-sample-5?_a=BAMAK+Xw0",
+    "folder": "root"
+  },
+  {
+    "genre": "Tango",
+    "publicId": "cld-sample",
+    "imageUrl": "https://res.cloudinary.com/dwafwm6uk/image/upload/c_fill,f_auto,h_1200,q_auto,w_1200/cld-sample?_a=BAMAK+Xw0",
+    "thumbnailUrl": "https://res.cloudinary.com/dwafwm6uk/image/upload/c_fill,f_auto,h_400,q_auto,w_400/cld-sample?_a=BAMAK+Xw0",
+    "folder": "root"
+  },
+  {
+    "genre": "Techno",
+    "publicId": "cld-sample-3",
+    "imageUrl": "https://res.cloudinary.com/dwafwm6uk/image/upload/c_fill,f_auto,h_1200,q_auto,w_1200/cld-sample-3?_a=BAMAK+Xw0",
+    "thumbnailUrl": "https://res.cloudinary.com/dwafwm6uk/image/upload/c_fill,f_auto,h_400,q_auto,w_400/cld-sample-3?_a=BAMAK+Xw0",
+    "folder": "root"
+  },
+  {
+    "genre": "ThrashMetal",
+    "publicId": "samples/radial",
+    "imageUrl": "https://res.cloudinary.com/dwafwm6uk/image/upload/c_fill,f_auto,h_1200,q_auto,w_1200/v1/samples/radial?_a=BAMAK+Xw0",
+    "thumbnailUrl": "https://res.cloudinary.com/dwafwm6uk/image/upload/c_fill,f_auto,h_400,q_auto,w_400/v1/samples/radial?_a=BAMAK+Xw0",
+    "folder": "samples"
+  },
+  {
+    "genre": "Trance",
+    "publicId": "cld-sample-3",
+    "imageUrl": "https://res.cloudinary.com/dwafwm6uk/image/upload/c_fill,f_auto,h_1200,q_auto,w_1200/cld-sample-3?_a=BAMAK+Xw0",
+    "thumbnailUrl": "https://res.cloudinary.com/dwafwm6uk/image/upload/c_fill,f_auto,h_400,q_auto,w_400/cld-sample-3?_a=BAMAK+Xw0",
+    "folder": "root"
+  },
+  {
+    "genre": "Trap",
+    "publicId": "cld-sample-4",
+    "imageUrl": "https://res.cloudinary.com/dwafwm6uk/image/upload/c_fill,f_auto,h_1200,q_auto,w_1200/cld-sample-4?_a=BAMAK+Xw0",
+    "thumbnailUrl": "https://res.cloudinary.com/dwafwm6uk/image/upload/c_fill,f_auto,h_400,q_auto,w_400/cld-sample-4?_a=BAMAK+Xw0",
+    "folder": "root"
+  }
+]

@@ -17,6 +17,12 @@ export class GeneratedImage {
   @Prop()
   thumbnailUrl?: string;
 
+  @Prop()
+  cloudinaryPublicId?: string;
+
+  @Prop()
+  cloudinaryFolder?: string;
+
   @Prop({ required: true })
   prompt!: string;
 

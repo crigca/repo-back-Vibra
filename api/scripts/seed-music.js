@@ -4,7 +4,7 @@ const { artistsByGenre, genericQueries } = require('./artists-data');
 // Configuración
 const API_BASE_URL = 'http://localhost:3000';
 const TARGET_SONGS = 400;  // Límite seguro para no agotar cuota
-const MAX_SEARCHES = 60;   // ~60 búsquedas máximo por día (deja margen para testing)
+const MAX_SEARCHES = 80;   // 80 búsquedas máximo por día
 
 // Generar búsquedas dinámicamente
 function generateSearchQueries() {
