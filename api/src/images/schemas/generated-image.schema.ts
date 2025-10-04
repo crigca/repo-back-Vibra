@@ -26,11 +26,11 @@ export class GeneratedImage {
   @Prop({ required: true })
   prompt!: string;
 
-  @Prop({ required: true, enum: ['primary', 'secondary'] })
+  @Prop({ required: true })
   generator!: string;
 
-  @Prop({ required: true })
-  genre!: string;
+  @Prop({ required: false })
+  genre?: string;
 
   @Prop({ type: Object, default: {} })
   metadata!: {
