@@ -126,21 +126,6 @@ export class MusicService {
     return song;
   }
 
-  // Reproduce canción
-  async playSong(songId: string): Promise<Song> {
-    const song = await this.findSongById(songId);
-
-    this.logger.log(`▶️ Reproduciendo: "${song.title}" por ${song.artist}`);
-
-    // Emitir evento
-    this.eventEmitter.emit('song.started', {
-      song,
-      timestamp: new Date(),
-    });
-
-    return song;
-  }
-
   // Pausa reproducción
   async pauseSong(): Promise<void> {
     this.logger.log('⏸️ Reproducción pausada');
@@ -466,6 +451,37 @@ export class MusicService {
 
     } catch (error) {
       this.logger.error(`❌ Error al eliminar canción: ${error.message}`);
+      throw error;
+    }
+  }
+
+  /**
+   * Reproduce una canción y emite evento song.started
+   */
+  async playSong(songId: string): Promise<Song> {
+    this.logger.log(`▶️  Playing song: ${songId}`);
+
+    try {
+      const song = await this.songRepository.findOne({ where: { id: songId } });
+
+      if (!song) {
+        throw new NotFoundException(`Song not found: ${songId}`);
+      }
+
+      // Emitir evento song.started para ParallelImageService
+      this.eventEmitter.emit('song.started', {
+        songId: song.id,
+        title: song.title,
+        artist: song.artist,
+        genre: song.genre,
+        duration: song.duration || 0,
+      });
+
+      this.logger.log(`✅ Song started: ${song.title} - ${song.artist} (${song.genre})`);
+
+      return song;
+    } catch (error) {
+      this.logger.error(`❌ Error playing song: ${error.message}`);
       throw error;
     }
   }

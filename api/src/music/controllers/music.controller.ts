@@ -297,4 +297,29 @@ export class MusicController {
     }
   }
 
+  /**
+   * POST /music/play/:id
+   * Reproduce una canción y emite evento para generar imágenes
+   */
+  @Post('play/:id')
+  @HttpCode(HttpStatus.OK)
+  async playSong(@Param('id', ParseUUIDPipe) id: string) {
+    this.logger.log(`▶️  POST /music/play/${id}`);
+
+    try {
+      const song = await this.musicService.playSong(id);
+
+      this.logger.log(`✅ Song playing: ${song.title}`);
+
+      return {
+        success: true,
+        data: song,
+        message: 'Song started successfully',
+      };
+    } catch (error) {
+      this.logger.error(`❌ Error playing song: ${error.message}`);
+      throw error;
+    }
+  }
+
 }

@@ -9,7 +9,9 @@ import { Prompt, PromptSchema } from './schemas/prompt.schema';
 import { CloudinaryService } from './services/cloudinary.service';
 import { PromptService } from './services/prompt.service';
 import { ImagesService } from './services/images.service';
+import { ParallelImageService } from './services/parallel-image.service';
 import { StubImageGenerator } from './generators/stub-image-generator';
+import { PrimaryAIGenerator } from './generators/primary-ai-generator';
 import { ImagesController } from './images.controller';
 import { Song } from '../music/entities/song.entity';
 
@@ -26,11 +28,14 @@ import { Song } from '../music/entities/song.entity';
     CloudinaryService,
     PromptService,
     ImagesService,
+    ParallelImageService,
+    StubImageGenerator,
+    PrimaryAIGenerator,
     {
       provide: 'IImageGenerator',
-      useClass: StubImageGenerator,
+      useClass: PrimaryAIGenerator, // DALL-E 3 para generación real
     },
   ],
-  exports: [MongooseModule, CloudinaryService, PromptService, ImagesService],
+  exports: [MongooseModule, CloudinaryService, PromptService, ImagesService, ParallelImageService],
 })
 export class ImagesModule {}

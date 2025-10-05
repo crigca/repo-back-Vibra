@@ -215,4 +215,23 @@ export class CloudinaryService {
       throw new Error(`Failed to list images: ${error.message}`);
     }
   }
+
+  /**
+   * Sube un buffer de imagen a Cloudinary
+   * (Alias específico para IA generators)
+   * @param buffer - Buffer de la imagen
+   * @param folder - Carpeta en Cloudinary
+   */
+  async uploadBuffer(
+    buffer: Buffer,
+    folder: string = 'vibra/ai-generated',
+  ): Promise<{ secure_url: string; public_id: string; width: number; height: number }> {
+    const result = await this.uploadImage(buffer, folder);
+    return {
+      secure_url: result.secureUrl,
+      public_id: result.publicId,
+      width: result.width,
+      height: result.height,
+    };
+  }
 }
