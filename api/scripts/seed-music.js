@@ -10,11 +10,33 @@ const MAX_SEARCHES = 80;   // 80 búsquedas máximo por día
 function generateSearchQueries() {
   const queries = [];
 
-  // Búsquedas por artista individual (6-8 canciones por artista)
+  // Búsquedas por artista individual con variaciones (6-8 canciones por artista)
+  const searchVariations = [
+    { suffix: 'official audio', weight: 3 },
+    { suffix: 'official video', weight: 3 },
+    { suffix: 'official music video', weight: 2 },
+    { suffix: 'top songs', weight: 1 },
+    { suffix: 'best of', weight: 1 },
+    { suffix: 'greatest hits', weight: 1 }
+  ];
+
   Object.entries(artistsByGenre).forEach(([genre, artists]) => {
     artists.forEach(artist => {
+      // Selección aleatoria ponderada
+      const totalWeight = searchVariations.reduce((sum, v) => sum + v.weight, 0);
+      let random = Math.floor(Math.random() * totalWeight);
+      let selectedVariation;
+
+      for (const variation of searchVariations) {
+        random -= variation.weight;
+        if (random < 0) {
+          selectedVariation = variation;
+          break;
+        }
+      }
+
       queries.push({
-        query: artist,
+        query: `${artist} "${selectedVariation.suffix}" -live -cover -karaoke -lyrics`,
         maxResults: Math.floor(Math.random() * 3) + 6, // 6-8 resultados
         genre: genre.charAt(0).toUpperCase() + genre.slice(1)
       });
