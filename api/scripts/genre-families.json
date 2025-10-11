@@ -1,0 +1,102 @@
+{
+  "metal": [
+    "Metal",
+    "HeavyMetal",
+    "HeavyMetalArgentino",
+    "DeathMetal",
+    "ThrashMetal",
+    "BlackMetal",
+    "GlamMetal",
+    "IndustrialMetal"
+  ],
+  "rock": [
+    "Rock",
+    "RockArgentino",
+    "Rock Nacional",
+    "RockLatino",
+    "AlternativeRock",
+    "IndieRock",
+    "SoftRock"
+  ],
+  "cumbia": [
+    "Cumbia",
+    "CumbiaVillera",
+    "Cumbia420",
+    "Cuarteto"
+  ],
+  "latin": [
+    "Reggaeton",
+    "Bachata",
+    "Salsa",
+    "Merengue",
+    "Tango",
+    "Bolero"
+  ],
+  "urban": [
+    "Trap",
+    "Hiphop",
+    "Rap",
+    "Drill",
+    "Reggaeton"
+  ],
+  "electronic": [
+    "Electronic",
+    "Techno",
+    "House",
+    "Trance",
+    "Dubstep",
+    "DrumAndBass",
+    "EdmActual"
+  ],
+  "pop": [
+    "Pop",
+    "PopLatinoActual",
+    "PopLatinoClasico",
+    "Pop Latino",
+    "Pop90s",
+    "Alternative Pop",
+    "Hyperpop"
+  ],
+  "punk": [
+    "Punk",
+    "HardcorePunk",
+    "Ska"
+  ],
+  "folk": [
+    "FolkloreArgentino",
+    "Country",
+    "Bluegrass",
+    "Folk"
+  ],
+  "latin_traditional": [
+    "Mariachi",
+    "Ranchera",
+    "Corrido",
+    "CorridosTumbados",
+    "Norteño"
+  ],
+  "afro_caribbean": [
+    "Afrobeat",
+    "Reggae",
+    "Dancehall",
+    "SambaPagode"
+  ],
+  "soul_funk": [
+    "Soul",
+    "Funk",
+    "Rb",
+    "Disco"
+  ],
+  "alternative": [
+    "Alternative",
+    "AlternativeRock",
+    "IndieRock",
+    "LatinIndie"
+  ],
+  "chill": [
+    "BossaNova",
+    "Lofi",
+    "Jazz",
+    "Blues"
+  ]
+}

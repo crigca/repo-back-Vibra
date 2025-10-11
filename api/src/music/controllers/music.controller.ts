@@ -2,6 +2,8 @@ import {
   Controller,
   Get,
   Post,
+  Put,
+  Delete,
   Body,
   Param,
   Query,
@@ -27,10 +29,10 @@ export class MusicController {
 
   constructor(private readonly musicService: MusicService) {}
 
-  // Buscar canciones en YouTube
+  // Buscar canciones en YouTube (solo búsqueda, no guarda en BD)
   @Get('search')
   async searchSongs(
-    @Query(new ValidationPipe({ transform: true })) searchDto: SearchSongsDto,
+    @Query(new ValidationPipe({ transform: true })) searchDto: SearchSongsDto
   ): Promise<YouTubeSearchResult[]> {
     this.logger.log(`🔍 GET /music/search - Query: "${searchDto.query}"`);
 
@@ -41,25 +43,6 @@ export class MusicController {
       return results;
     } catch (error) {
       this.logger.error(`❌ Error en búsqueda: ${error.message}`);
-      throw error;
-    }
-  }
-
-  // Crear nueva canción en BD
-  @Post('songs')
-  @HttpCode(HttpStatus.CREATED)
-  async createSong(
-    @Body(ValidationPipe) createSongDto: CreateSongDto,
-  ): Promise<Song> {
-    this.logger.log(`💾 POST /music/songs - Título: "${createSongDto.title}"`);
-
-    try {
-      const song = await this.musicService.createSong(createSongDto);
-
-      this.logger.log(`✅ Canción creada con ID: ${song.id}`);
-      return song;
-    } catch (error) {
-      this.logger.error(`❌ Error al crear canción: ${error.message}`);
       throw error;
     }
   }
@@ -179,34 +162,31 @@ export class MusicController {
     }
   }
 
-  // Reproducir canción
-  @Post('play/:id')
-  async playSong(@Param('id', ParseUUIDPipe) id: string): Promise<Song> {
-    this.logger.log(`▶️ POST /music/play/${id}`);
+
+  // Búsqueda optimizada por artista y/o canción
+  @Get('search-optimized')
+  async searchByArtistAndSong(
+    @Query('artist') artist?: string,
+    @Query('song') song?: string,
+    @Query('limit') limit?: number,
+  ): Promise<Song[]> {
+    const parsedLimit = limit ? parseInt(limit.toString()) : 20;
+
+    this.logger.log(
+      `🔍 GET /music/search-optimized - Artista: "${artist || 'any'}", Canción: "${song || 'any'}"`
+    );
 
     try {
-      const song = await this.musicService.playSong(id);
+      const songs = await this.musicService.searchByArtistAndSong({
+        artist,
+        song,
+        limit: parsedLimit,
+      });
 
-      this.logger.log(`✅ Reproduciendo: "${song.title}"`);
-      return song;
+      this.logger.log(`✅ Búsqueda optimizada exitosa: ${songs.length} resultados`);
+      return songs;
     } catch (error) {
-      this.logger.error(`❌ Error al reproducir: ${error.message}`);
-      throw error;
-    }
-  }
-
-  // Pausar reproducción
-  @Post('pause')
-  async pauseSong(): Promise<{ message: string }> {
-    this.logger.log('⏸️ POST /music/pause');
-
-    try {
-      await this.musicService.pauseSong();
-
-      this.logger.log('✅ Reproducción pausada');
-      return { message: 'Reproducción pausada exitosamente' };
-    } catch (error) {
-      this.logger.error(`❌ Error al pausar: ${error.message}`);
+      this.logger.error(`❌ Error en búsqueda optimizada: ${error.message}`);
       throw error;
     }
   }
@@ -238,4 +218,108 @@ export class MusicController {
       throw error;
     }
   }
+
+  // Crear nueva canción en BD (usado por seed script)
+  @Post('songs')
+  @HttpCode(HttpStatus.CREATED)
+  async createSong(
+    @Body(ValidationPipe) createSongDto: CreateSongDto
+  ): Promise<Song> {
+    this.logger.log(`💾 POST /music/songs - Título: "${createSongDto.title}"`);
+
+    try {
+      const song = await this.musicService.createSong(createSongDto);
+
+      this.logger.log(`✅ Canción creada con ID: ${song.id}`);
+      return song;
+    } catch (error) {
+      this.logger.error(`❌ Error al crear canción: ${error.message}`);
+      throw error;
+    }
+  }
+
+  // Guardar canción de YouTube en BD
+  @Post('save-from-youtube')
+  @HttpCode(HttpStatus.CREATED)
+  async saveFromYoutube(
+    @Body() youtubeData: { youtubeId: string }
+  ): Promise<Song> {
+    this.logger.log(`💾 POST /music/save-from-youtube - YouTube ID: "${youtubeData.youtubeId}"`);
+
+    try {
+      const song = await this.musicService.saveFromYoutube(youtubeData.youtubeId);
+
+      this.logger.log(`✅ Canción guardada desde YouTube con ID: ${song.id}`);
+      return song;
+    } catch (error) {
+      this.logger.error(`❌ Error al guardar desde YouTube: ${error.message}`);
+      throw error;
+    }
+  }
+
+  // Actualizar canción
+  @Put('songs/:id')
+  async updateSong(
+    @Param('id', ParseUUIDPipe) id: string,
+    @Body(ValidationPipe) updateData: {
+      title?: string;
+      artist?: string;
+      genre?: string;
+      duration?: number;
+    }
+  ): Promise<Song> {
+    this.logger.log(`🔄 PUT /music/songs/${id}`);
+
+    try {
+      const song = await this.musicService.updateSong(id, updateData);
+
+      this.logger.log(`✅ Canción actualizada: "${song.title}"`);
+      return song;
+    } catch (error) {
+      this.logger.error(`❌ Error al actualizar canción: ${error.message}`);
+      throw error;
+    }
+  }
+
+  // Eliminar canción
+  @Delete('songs/:id')
+  @HttpCode(HttpStatus.NO_CONTENT)
+  async deleteSong(@Param('id', ParseUUIDPipe) id: string): Promise<void> {
+    this.logger.log(`🗑️ DELETE /music/songs/${id}`);
+
+    try {
+      await this.musicService.deleteSong(id);
+
+      this.logger.log(`✅ Canción eliminada exitosamente`);
+    } catch (error) {
+      this.logger.error(`❌ Error al eliminar canción: ${error.message}`);
+      throw error;
+    }
+  }
+
+  /**
+   * POST /music/play/:id
+   * Reproduce una canción y emite evento para generar imágenes
+   */
+  @Post('play/:id')
+  @HttpCode(HttpStatus.OK)
+  async playSong(@Param('id', ParseUUIDPipe) id: string) {
+    this.logger.log(`▶️  POST /music/play/${id}`);
+
+    try {
+      const song = await this.musicService.playSong(id);
+
+      this.logger.log(`✅ Song playing: ${song.title}`);
+
+      return {
+        success: true,
+        data: song,
+        message: 'Song started successfully',
+      };
+    } catch (error) {
+      this.logger.error(`❌ Error playing song: ${error.message}`);
+      throw error;
+    }
+  }
+
 }
