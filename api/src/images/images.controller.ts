@@ -143,6 +143,37 @@ export class ImagesController {
   }
 
   /**
+   * GET /images/for-playback
+   * Obtiene mix balanceado de imágenes para reproducción
+   * Mix: 33% precargadas, 42% FAL, 17% Replicate, 8% DALL-E
+   */
+  @Get('for-playback')
+  async getImagesForPlayback(
+    @Query('genre') genre: string,
+    @Query('duration') duration: number,
+  ) {
+    this.logger.log(`GET /images/for-playback?genre=${genre}&duration=${duration}`);
+
+    if (!genre || !duration) {
+      return {
+        success: false,
+        message: 'Missing required parameters: genre and duration',
+      };
+    }
+
+    const result = await this.imagesService.getBalancedImagesForPlayback(
+      genre,
+      duration,
+    );
+
+    return {
+      success: true,
+      data: result.images,
+      breakdown: result.breakdown,
+    };
+  }
+
+  /**
    * GET /images/:id
    * Obtiene una imagen por ID
    */

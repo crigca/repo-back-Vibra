@@ -1,6 +1,6 @@
 # Géneros Musicales en Vibra
 
-Total de géneros únicos: **81**
+Total de géneros únicos: **77**
 
 ## Lista Completa
 
@@ -8,83 +8,79 @@ Total de géneros únicos: **81**
 2. Alternative
 3. Alternative Pop
 4. Alternative Rock
-5. AlternativeRock
-6. Bachata
-7. Balada
-8. BlackMetal
-9. Bluegrass
-10. Blues
-11. Bolero
-12. BossaNova
-13. Corrido
-14. CorridosTumbados
-15. Country
-16. Cuarteto
-17. Cumbia
-18. Cumbia420
-19. CumbiaVillera
-20. Dancehall
-21. DeathMetal
-22. Disco
-23. Drill
-24. DrumAndBass
-25. Dubstep
-26. EdmActual
-27. Electronic
-28. Flamenco
-29. Folk
-30. FolkloreArgentino
-31. Funk
-32. GlamMetal
-33. Gospel
-34. HardcorePunk
-35. Heavy Metal
-36. HeavyMetal
-37. HeavyMetalArgentino
-38. Highlife
-39. Hiphop
-40. House
-41. Hyperpop
-42. IndieRock
-43. IndustrialMetal
-44. Jazz
-45. Jpop
-46. kpop
-47. Kpop
-48. Latin
-49. LatinIndie
-50. Lofi
-51. Mariachi
-52. Merengue
-53. Metal
-54. Norteño
-55. Opera
-56. Pop
-57. Pop90s
-58. Pop Latino
-59. PopLatinoActual
-60. PopLatinoClasico
-61. Punk
-62. Ranchera
-63. Rap
-64. Rb
-65. Reggae
-66. Reggaeton
-67. Rock
-68. RockArgentino
-69. RockLatino
-70. Rock Nacional
-71. Salsa
-72. SambaPagode
-73. Sin categoría
-74. Ska
-75. SoftRock
-76. Soul
-77. Tango
-78. Techno
-79. ThrashMetal
-80. Trance
-81. Trap
+5. Bachata
+6. Balada
+7. BlackMetal
+8. Bluegrass
+9. Blues
+10. Bolero
+11. BossaNova
+12. Corrido
+13. CorridosTumbados
+14. Country
+15. Cuarteto
+16. Cumbia
+17. Cumbia420
+18. CumbiaVillera
+19. Dancehall
+20. DeathMetal
+21. Disco
+22. Drill
+23. DrumAndBass
+24. Dubstep
+25. EdmActual
+26. Electronic
+27. Flamenco
+28. Folk
+29. FolkloreArgentino
+30. Funk
+31. GlamMetal
+32. Gospel
+33. HardcorePunk
+34. Heavy Metal
+35. HeavyMetalArgentino
+36. Highlife
+37. Hiphop
+38. House
+39. Hyperpop
+40. IndieRock
+41. IndustrialMetal
+42. Jazz
+43. Jpop
+44. Kpop
+45. Latin
+46. LatinIndie
+47. Lofi
+48. Mariachi
+49. Merengue
+50. Metal
+51. Norteño
+52. Opera
+53. Pop
+54. Pop90s
+55. Pop Latino
+56. PopLatinoActual
+57. PopLatinoClasico
+58. Punk
+59. Ranchera
+60. Rap
+61. Rb
+62. Reggae
+63. Reggaeton
+64. Rock
+65. RockArgentino
+66. RockLatino
+67. Salsa
+68. SambaPagode
+69. Sin categoría
+70. Ska
+71. SoftRock
+72. Soul
+73. Tango
+74. Techno
+75. ThrashMetal
+76. Trance
+77. Trap
 
 ---
 

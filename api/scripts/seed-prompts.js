@@ -36,31 +36,19 @@ promptSchema.index({ promptText: 'text' });
 
 const Prompt = mongoose.model('Prompt', promptSchema);
 
+// Cargar prompts desde archivo JSON
+const promptsPath = path.join(__dirname, 'prompts.json');
+const BASE_PROMPTS = JSON.parse(fs.readFileSync(promptsPath, 'utf-8'));
+
 // Template de prompts por categoría
 const PROMPT_TEMPLATES = {
   base: (genre) => {
-    const templates = {
-      Rock: 'Abstract visualization of electric guitars, drums, and energetic vibrant colors representing raw rock energy. Dynamic composition with bold reds, blacks, and electric blues.',
-      Pop: 'Colorful and vibrant abstract art with playful geometric shapes, bright pastels, and modern trendy aesthetics. Energetic and uplifting composition.',
-      Electronic: 'Futuristic digital landscape with neon lights, geometric patterns, circuit-like designs. Glowing cyan, purple, and electric colors in a cyberpunk aesthetic.',
-      Jazz: 'Smooth and sophisticated abstract composition with warm golden tones, saxophone silhouettes, smoky atmosphere, and elegant flowing shapes.',
-      Metal: 'Dark and aggressive imagery with sharp angular shapes, chains, skulls, fire, and metallic textures. Intense blacks, deep reds, and silver highlights.',
-      Hiphop: 'Urban street art aesthetic with graffiti elements, bold typography, vibrant colors, and dynamic movement. Contemporary and edgy composition.',
-      Latin: 'Vibrant tropical colors, rhythmic patterns, cultural elements, festive atmosphere. Warm oranges, bright yellows, passionate reds.',
-      Country: 'Rustic and warm imagery with natural elements, earth tones, vintage aesthetics, and countryside vibes. Browns, greens, and golden sunset hues.',
-      Classical: 'Elegant and timeless composition with orchestral elements, vintage concert hall aesthetics, gold accents, and sophisticated color palette.',
-      Reggae: 'Relaxed tropical vibes with green, yellow, and red color scheme. Natural elements, sunshine, beach aesthetics, and peaceful atmosphere.',
-    };
-
-    // Normalizar género para buscar en templates
-    const normalizedGenre = genre.toLowerCase();
-    for (const [key, template] of Object.entries(templates)) {
-      if (normalizedGenre.includes(key.toLowerCase())) {
-        return template;
-      }
+    // Buscar prompt específico en prompts.json
+    if (BASE_PROMPTS[genre]) {
+      return BASE_PROMPTS[genre];
     }
 
-    // Template genérico
+    // Template genérico si no existe
     return `Abstract artistic visualization representing ${genre} music. Vibrant colors, dynamic composition, and modern aesthetics that capture the essence and energy of the genre.`;
   },
 

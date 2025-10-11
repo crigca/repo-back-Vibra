@@ -10,8 +10,9 @@ import { CloudinaryService } from './services/cloudinary.service';
 import { PromptService } from './services/prompt.service';
 import { ImagesService } from './services/images.service';
 import { ParallelImageService } from './services/parallel-image.service';
-import { StubImageGenerator } from './generators/stub-image-generator';
 import { PrimaryAIGenerator } from './generators/primary-ai-generator';
+import { SecondaryAIGenerator } from './generators/secondary-ai-generator';
+import { TertiaryAIGenerator } from './generators/tertiary-ai-generator';
 import { ImagesController } from './images.controller';
 import { Song } from '../music/entities/song.entity';
 
@@ -29,11 +30,12 @@ import { Song } from '../music/entities/song.entity';
     PromptService,
     ImagesService,
     ParallelImageService,
-    StubImageGenerator,
     PrimaryAIGenerator,
+    SecondaryAIGenerator,
+    TertiaryAIGenerator,
     {
       provide: 'IImageGenerator',
-      useClass: PrimaryAIGenerator, // DALL-E 3 para generación real
+      useClass: ParallelImageService, // Usa servicio paralelo con fallback automático
     },
   ],
   exports: [MongooseModule, CloudinaryService, PromptService, ImagesService, ParallelImageService],

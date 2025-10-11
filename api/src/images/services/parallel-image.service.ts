@@ -1,11 +1,12 @@
-import { Injectable, Logger, Inject } from '@nestjs/common';
+import { Injectable, Logger } from '@nestjs/common';
 import { OnEvent } from '@nestjs/event-emitter';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
 import { GeneratedImage, GeneratedImageDocument } from '../schemas/generated-image.schema';
 import { PromptService } from './prompt.service';
 import { PrimaryAIGenerator } from '../generators/primary-ai-generator';
-import { StubImageGenerator } from '../generators/stub-image-generator';
+import { SecondaryAIGenerator } from '../generators/secondary-ai-generator';
+import { TertiaryAIGenerator } from '../generators/tertiary-ai-generator';
 import { CloudinaryService } from './cloudinary.service';
 
 export interface SongStartedEvent {
@@ -19,8 +20,8 @@ export interface SongStartedEvent {
 /**
  * Servicio orquestador para generación paralela de imágenes
  * - Escucha eventos song.started
- * - Devuelve imágenes precargadas aleatorias
- * - Genera nuevas imágenes en background
+ * - Devuelve imágenes precargadas aleatorias de MongoDB
+ * - Genera nuevas imágenes en background con 3 AIs
  */
 @Injectable()
 export class ParallelImageService {
@@ -31,10 +32,10 @@ export class ParallelImageService {
     private generatedImageModel: Model<GeneratedImageDocument>,
     private promptService: PromptService,
     private primaryAI: PrimaryAIGenerator,
-    private stubAI: StubImageGenerator,
-    private cloudinaryService: CloudinaryService,
+    private secondaryAI: SecondaryAIGenerator,
+    private tertiaryAI: TertiaryAIGenerator,
   ) {
-    this.logger.log('✅ ParallelImageService initialized');
+    this.logger.log('✅ ParallelImageService initialized with fallback chain: DALL-E → Replicate SDXL → FAL AI');
   }
 
   /**
@@ -61,8 +62,8 @@ export class ParallelImageService {
         return randomImage;
       }
 
-      // 3. Si no hay precargadas, generar con Stub como fallback
-      this.logger.warn(`⚠️  No precached images for genre: ${event.genre}, using fallback`);
+      // 3. Si no hay precargadas, intentar generar con las 3 IAs
+      this.logger.warn(`⚠️  No precached images for genre: ${event.genre}, generating with AI fallback`);
       return await this.generateFallbackImage(event);
 
     } catch (error) {
@@ -98,7 +99,8 @@ export class ParallelImageService {
   }
 
   /**
-   * Genera imagen en background (no bloquea)
+   * Genera imagen en background con fallback automático (no bloquea)
+   * Fallback chain: DALL-E 3 → Replicate SDXL → FAL AI (Flux Schnell)
    */
   private async generateInBackground(event: SongStartedEvent): Promise<void> {
     this.logger.debug(`🎨 Generating new image in background for: ${event.genre}`);
@@ -107,8 +109,8 @@ export class ParallelImageService {
       // Obtener prompt
       const prompt = await this.promptService.getRandomPromptByGenre(event.genre);
 
-      // Generar con PrimaryAI (DALL-E)
-      const result = await this.primaryAI.generateImage(prompt.promptText, event.genre);
+      // Intentar generar con fallback automático
+      const result = await this.generateWithFallback(prompt.promptText, event.genre);
 
       // Guardar en MongoDB
       const newImage = new this.generatedImageModel({
@@ -116,16 +118,19 @@ export class ParallelImageService {
         genre: event.genre,
         imageUrl: result.imageUrl,
         thumbnailUrl: result.thumbnailUrl,
-        publicId: result.publicId,
+        cloudinaryPublicId: result.publicId,
+        cloudinaryFolder: `vibra/ai-generated/${event.genre}`,
         prompt: prompt.promptText,
-        generator: 'PrimaryAIGenerator',
-        processingTime: result.metadata.processingTime,
+        generator: result.provider,
+        processingTime: result.processingTime,
         metadata: {
-          ...result.metadata,
           songTitle: event.title,
           songArtist: event.artist,
           promptId: (prompt as any)._id.toString(),
           promptCategory: prompt.category,
+          aiModel: result.provider,
+          width: result.width || 1024,
+          height: result.height || 1024,
         },
         isActive: true,
       });
@@ -135,35 +140,77 @@ export class ParallelImageService {
       // Incrementar usage count del prompt
       await this.promptService.incrementUsageCount((prompt as any)._id.toString());
 
-      this.logger.log(`✅ Background image generated: ${newImage._id}`);
+      this.logger.log(`✅ Background image generated: ${newImage._id} (${result.provider})`);
     } catch (error) {
       this.logger.error(`❌ Failed to generate background image: ${error.message}`);
     }
   }
 
   /**
-   * Genera imagen fallback con Stub si no hay precargadas
+   * Intenta generar imagen con fallback automático
+   * 1. DALL-E 3 (Primary)
+   * 2. Replicate SDXL (Secondary)
+   * 3. FAL AI Flux Schnell (Tertiary)
+   */
+  private async generateWithFallback(prompt: string, genre: string): Promise<any> {
+    // Intento 1: DALL-E 3
+    try {
+      this.logger.debug(`🎨 Attempt 1: PrimaryAI (DALL-E 3)`);
+      const result = await this.primaryAI.generateImage(prompt, genre);
+      this.logger.log(`✅ PrimaryAI succeeded`);
+      return result;
+    } catch (primaryError) {
+      this.logger.warn(`⚠️  PrimaryAI failed: ${primaryError.message}`);
+
+      // Intento 2: Replicate SDXL
+      try {
+        this.logger.debug(`🎨 Attempt 2: SecondaryAI (Replicate SDXL)`);
+        const result = await this.secondaryAI.generateImage(prompt, genre);
+        this.logger.log(`✅ SecondaryAI succeeded (fallback)`);
+        return result;
+      } catch (secondaryError) {
+        this.logger.warn(`⚠️  SecondaryAI failed: ${secondaryError.message}`);
+
+        // Intento 3: FAL AI (Flux Schnell)
+        try {
+          this.logger.debug(`🎨 Attempt 3: TertiaryAI (FAL AI - Flux Schnell)`);
+          const result = await this.tertiaryAI.generateImage(prompt, genre);
+          this.logger.log(`✅ TertiaryAI succeeded (final fallback)`);
+          return result;
+        } catch (tertiaryError) {
+          this.logger.error(`❌ All AI generators failed`);
+          throw new Error(`All AI generators failed. Last error: ${tertiaryError.message}`);
+        }
+      }
+    }
+  }
+
+  /**
+   * Genera imagen fallback con las 3 IAs si no hay precargadas
    */
   private async generateFallbackImage(event: SongStartedEvent): Promise<GeneratedImageDocument> {
     try {
       const prompt = await this.promptService.getRandomPromptByGenre(event.genre);
-      const result = await this.stubAI.generateImage(prompt.promptText, event.genre);
+      const result = await this.generateWithFallback(prompt.promptText, event.genre);
 
       const fallbackImage = new this.generatedImageModel({
         songId: event.songId,
         genre: event.genre,
         imageUrl: result.imageUrl,
         thumbnailUrl: result.thumbnailUrl,
-        publicId: result.publicId,
+        cloudinaryPublicId: result.publicId,
+        cloudinaryFolder: `vibra/ai-generated/${event.genre}`,
         prompt: prompt.promptText,
-        generator: 'StubImageGenerator',
-        processingTime: result.metadata.processingTime,
+        generator: result.provider,
+        processingTime: result.processingTime,
         metadata: {
-          ...result.metadata,
           songTitle: event.title,
           songArtist: event.artist,
           promptId: (prompt as any)._id.toString(),
           promptCategory: prompt.category,
+          aiModel: result.provider,
+          width: result.width || 1024,
+          height: result.height || 1024,
         },
         isActive: true,
       });
@@ -171,7 +218,7 @@ export class ParallelImageService {
       await fallbackImage.save();
       await this.promptService.incrementUsageCount((prompt as any)._id.toString());
 
-      this.logger.log(`✅ Fallback image created: ${fallbackImage._id}`);
+      this.logger.log(`✅ Fallback image created: ${fallbackImage._id} (${result.provider})`);
       return fallbackImage;
     } catch (error) {
       this.logger.error(`Error creating fallback image: ${error.message}`);

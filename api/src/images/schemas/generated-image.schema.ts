@@ -8,8 +8,11 @@ export type GeneratedImageDocument = GeneratedImage & Document;
   collection: 'generatedImages',
 })
 export class GeneratedImage {
-  @Prop({ required: true, index: true })
-  songId!: string;
+  @Prop({ required: false, index: true })
+  songId?: string;
+
+  @Prop({ index: true })
+  genre!: string;
 
   @Prop({ required: true })
   imageUrl!: string;
@@ -28,9 +31,6 @@ export class GeneratedImage {
 
   @Prop({ required: true })
   generator!: string;
-
-  @Prop({ required: false })
-  genre?: string;
 
   @Prop({ type: Object, default: {} })
   metadata!: {
@@ -61,6 +61,5 @@ export const GeneratedImageSchema =
   SchemaFactory.createForClass(GeneratedImage);
 
 GeneratedImageSchema.index({ songId: 1, createdAt: -1 });
-GeneratedImageSchema.index({ genre: 1 });
 GeneratedImageSchema.index({ generator: 1 });
 GeneratedImageSchema.index({ userFavorites: 1 });
