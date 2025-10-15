@@ -35,6 +35,9 @@ export class Song {
   @Column({ nullable: true })
   publishedAt?: Date;
 
+  @Column({ length: 500, nullable: true })
+  audioPath?: string; // Ruta del archivo MP3 (ejemplo: "audio/lkxgOs2fSnU.mp3")
+
   @CreateDateColumn()
   createdAt!: Date;
 

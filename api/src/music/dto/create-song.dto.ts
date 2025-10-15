@@ -39,4 +39,8 @@ export class CreateSongDto {
   @IsOptional()
   @IsDateString({}, { message: 'publishedAt debe ser una fecha válida' })
   publishedAt?: string;
+
+  @IsOptional()
+  @IsString()
+  audioPath?: string;
 }

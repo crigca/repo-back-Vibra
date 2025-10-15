@@ -3,6 +3,7 @@ import {
   Get,
   Post,
   Put,
+  Patch,
   Delete,
   Body,
   Param,
@@ -47,7 +48,7 @@ export class MusicController {
     }
   }
 
-  // Obtener canciones con paginación
+  // Obtener canciones con paginación (ALEATORIAS con MP3)
   @Get('songs')
   async getAllSongs(
     @Query('limit') limit?: number,
@@ -74,6 +75,33 @@ export class MusicController {
     }
   }
 
+  // Obtener TODAS las canciones sin filtros (para script de limpieza)
+  @Get('songs/all-raw')
+  async getAllSongsRaw(
+    @Query('limit') limit?: number,
+    @Query('offset') offset?: number,
+  ): Promise<Song[]> {
+    const parsedLimit = limit ? parseInt(limit.toString()) : 500;
+    const parsedOffset = offset ? parseInt(offset.toString()) : 0;
+
+    this.logger.log(
+      `📋 GET /music/songs/all-raw - Limit: ${parsedLimit}, Offset: ${parsedOffset}`,
+    );
+
+    try {
+      const songs = await this.musicService.getAllSongsRaw(
+        parsedLimit,
+        parsedOffset,
+      );
+
+      this.logger.log(`✅ Obtenidas ${songs.length} canciones sin filtros`);
+      return songs;
+    } catch (error) {
+      this.logger.error(`❌ Error al obtener canciones: ${error.message}`);
+      throw error;
+    }
+  }
+
   // Contar total de canciones
   @Get('songs/count')
   async getTotalSongsCount(): Promise<{ total: number }> {
@@ -86,6 +114,28 @@ export class MusicController {
       return { total };
     } catch (error) {
       this.logger.error(`❌ Error al contar canciones: ${error.message}`);
+      throw error;
+    }
+  }
+
+  // Obtener canciones sin audio (para script de descarga)
+  @Get('songs/without-audio')
+  async getSongsWithoutAudio(
+    @Query('limit') limit?: number,
+  ): Promise<Song[]> {
+    const parsedLimit = limit ? parseInt(limit.toString()) : 500;
+
+    this.logger.log(
+      `📋 GET /music/songs/without-audio - Limit: ${parsedLimit}`,
+    );
+
+    try {
+      const songs = await this.musicService.getSongsWithoutAudio(parsedLimit);
+
+      this.logger.log(`✅ Obtenidas ${songs.length} canciones sin MP3`);
+      return songs;
+    } catch (error) {
+      this.logger.error(`❌ Error al obtener canciones sin MP3: ${error.message}`);
       throw error;
     }
   }
@@ -269,6 +319,31 @@ export class MusicController {
     }
   ): Promise<Song> {
     this.logger.log(`🔄 PUT /music/songs/${id}`);
+
+    try {
+      const song = await this.musicService.updateSong(id, updateData);
+
+      this.logger.log(`✅ Canción actualizada: "${song.title}"`);
+      return song;
+    } catch (error) {
+      this.logger.error(`❌ Error al actualizar canción: ${error.message}`);
+      throw error;
+    }
+  }
+
+  // Actualizar parcialmente canción (usado por download-mp3.js)
+  @Patch('songs/:id')
+  async patchSong(
+    @Param('id', ParseUUIDPipe) id: string,
+    @Body() updateData: {
+      audioPath?: string;
+      title?: string;
+      artist?: string;
+      genre?: string;
+      duration?: number;
+    }
+  ): Promise<Song> {
+    this.logger.log(`🔄 PATCH /music/songs/${id}`);
 
     try {
       const song = await this.musicService.updateSong(id, updateData);
