@@ -1,6 +1,5 @@
 api/*-player-script.js
 api/public/
-/api/scripts/data/
 /node_modules/
 .env
 *.mp3
