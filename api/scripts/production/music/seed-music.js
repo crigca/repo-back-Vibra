@@ -1,5 +1,5 @@
 const axios = require('axios');
-const { artistsByGenre, genericQueries } = require('./artists-data');
+const { artistsByGenre, genericQueries } = require('../../data/artists-data');
 const ytdl = require('@distube/ytdl-core');
 const fs = require('fs');
 const path = require('path');

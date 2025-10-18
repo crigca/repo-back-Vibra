@@ -234,4 +234,70 @@ export class CloudinaryService {
       height: result.height,
     };
   }
+
+  /**
+   * Sube un archivo de audio (MP3) a Cloudinary
+   * @param filePath - Ruta del archivo MP3 local
+   * @param folder - Carpeta en Cloudinary (ej: 'vibra/music/rock')
+   * @param publicId - ID público opcional (ej: youtubeId)
+   */
+  async uploadAudio(
+    filePath: string,
+    folder: string = 'vibra/music/unknown',
+    publicId?: string,
+  ): Promise<{ secure_url: string; public_id: string; duration: number; bytes: number }> {
+    try {
+      this.logger.debug(`Uploading audio to folder: ${folder}`);
+
+      const uploadOptions: any = {
+        folder,
+        resource_type: 'video', // Cloudinary usa 'video' para archivos de audio
+        overwrite: false,
+      };
+
+      if (publicId) {
+        uploadOptions.public_id = publicId;
+      }
+
+      // Subir desde path local
+      const result = await cloudinary.uploader.upload(filePath, uploadOptions);
+
+      this.logger.log(`✅ Audio uploaded: ${result.public_id}`);
+
+      return {
+        secure_url: result.secure_url,
+        public_id: result.public_id,
+        duration: result.duration || 0,
+        bytes: result.bytes,
+      };
+    } catch (error) {
+      this.logger.error(`Error uploading audio: ${error.message}`, error.stack);
+      throw new Error(`Failed to upload audio to Cloudinary: ${error.message}`);
+    }
+  }
+
+  /**
+   * Elimina un archivo de audio de Cloudinary
+   * @param publicId - Public ID del audio (ej: 'vibra/music/rock/abc123')
+   */
+  async deleteAudio(publicId: string): Promise<boolean> {
+    try {
+      this.logger.debug(`Deleting audio: ${publicId}`);
+
+      const result = await cloudinary.uploader.destroy(publicId, {
+        resource_type: 'video',
+      });
+
+      if (result.result === 'ok') {
+        this.logger.log(`✅ Audio deleted: ${publicId}`);
+        return true;
+      }
+
+      this.logger.warn(`⚠️ Audio not found or already deleted: ${publicId}`);
+      return false;
+    } catch (error) {
+      this.logger.error(`Error deleting audio: ${error.message}`, error.stack);
+      throw new Error(`Failed to delete audio from Cloudinary: ${error.message}`);
+    }
+  }
 }
