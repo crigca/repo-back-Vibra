@@ -136,20 +136,24 @@ export class MusicService {
     });
   }
 
-  // Obtiene canciones con paginación (solo las que tienen MP3) - ORDEN ALEATORIO
-  async getAllSongs(limit: number = 50, offset: number = 0): Promise<Song[]> {
+  // Obtiene canciones con paginación (SOLO las que tienen Cloudinary URL) - UNA POR GÉNERO
+  async getAllSongs(limit: number = 50): Promise<Song[]> {
     this.logger.log(
-      `📋 Obteniendo canciones ALEATORIAS con MP3 (limit: ${limit})`,
+      `📋 Obteniendo ${limit} canciones ALEATORIAS (una por género) con Cloudinary URL`,
     );
 
-    const songs = await this.songRepository
-      .createQueryBuilder('song')
-      .where('song.audioPath IS NOT NULL')
-      .orderBy('RANDOM()')
-      .take(limit)
-      .getMany();
+    // Query para obtener una canción aleatoria por cada género diferente
+    const songs = await this.songRepository.query(`
+      SELECT DISTINCT ON (genre) *
+      FROM songs
+      WHERE "cloudinaryUrl" IS NOT NULL
+        AND genre IS NOT NULL
+        AND genre != ''
+      ORDER BY genre, RANDOM()
+      LIMIT $1
+    `, [limit]);
 
-    this.logger.log(`✅ Obtenidas ${songs.length} canciones con MP3 (aleatorias)`);
+    this.logger.log(`✅ Obtenidas ${songs.length} canciones (una por género, aleatorias)`);
     return songs;
   }
 
@@ -177,81 +181,43 @@ export class MusicService {
     return songs;
   }
 
-  // Obtener canciones SIN audioPath (para el script de descarga)
-  // Filtra palabras prohibidas (MIX, COMPILATION, PLAYLIST, etc.)
-  async getSongsWithoutAudio(limit: number = 500): Promise<Song[]> {
-    this.logger.log(`📋 Obteniendo canciones SIN MP3 (limit: ${limit})`);
 
-    // Palabras prohibidas que indican compilaciones o mixes
-    const bannedWords = [
-      'mix', 'megamix', 'minimix', 'mashup', 'medley', 'mezcla', 'popurri',
-      'top 10', 'top 20', 'top 30', 'top 40', 'top 50', 'top 100',
-      'best of', 'greatest hits', 'grandes exitos', 'grandes éxitos',
-      'compilation', 'compilación', 'recopilación', 'colección',
-      'full album', 'album completo', 'disco completo',
-      'playlist', 'lista de reproducción',
-      'hour', 'hours', 'hora', 'horas',
-      'live', 'en vivo', 'concierto',
-      'cover', 'karaoke', 'lyrics', 'letra',
-      'nightcore', 'sped up', 'slowed', 'reverb',
-      'acoustic', 'instrumental',
-      'all songs', 'todas las canciones', 'discography'
-    ];
-
-    const songs = await this.songRepository
-      .createQueryBuilder('song')
-      .where('song.audioPath IS NULL')
-      .andWhere('song.duration >= 60') // Mínimo 1 minuto
-      .andWhere('song.duration <= 600') // Máximo 10 minutos
-      .take(limit * 2) // Traer el doble para filtrar
-      .getMany();
-
-    // Filtrar por palabras prohibidas en el título
-    const filtered = songs.filter(song => {
-      const titleLower = song.title.toLowerCase();
-      return !bannedWords.some(word => titleLower.includes(word));
-    }).slice(0, limit); // Limitar al número solicitado
-
-    this.logger.log(`✅ Encontradas ${filtered.length} canciones sin MP3(filtradas)`);
-    return filtered;
-  }
-
-  // Busca canciones por género (solo las que tienen MP3)
+  // Busca canciones por género (SOLO las que tienen Cloudinary URL)
   async findSongsByGenre(genre: string, limit: number = 20): Promise<Song[]> {
     this.logger.log(`🎵 Buscando canciones de género: ${genre}`);
 
     const songs = await this.songRepository
       .createQueryBuilder('song')
       .where('song.genre = :genre', { genre })
-      .andWhere('song.audioPath IS NOT NULL')
+      .andWhere('song.cloudinaryUrl IS NOT NULL')
       .orderBy('song.createdAt', 'DESC')
       .take(limit)
       .getMany();
 
     this.logger.log(
-      `✅ Encontradas ${songs.length} canciones con MP3 de género "${genre}"`,
+      `✅ Encontradas ${songs.length} canciones con Cloudinary de género "${genre}"`,
     );
     return songs;
   }
 
-  // Busca canciones por artista (optimizado, solo las que tienen MP3)
+  // Busca canciones por artista (optimizado, SOLO las que tienen Cloudinary URL)
   async findSongsByArtist(artist: string, limit: number = 20): Promise<Song[]> {
     this.logger.log(`👤 Buscando canciones de artista: ${artist}`);
 
     const songs = await this.songRepository
       .createQueryBuilder('song')
       .where('LOWER(song.artist) LIKE LOWER(:artist)', { artist: `%${artist}%` })
-      .andWhere('song.audioPath IS NOT NULL')
+      .andWhere('song.cloudinaryUrl IS NOT NULL')
       .orderBy('song.viewCount', 'DESC')
       .addOrderBy('song.createdAt', 'DESC')
       .take(limit)
       .getMany();
 
-    this.logger.log(`✅ Encontradas ${songs.length} canciones con MP3 de "${artist}"`);
+    this.logger.log(`✅ Encontradas ${songs.length} canciones con Cloudinary de "${artist}"`);
     return songs;
   }
 
-  // Búsqueda optimizada por artista y/o canción (solo las que tienen MP3)
+  // Búsqueda optimizada por artista y/o canción (SOLO las que tienen Cloudinary URL)
   async searchByArtistAndSong(params: {
     artist?: string;
     song?: string;
@@ -263,8 +229,8 @@ export class MusicService {
 
     const query = this.songRepository.createQueryBuilder('song');
 
-    // Solo canciones con MP3
-    query.where('song.audioPath IS NOT NULL');
+    // SOLO canciones con cloudinaryUrl
+    query.where('song.cloudinaryUrl IS NOT NULL');
 
     if (artist) {
       query.andWhere('LOWER(song.artist) LIKE LOWER(:artist)', {
@@ -284,7 +250,7 @@ export class MusicService {
       .take(limit)
       .getMany();
 
-    this.logger.log(`✅ Búsqueda optimizada: ${songs.length} resultados con MP3 encontrados`);
+    this.logger.log(`✅ Búsqueda optimizada: ${songs.length} resultados con audio encontrados`);
     return songs;
   }
 
@@ -308,10 +274,10 @@ export class MusicService {
   }> {
     this.logger.log(`🧠 Búsqueda inteligente con auto-guardado: "${searchDto.query}"`);
 
-    // 1. Buscar primero en la base de datos (solo canciones con MP3)
+    // 1. Buscar primero en la base de datos (SOLO canciones con Cloudinary URL)
     const dbResults = await this.songRepository
       .createQueryBuilder('song')
-      .where('song.audioPath IS NOT NULL')
+      .where('song.cloudinaryUrl IS NOT NULL')
       .andWhere(
         '(LOWER(song.title) LIKE LOWER(:query) OR LOWER(song.artist) LIKE LOWER(:query))',
         { query: `%${searchDto.query}%` }
@@ -475,7 +441,7 @@ export class MusicService {
     artist?: string;
     genre?: string;
     duration?: number;
-    audioPath?: string;
+    cloudinaryUrl?: string;
   }): Promise<Song> {
     this.logger.log(`🔄 Actualizando canción con ID: ${id}`);
 
@@ -486,7 +452,7 @@ export class MusicService {
     if (updateData.artist !== undefined) song.artist = updateData.artist;
     if (updateData.genre !== undefined) song.genre = updateData.genre;
     if (updateData.duration !== undefined) song.duration = updateData.duration;
-    if (updateData.audioPath !== undefined) song.audioPath = updateData.audioPath;
+    if (updateData.cloudinaryUrl !== undefined) song.cloudinaryUrl = updateData.cloudinaryUrl;
 
     try {
       const updatedSong = await this.songRepository.save(song);

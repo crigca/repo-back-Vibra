@@ -48,26 +48,21 @@ export class MusicController {
     }
   }
 
-  // Obtener canciones con paginación (ALEATORIAS con MP3)
+  // Obtener canciones con paginación (ALEATORIAS con audio disponible)
   @Get('songs')
   async getAllSongs(
     @Query('limit') limit?: number,
-    @Query('offset') offset?: number,
   ): Promise<Song[]> {
     const parsedLimit = limit ? parseInt(limit.toString()) : 50;
-    const parsedOffset = offset ? parseInt(offset.toString()) : 0;
 
     this.logger.log(
-      `📋 GET /music/songs - Limit: ${parsedLimit}, Offset: ${parsedOffset}`,
+      `📋 GET /music/songs - Limit: ${parsedLimit} (aleatorias)`,
     );
 
     try {
-      const songs = await this.musicService.getAllSongs(
-        parsedLimit,
-        parsedOffset,
-      );
+      const songs = await this.musicService.getAllSongs(parsedLimit);
 
-      this.logger.log(`✅ Obtenidas ${songs.length} canciones`);
+      this.logger.log(`✅ Obtenidas ${songs.length} canciones aleatorias`);
       return songs;
     } catch (error) {
       this.logger.error(`❌ Error al obtener canciones: ${error.message}`);
@@ -118,27 +113,6 @@ export class MusicController {
     }
   }
 
-  // Obtener canciones sin audio (para script de descarga)
-  @Get('songs/without-audio')
-  async getSongsWithoutAudio(
-    @Query('limit') limit?: number,
-  ): Promise<Song[]> {
-    const parsedLimit = limit ? parseInt(limit.toString()) : 500;
-
-    this.logger.log(
-      `📋 GET /music/songs/without-audio - Limit: ${parsedLimit}`,
-    );
-
-    try {
-      const songs = await this.musicService.getSongsWithoutAudio(parsedLimit);
-
-      this.logger.log(`✅ Obtenidas ${songs.length} canciones sin MP3`);
-      return songs;
-    } catch (error) {
-      this.logger.error(`❌ Error al obtener canciones sin MP3: ${error.message}`);
-      throw error;
-    }
-  }
 
   // Obtener canción por ID
   @Get('songs/:id')
@@ -331,12 +305,12 @@ export class MusicController {
     }
   }
 
-  // Actualizar parcialmente canción (usado por download-mp3.js)
+  // Actualizar parcialmente canción (usado por scripts)
   @Patch('songs/:id')
   async patchSong(
     @Param('id', ParseUUIDPipe) id: string,
     @Body() updateData: {
-      audioPath?: string;
+      cloudinaryUrl?: string;
       title?: string;
       artist?: string;
       genre?: string;
