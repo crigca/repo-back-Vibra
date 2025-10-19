@@ -139,21 +139,28 @@ export class MusicService {
   // Obtiene canciones con paginación (SOLO las que tienen Cloudinary URL) - UNA POR GÉNERO
   async getAllSongs(limit: number = 50): Promise<Song[]> {
     this.logger.log(
-      `📋 Obteniendo ${limit} canciones ALEATORIAS (una por género) con Cloudinary URL`,
+      `📋 Obteniendo ${limit} canciones ALEATORIAS (una por género, orden aleatorio) con Cloudinary URL`,
     );
 
-    // Query para obtener una canción aleatoria por cada género diferente
+    // Query para obtener una canción aleatoria por cada género
+    // Primero seleccionamos una canción random de cada género
+    // Luego mezclamos el orden de los géneros aleatoriamente
     const songs = await this.songRepository.query(`
-      SELECT DISTINCT ON (genre) *
-      FROM songs
-      WHERE "cloudinaryUrl" IS NOT NULL
-        AND genre IS NOT NULL
-        AND genre != ''
-      ORDER BY genre, RANDOM()
+      WITH random_songs_per_genre AS (
+        SELECT DISTINCT ON (genre) *
+        FROM songs
+        WHERE "cloudinaryUrl" IS NOT NULL
+          AND genre IS NOT NULL
+          AND genre != ''
+        ORDER BY genre, RANDOM()
+      )
+      SELECT *
+      FROM random_songs_per_genre
+      ORDER BY RANDOM()
       LIMIT $1
     `, [limit]);
 
-    this.logger.log(`✅ Obtenidas ${songs.length} canciones (una por género, aleatorias)`);
+    this.logger.log(`✅ Obtenidas ${songs.length} canciones (una por género, orden aleatorio)`);
     return songs;
   }
 

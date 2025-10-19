@@ -4,32 +4,87 @@ const ytdl = require('@distube/ytdl-core');
 const fs = require('fs');
 const path = require('path');
 
+// Cargar configuración de tiers
+const genresTiers = require('../../data/genres-tiers.json');
+
 // Configuración
 const API_BASE_URL = 'http://localhost:3000';
 const TARGET_SONGS = 500;  // Límite seguro para no agotar cuota
 const MAX_SEARCHES = 90;   // 80 búsquedas máximo por día
 const AUDIO_DIR = path.join(__dirname, '..', 'public', 'audio');
 
-// Generar búsquedas dinámicamente
+// Configuración de tiers (Sistema Híbrido - Opción 4 OPTIMIZADO para calidad oficial)
+const TIER_CONFIG = {
+  tier1: {
+    weight: 0.60,           // 60% de las búsquedas
+    resultsRange: [10, 15], // 10-15 resultados por artista
+    minViews: 15000         // Mínimo 15k vistas (permite oficiales de artistas latinos)
+  },
+  tier2: {
+    weight: 0.25,           // 25% de las búsquedas
+    resultsRange: [7, 10],  // 7-10 resultados por artista
+    minViews: 8000          // Mínimo 8k vistas
+  },
+  tier3: {
+    weight: 0.12,           // 12% de las búsquedas
+    resultsRange: [4, 6],   // 4-6 resultados por artista
+    minViews: 2000          // Mínimo 2k vistas
+  },
+  tier4: {
+    weight: 0.03,           // 3% de las búsquedas
+    resultsRange: [2, 3],   // 2-3 resultados por artista
+    minViews: 1000          // Mínimo 1k vistas
+  }
+};
+
+// Función helper para encontrar el tier de un género
+function getGenreTier(genreName) {
+  const normalizedGenre = genreName.toLowerCase().replace(/\s+/g, '');
+
+  for (const [tierKey, tierData] of Object.entries(genresTiers)) {
+    const normalizedGenres = tierData.genres.map(g => g.toLowerCase().replace(/\s+/g, ''));
+    if (normalizedGenres.includes(normalizedGenre)) {
+      return tierKey;
+    }
+  }
+
+  // Si no se encuentra, asignar tier4 por defecto
+  return 'tier4';
+}
+
+// Generar búsquedas dinámicamente CON SISTEMA DE TIERS
 function generateSearchQueries() {
   const queries = [];
 
   // Sistema de prioridad: Official Channel > VEVO > Topic
   // Búsquedas optimizadas para canales oficiales y embebibles
   const searchVariations = [
-    // PRIORIDAD 1: Canal oficial del artista (verificado)
+    // PRIORIDAD 1: Videos oficiales (más común y efectivo)
+    { suffix: 'official video', weight: 6 },
+    { suffix: 'official music video', weight: 5 },
+
+    // PRIORIDAD 2: Audio oficial
     { suffix: 'official audio', weight: 5 },
-    { suffix: 'official video', weight: 4 },
 
-    // PRIORIDAD 2: VEVO (casi siempre embebible)
-    { suffix: 'vevo official', weight: 4 },
+    // PRIORIDAD 3: VEVO (casi siempre embebible)
+    { suffix: 'vevo', weight: 4 },
 
-    // PRIORIDAD 3: Topic channels (siempre embebible)
-    { suffix: 'topic official audio', weight: 5 },
-    { suffix: 'topic audio', weight: 3 }
+    // PRIORIDAD 4: Topic channels (siempre embebible)
+    { suffix: 'topic', weight: 3 }
   ];
 
+  // Organizar queries por tier
+  const queriesByTier = {
+    tier1: [],
+    tier2: [],
+    tier3: [],
+    tier4: []
+  };
+
   Object.entries(artistsByGenre).forEach(([genre, artists]) => {
+    const tier = getGenreTier(genre);
+    const tierConfig = TIER_CONFIG[tier];
+
     artists.forEach(artist => {
       // Selección aleatoria ponderada
       const totalWeight = searchVariations.reduce((sum, v) => sum + v.weight, 0);
@@ -44,18 +99,53 @@ function generateSearchQueries() {
         }
       }
 
-      queries.push({
-        query: `${artist} "${selectedVariation.suffix}" -live -cover -karaoke -lyrics -mix -compilation -"best of" -"greatest hits" -playlist -album -"top 10" -"top 20" -remix -nightcore -"sped up" -slowed -instrumental -acoustic`,
-        maxResults: Math.floor(Math.random() * 3) + 6, // 6-8 resultados
-        genre: genre.charAt(0).toUpperCase() + genre.slice(1)
+      // Calcular número de resultados según el rango del tier
+      const [min, max] = tierConfig.resultsRange;
+      const maxResults = Math.floor(Math.random() * (max - min + 1)) + min;
+
+      queriesByTier[tier].push({
+        query: `${artist} "${selectedVariation.suffix}" -karaoke -lyrics -"full album"`,
+        maxResults: maxResults,
+        genre: genre.charAt(0).toUpperCase() + genre.slice(1),
+        tier: tier,
+        minViews: tierConfig.minViews
       });
     });
   });
 
-  // Agregar búsquedas genéricas
-  queries.push(...genericQueries);
+  // Mezclar cada tier por separado
+  Object.keys(queriesByTier).forEach(tier => {
+    queriesByTier[tier].sort(() => Math.random() - 0.5);
+  });
 
-  // Mezclar aleatoriamente para variety
+  // Calcular cuántas búsquedas por tier según los weights
+  const totalSearches = MAX_SEARCHES;
+  const searchesByTier = {
+    tier1: Math.floor(totalSearches * TIER_CONFIG.tier1.weight),
+    tier2: Math.floor(totalSearches * TIER_CONFIG.tier2.weight),
+    tier3: Math.floor(totalSearches * TIER_CONFIG.tier3.weight),
+    tier4: Math.floor(totalSearches * TIER_CONFIG.tier4.weight)
+  };
+
+  // Combinar queries respetando las proporciones de cada tier
+  const finalQueries = [
+    ...queriesByTier.tier1.slice(0, searchesByTier.tier1),
+    ...queriesByTier.tier2.slice(0, searchesByTier.tier2),
+    ...queriesByTier.tier3.slice(0, searchesByTier.tier3),
+    ...queriesByTier.tier4.slice(0, searchesByTier.tier4)
+  ];
+
+  // Agregar búsquedas genéricas (tratarlas como tier1 para prioridad)
+  const genericWithTier = genericQueries.map(q => ({
+    ...q,
+    tier: 'tier1',
+    minViews: TIER_CONFIG.tier1.minViews
+  }));
+
+  queries.push(...finalQueries);
+  queries.push(...genericWithTier);
+
+  // Mezclar aleatoriamente para variety manteniendo balance de tiers
   return queries.sort(() => Math.random() - 0.5);
 }
 
@@ -67,7 +157,13 @@ let stats = {
   found: 0,
   saved: 0,
   duplicates: 0,
-  errors: 0
+  errors: 0,
+  byTier: {
+    tier1: { searched: 0, saved: 0 },
+    tier2: { searched: 0, saved: 0 },
+    tier3: { searched: 0, saved: 0 },
+    tier4: { searched: 0, saved: 0 }
+  }
 };
 
 // Función para hacer búsqueda en YouTube
@@ -228,7 +324,7 @@ async function downloadMP3(youtubeId) {
 }
 
 // Función para guardar canción en BD
-async function saveSong(song, genre) {
+async function saveSong(song, genre, minViews = 1000, tier = 'tier4') {
   try {
     // FILTRO 1: Verificar duración (entre 60 y 600 segundos = 1-10 minutos)
     if (!song.duration || song.duration < 60 || song.duration > 600) {
@@ -248,9 +344,9 @@ async function saveSong(song, genre) {
       return false;
     }
 
-    // FILTRO 4: Mínimo 1000 vistas
-    if (!song.viewCount || song.viewCount < 1000) {
-      console.log(`⏭️ Omitida (pocas vistas: ${song.viewCount || 0}): "${song.title}"`);
+    // FILTRO 4: Mínimo de vistas dinámico según tier
+    if (!song.viewCount || song.viewCount < minViews) {
+      console.log(`⏭️ Omitida (pocas vistas: ${song.viewCount || 0}, mínimo: ${minViews}): "${song.title}"`);
       return false;
     }
 
@@ -268,8 +364,9 @@ async function saveSong(song, genre) {
 
     await axios.post(`${API_BASE_URL}/music/songs`, songData);
 
-    console.log(`💾 Guardada: "${song.title}" por ${song.artist} (${song.duration}s)`);
+    console.log(`💾 Guardada: "${song.title}" por ${song.artist} (${song.duration}s, ${song.viewCount?.toLocaleString()} vistas)`);
     stats.saved++;
+    stats.byTier[tier].saved++;
     return true;
 
   } catch (error) {
@@ -287,10 +384,19 @@ async function saveSong(song, genre) {
 
 // Función principal
 async function seedMusic() {
-  console.log('🎵 INICIANDO PRECARGA DE MÚSICA');
-  console.log('=================================');
+  console.log('🎵 INICIANDO PRECARGA DE MÚSICA CON SISTEMA DE TIERS');
+  console.log('====================================================');
   console.log(`Meta: ${TARGET_SONGS} canciones`);
   console.log(`Límite de búsquedas: ${MAX_SEARCHES}`);
+  console.log('');
+  console.log('⚙️  CONFIGURACIÓN DE TIERS (Optimizado para Contenido Oficial):');
+  console.log('----------------------------------------------------------------');
+  console.log('TIER 1 (Mainstream): 60% búsquedas, 10-15 resultados/artista, min 15k vistas');
+  console.log('TIER 2 (Muy Popular): 25% búsquedas, 7-10 resultados/artista, min 8k vistas');
+  console.log('TIER 3 (Dedicado): 12% búsquedas, 4-6 resultados/artista, min 2k vistas');
+  console.log('TIER 4 (Nicho): 3% búsquedas, 2-3 resultados/artista, min 1k vistas');
+  console.log('');
+  console.log('🎯 Filtros de Calidad: Solo contenido oficial (no lives, covers, karaoke)');
   console.log('');
 
   for (const searchQuery of searchQueries) {
@@ -303,12 +409,20 @@ async function seedMusic() {
 
     stats.searched++;
 
+    // Registrar búsqueda por tier
+    if (searchQuery.tier && stats.byTier[searchQuery.tier]) {
+      stats.byTier[searchQuery.tier].searched++;
+    }
+
+    // Mostrar información del tier actual
+    console.log(`📊 Tier: ${searchQuery.tier?.toUpperCase() || 'N/A'} | Min vistas: ${searchQuery.minViews?.toLocaleString() || 'N/A'}`);
+
     // Buscar canciones en YouTube
     const songs = await searchSongs(searchQuery.query, searchQuery.maxResults);
 
-    // Guardar cada canción encontrada
+    // Guardar cada canción encontrada con filtro de vistas dinámico
     for (const song of songs) {
-      await saveSong(song, searchQuery.genre);
+      await saveSong(song, searchQuery.genre, searchQuery.minViews || 1000, searchQuery.tier || 'tier4');
 
       // Pausa pequeña para no saturar la API
       await new Promise(resolve => setTimeout(resolve, 100));
@@ -333,6 +447,20 @@ async function seedMusic() {
   console.log(`Duplicadas (omitidas): ${stats.duplicates}`);
   console.log(`Errores: ${stats.errors}`);
   console.log('');
+
+  // Estadísticas por tier
+  console.log('📈 DISTRIBUCIÓN POR TIER (Sistema Híbrido)');
+  console.log('==========================================');
+  Object.entries(stats.byTier).forEach(([tier, data]) => {
+    const tierConfig = TIER_CONFIG[tier];
+    const percentage = stats.saved > 0 ? ((data.saved / stats.saved) * 100).toFixed(1) : 0;
+    console.log(`${tier.toUpperCase()}:`);
+    console.log(`  Búsquedas: ${data.searched} (objetivo: ${tierConfig.weight * 100}%)`);
+    console.log(`  Guardadas: ${data.saved} (${percentage}% del total)`);
+    console.log(`  Min vistas: ${tierConfig.minViews.toLocaleString()}`);
+    console.log(`  Resultados: ${tierConfig.resultsRange[0]}-${tierConfig.resultsRange[1]} por artista`);
+    console.log('');
+  });
 
   if (stats.saved > 0) {
     console.log('✅ Precarga completada exitosamente!');

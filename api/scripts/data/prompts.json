@@ -388,5 +388,10 @@
     "sceneElements": ["808s imagery", "hi-hat motifs", "urban credibility"],
     "visualStyle": ["dark moody aesthetics", "minimal design"],
     "emotionMood": ["cold", "confident", "modern"]
+  },
+  "UrbanoLatino": {
+    "sceneElements": ["Latin street culture", "reggaeton fusion", "trap latino", "urban barrios", "neon lit clubs", "perreo vibes", "Spanish lyrics graffiti", "gold chains", "luxury cars", "tropical urban mix"],
+    "visualStyle": ["vibrant neon accents", "dark urban aesthetics", "bold typography", "reggaeton color palette", "sleek modern design", "street art influences", "cinematic glow", "purple and pink tones"],
+    "emotionMood": ["confident", "sensual", "rebellious", "party", "swagger", "trendy", "passionate", "energetic"]
   }
 }

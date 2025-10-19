@@ -34,11 +34,19 @@ export class Playlist {
   @Column({ length: 1000, nullable: true })
   coverImageUrl?: string;
 
+  @Column({ length: 100, nullable: true })
+  @Index()
+  genre?: string;
+
   @Column({ default: 0 })
   totalDuration!: number;
 
   @Column({ default: 0 })
   songCount!: number;
+
+  @Column({ type: 'integer', default: 0 })
+  @Index()
+  displayOrder!: number;
 
   @CreateDateColumn()
   createdAt!: Date;

@@ -15,7 +15,9 @@
       "PopLatinoActual",
       "RockLatino",
       "Metal",
-      "Pop"
+      "Pop",
+      "Kpop",
+      "UrbanoLatino"
     ]
   },
   "tier2": {
@@ -33,7 +35,9 @@
       "House",
       "Reggae",
       "HeavyMetal",
-      "HeavyMetalArgentino"
+      "HeavyMetalArgentino",
+      "Hiphop",
+      "Rap"
     ]
   },
   "tier3": {
@@ -41,8 +45,6 @@
     "images": 5,
     "genres": [
       "Latin",
-      "Hiphop",
-      "Rap",
       "DeathMetal",
       "ThrashMetal",
       "Punk",
@@ -75,7 +77,6 @@
     "description": "Géneros nicho o experimentales",
     "images": 2,
     "genres": [
-      "Kpop",
       "Jpop",
       "Hyperpop",
       "BlackMetal",

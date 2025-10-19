@@ -77,16 +77,29 @@ export class PlaylistsService {
       query.andWhere('playlist.userId = :userId', { userId });
     }
 
-    const playlists = await query
-      .orderBy('playlist.updatedAt', 'DESC')
-      .getMany();
+    // Incluir las primeras 4 canciones para el mosaico
+    query
+      .leftJoinAndSelect('playlist.playlistSongs', 'playlistSong')
+      .leftJoinAndSelect('playlistSong.song', 'song')
+      .orderBy('playlist.displayOrder', 'ASC')
+      .addOrderBy('playlist.updatedAt', 'DESC')
+      .addOrderBy('playlistSong.position', 'ASC');
+
+    const playlists = await query.getMany();
+
+    // Limitar a solo las primeras 4 canciones por playlist (para el mosaico)
+    playlists.forEach(playlist => {
+      if (playlist.playlistSongs && playlist.playlistSongs.length > 4) {
+        playlist.playlistSongs = playlist.playlistSongs.slice(0, 4);
+      }
+    });
 
     this.logger.log(`✅ Obtenidas ${playlists.length} playlists`);
     return playlists;
   }
 
   // Obtener playlist por ID con canciones
-  async findOne(id: string, includeSongs: boolean = false): Promise<Playlist> {
+  async findOne(id: string, includeSongs: boolean = true): Promise<Playlist> {
     this.logger.log(`🔍 Buscando playlist por ID: ${id} (incluir canciones: ${includeSongs})`);
 
     const query = this.playlistRepository.createQueryBuilder('playlist')
@@ -104,6 +117,11 @@ export class PlaylistsService {
     if (!playlist) {
       this.logger.warn(`⚠️ Playlist no encontrada con ID: ${id}`);
       throw new NotFoundException(`Playlist con ID ${id} no encontrada`);
+    }
+
+    // Transform to include songs array directly
+    if (includeSongs && playlist.playlistSongs) {
+      (playlist as any).songs = playlist.playlistSongs.map(ps => ps.song);
     }
 
     this.logger.log(`✅ Playlist encontrada: "${playlist.name}"`);
@@ -471,5 +489,70 @@ export class PlaylistsService {
     }
 
     this.logger.log(`📊 Contadores actualizados: ${stats.songCount} canciones, ${stats.totalDuration}s total`);
+  }
+
+  // Regenerar playlist (actualizar con nuevas canciones aleatorias)
+  async regeneratePlaylist(playlistId: string): Promise<Playlist> {
+    this.logger.log(`🔄 Regenerando playlist: ${playlistId}`);
+
+    return await this.dataSource.transaction(async (manager) => {
+      // Verificar que la playlist existe
+      const playlist = await manager.findOne(Playlist, { where: { id: playlistId } });
+      if (!playlist) {
+        throw new NotFoundException(`Playlist con ID ${playlistId} no encontrada`);
+      }
+
+      // Solo regenerar playlists públicas (generadas automáticamente)
+      if (!playlist.isPublic || playlist.userId) {
+        throw new BadRequestException('Solo se pueden regenerar playlists automáticas');
+      }
+
+      // Eliminar todas las canciones actuales
+      await manager.delete(PlaylistSong, { playlistId });
+
+      // Obtener género de la playlist
+      const genre = playlist.genre;
+      if (!genre) {
+        throw new BadRequestException('La playlist no tiene un género asignado');
+      }
+
+      // Obtener 24 canciones aleatorias del mismo género
+      const randomSongs = await manager.query(`
+        SELECT id, title, artist, duration
+        FROM songs
+        WHERE "cloudinaryUrl" IS NOT NULL
+          AND genre = $1
+        ORDER BY RANDOM()
+        LIMIT 24
+      `, [genre]);
+
+      // Agregar las nuevas canciones
+      let position = 1;
+      for (const song of randomSongs) {
+        const playlistSong = manager.create(PlaylistSong, {
+          playlistId,
+          songId: song.id,
+          position: position++,
+        });
+        await manager.save(PlaylistSong, playlistSong);
+      }
+
+      // Actualizar contadores
+      await this.updatePlaylistCounters(playlistId, manager);
+
+      // Obtener playlist actualizada
+      const updatedPlaylist = await manager.findOne(Playlist, { where: { id: playlistId } });
+
+      if (!updatedPlaylist) {
+        throw new NotFoundException(`No se pudo obtener la playlist actualizada`);
+      }
+
+      this.logger.log(`✅ Playlist regenerada: "${updatedPlaylist.name}" con ${randomSongs.length} canciones`);
+
+      // Emitir evento
+      this.eventEmitter.emit('playlist.regenerated', { playlistId });
+
+      return updatedPlaylist;
+    });
   }
 }

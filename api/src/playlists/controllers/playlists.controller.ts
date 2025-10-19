@@ -200,4 +200,20 @@ export class PlaylistsController {
       throw error;
     }
   }
+
+  // Regenerar playlist con nuevas canciones aleatorias
+  @Patch(':id/regenerate')
+  async regenerate(@Param('id', ParseUUIDPipe) playlistId: string): Promise<Playlist> {
+    this.logger.log(`🔄 PATCH /playlists/${playlistId}/regenerate`);
+
+    try {
+      const playlist = await this.playlistsService.regeneratePlaylist(playlistId);
+
+      this.logger.log(`✅ Playlist regenerada: "${playlist.name}"`);
+      return playlist;
+    } catch (error) {
+      this.logger.error(`❌ Error al regenerar playlist: ${error.message}`);
+      throw error;
+    }
+  }
 }

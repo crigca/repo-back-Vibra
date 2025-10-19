@@ -135,10 +135,104 @@ npm run validate:youtube
 
 ## 🖼️ Production - Images
 
-Scripts para generación de imágenes con AI.
+Scripts para generación masiva de imágenes con AI para cada género musical.
+
+### 📋 Requisitos Previos
+
+**IMPORTANTE:** Antes de ejecutar cualquier script de generación, asegúrate de que existan los enlaces simbólicos a los archivos de datos:
+
+```bash
+cd scripts/production/images
+ls -la  # Deberías ver: prompts.json, genres.json, genre-families.json
+```
+
+Si no existen, créalos:
+```bash
+ln -sf ../../data/prompts.json prompts.json
+ln -sf ../../data/genres.json genres.json
+ln -sf ../../data/genre-families.json genre-families.json
+```
+
+---
+
+### `generate-dalle.js`
+**Descripción:** Genera imágenes usando DALL-E 3 de OpenAI (calidad premium).
+
+**Uso:**
+```bash
+npm run generate:dalle
+```
+
+**Características:**
+- Genera 50 imágenes distribuidas por tiers
+- **Tier 1:** 20 imágenes (géneros mainstream)
+- **Tier 2:** 15 imágenes (géneros muy populares)
+- **Tier 3:** 10 imágenes (géneros con audiencia dedicada)
+- **Tier 4:** 5 imágenes (géneros nicho)
+- Sube automáticamente a Cloudinary
+- Guarda metadata en MongoDB
+- Costo: ~$0.04 USD por imagen (total ~$2.00 USD)
+- Tiempo: ~3-5 segundos por imagen
+
+**Requiere:**
+- `OPENAI_API_KEY` en `.env`
+- MongoDB conectado
+- Cloudinary configurado
+
+---
+
+### `generate-fal.js`
+**Descripción:** Genera imágenes usando FAL AI (Flux Schnell) - rápido y económico.
+
+**Uso:**
+```bash
+npm run generate:fal
+```
+
+**Características:**
+- Genera 100 imágenes distribuidas por tiers
+- **Tier 1:** 40 imágenes
+- **Tier 2:** 30 imágenes
+- **Tier 3:** 15 imágenes
+- **Tier 4:** 15 imágenes
+- Velocidad: ~2-3 segundos por imagen
+- Muy económico comparado con DALL-E
+- Calidad: Buena para visualizaciones rápidas
+
+**Requiere:**
+- `FAL_API_KEY` en `.env`
+- MongoDB conectado
+- Cloudinary configurado
+
+---
+
+### `generate-replicate.js`
+**Descripción:** Genera imágenes usando Replicate SDXL - balance calidad/precio.
+
+**Uso:**
+```bash
+npm run generate:replicate
+```
+
+**Características:**
+- Genera 100 imágenes distribuidas por tiers
+- **Tier 1:** 40 imágenes
+- **Tier 2:** 30 imágenes
+- **Tier 3:** 15 imágenes
+- **Tier 4:** 15 imágenes
+- Velocidad: ~5-10 segundos por imagen
+- Balance entre calidad y costo
+- Modelo: Stable Diffusion XL
+
+**Requiere:**
+- `REPLICATE_API_TOKEN` en `.env`
+- MongoDB conectado
+- Cloudinary configurado
+
+---
 
 ### `generate-by-genre.js`
-**Descripción:** Genera imágenes asociadas a géneros musicales.
+**Descripción:** Genera imágenes para un género específico.
 
 **Uso:**
 ```bash
@@ -147,43 +241,55 @@ node scripts/production/images/generate-by-genre.js all 2     # 2 por cada géne
 ```
 
 **Características:**
-- Genera imágenes reutilizables por género
-- Guarda en Cloudinary
-- Asocia a múltiples canciones del mismo género
-
----
-
-### `generate-dalle.js`
-**Descripción:** Genera imágenes usando DALL-E de OpenAI.
-
-**Requiere:**
-- API Key de OpenAI en `.env`
-
----
-
-### `generate-fal.js`
-**Descripción:** Genera imágenes usando Fal.ai.
-
-**Requiere:**
-- API Key de Fal.ai en `.env`
-
----
-
-### `generate-replicate.js`
-**Descripción:** Genera imágenes usando Replicate.
-
-**Requiere:**
-- API Key de Replicate en `.env`
+- Permite generar imágenes por género específico
+- Útil para rellenar géneros con pocas imágenes
+- Usa los mismos prompts que los scripts masivos
 
 ---
 
 ### `seed-prompts.js`
-**Descripción:** Carga prompts predefinidos para generación de imágenes.
+**Descripción:** Carga prompts predefinidos en MongoDB.
 
 **Uso:**
 ```bash
 node scripts/production/images/seed-prompts.js
 ```
+
+**Características:**
+- Lee `prompts.json` y `genres.json`
+- Carga todos los prompts en MongoDB
+- Crea 2 prompts por género (base + variation)
+- Útil para inicializar la base de datos
+
+---
+
+### 🎨 Sistema de Prompts
+
+Los prompts se generan aleatoriamente combinando:
+
+- **Scene Elements:** Elementos visuales del género
+- **Visual Style:** Estilo artístico y colores
+- **Emotion/Mood:** Sentimientos y atmósfera
+- **Artistic Styles:** 25+ estilos (vintage, cyberpunk, etc.)
+- **Lighting Techniques:** 25+ técnicas de iluminación
+- **Visual Concepts:** Conceptos abstractos musicales
+- **Photographic Compositions:** Ángulos y encuadres
+- **Music Environment Objects:** Objetos del ambiente musical
+
+Cada imagen es única gracias a la combinación aleatoria de elementos.
+
+---
+
+### 📊 Distribución por Tiers
+
+Los géneros están organizados en tiers según popularidad:
+
+- **Tier 1:** Rock, Cumbia, Reggaeton, Trap, Pop, Metal, etc.
+- **Tier 2:** Bachata, Tango, Techno, House, Hip Hop, etc.
+- **Tier 3:** Soul, Funk, Ska, Punk, Indie Rock, etc.
+- **Tier 4:** Jazz, Blues, Opera, Gospel, Flamenco, etc.
+
+Ver [genres-tiers.json](scripts/data/genres-tiers.json) para la lista completa.
 
 ---
 
@@ -308,6 +414,11 @@ npm run cleanup:db           # Limpiar canciones inválidas
 npm run cleanup:orphan-mp3   # Eliminar MP3 huérfanos
 npm run validate:youtube     # Validar youtubeIds
 
+# Generación de Imágenes
+npm run generate:dalle       # Generar 50 imágenes con DALL-E 3
+npm run generate:fal         # Generar 100 imágenes con FAL AI
+npm run generate:replicate   # Generar 100 imágenes con Replicate SDXL
+
 # Tests
 npm run demo:youtube         # Demo de YouTube API
 ```
@@ -338,6 +449,39 @@ npm run demo:youtube         # Demo de YouTube API
    npm run cleanup:db
    npm run cleanup:orphan-mp3
    ```
+
+---
+
+### Para generar imágenes con AI:
+
+1. **Verificar enlaces simbólicos (solo primera vez):**
+   ```bash
+   cd scripts/production/images
+   ln -sf ../../data/prompts.json prompts.json
+   ln -sf ../../data/genres.json genres.json
+   ln -sf ../../data/genre-families.json genre-families.json
+   cd ../../..
+   ```
+
+2. **Opción A - Calidad Premium (DALL-E 3):**
+   ```bash
+   npm run generate:dalle
+   # Genera 50 imágenes, costo ~$2.00 USD
+   ```
+
+3. **Opción B - Rápido y Económico (FAL AI):**
+   ```bash
+   npm run generate:fal
+   # Genera 100 imágenes, muy económico
+   ```
+
+4. **Opción C - Balance Calidad/Precio (Replicate):**
+   ```bash
+   npm run generate:replicate
+   # Genera 100 imágenes, precio moderado
+   ```
+
+**Nota:** Puedes ejecutar múltiples scripts simultáneamente para generar imágenes con diferentes AIs en paralelo.
 
 ---
 

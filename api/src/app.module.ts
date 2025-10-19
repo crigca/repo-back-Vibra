@@ -2,6 +2,7 @@ import { Module } from '@nestjs/common';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { MongooseModule } from '@nestjs/mongoose';
+import { ScheduleModule } from '@nestjs/schedule';
 import { UsersModule } from './users/users.module';
 import { MusicModule } from './music/music.module';
 import { PlaylistsModule } from './playlists/playlists.module';
@@ -13,6 +14,9 @@ import { ImagesModule } from './images/images.module';
       isGlobal: true,
       envFilePath: '.env',
     }),
+
+    // Módulo de Schedule para cron jobs
+    ScheduleModule.forRoot(),
 
     // PostgreSQL - para datos estructurados
     TypeOrmModule.forRootAsync({

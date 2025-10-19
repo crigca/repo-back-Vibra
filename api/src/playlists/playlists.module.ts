@@ -6,6 +6,8 @@ import { Playlist } from './entities/playlist.entity';
 import { PlaylistSong } from './entities/playlist-song.entity';
 import { Song } from '../music/entities/song.entity';
 import { PlaylistsService } from './services/playlists.service';
+import { PlaylistGeneratorService } from './services/playlist-generator.service';
+import { PlaylistSchedulerService } from './services/playlist-scheduler.service';
 import { PlaylistsController } from './controllers/playlists.controller';
 import { MusicModule } from '../music/music.module';
 
@@ -16,7 +18,11 @@ import { MusicModule } from '../music/music.module';
     MusicModule,
   ],
   controllers: [PlaylistsController],
-  providers: [PlaylistsService],
+  providers: [
+    PlaylistsService,
+    PlaylistGeneratorService,
+    PlaylistSchedulerService,
+  ],
   exports: [PlaylistsService, TypeOrmModule],
 })
 export class PlaylistsModule {}
