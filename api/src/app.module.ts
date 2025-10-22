@@ -3,10 +3,11 @@ import { ConfigModule, ConfigService } from '@nestjs/config';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { MongooseModule } from '@nestjs/mongoose';
 import { ScheduleModule } from '@nestjs/schedule';
-import { UsersModule } from './users/users.module';
+import { AuthModule } from './auth/auth.module';
 import { MusicModule } from './music/music.module';
 import { PlaylistsModule } from './playlists/playlists.module';
 import { ImagesModule } from './images/images.module';
+import { UsersModule } from './users/users.module';
 
 @Module({
   imports: [
@@ -49,6 +50,7 @@ import { ImagesModule } from './images/images.module';
 
     // Módulos de la aplicación
     UsersModule,
+    AuthModule,
     MusicModule,
     PlaylistsModule,
     ImagesModule,
