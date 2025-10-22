@@ -9,7 +9,7 @@ import {
   JoinColumn,
   Index,
 } from 'typeorm';
-import { User } from '../../users/users.entity';
+import { User } from '../../users/entities/users.entity';
 import { PlaylistSong } from './playlist-song.entity';
 
 @Entity({ name: 'playlists' })
