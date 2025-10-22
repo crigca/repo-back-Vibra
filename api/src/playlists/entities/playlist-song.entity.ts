@@ -10,7 +10,7 @@ import {
 } from 'typeorm';
 import { Playlist } from './playlist.entity';
 import { Song } from '../../music/entities/song.entity';
-import { User } from '../../users/users.entity';
+import { User } from '../../users/entities/users.entity';
 
 @Entity({ name: 'playlist_songs' })
 @Unique(['playlistId', 'songId'])
