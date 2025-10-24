@@ -12,7 +12,7 @@ import { JwtStrategy } from './strategies/jwt.strategy';
     TypeOrmModule.forFeature([User]),
     ConfigModule, // para que funcione ConfigService
     JwtModule.register({
-      secret: process.env.JWT_SECRET || 'fG7r1bJkPz5WmL0vQ8Yd3cXwA2Tn9sKjRi4ZuN6h',
+      secret: process.env.JWT_SECRET || 'secret_default',
       signOptions: { expiresIn: '7d' },
     }),
   ],
