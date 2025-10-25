@@ -17,8 +17,8 @@ export class User {
   @Column()
   username!: string;
 
-  @Column({ unique: true })
-  googleId!: string;
+  @Column({ unique: true, nullable: true })
+  googleId?: string;
 
   @CreateDateColumn()
   createdAt!: Date;
