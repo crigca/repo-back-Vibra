@@ -54,6 +54,34 @@ function normalizeGenre(genre) {
 }
 
 /**
+ * Verificar si el error es un video inválido permanentemente
+ */
+function isInvalidVideo(errorMessage) {
+  const invalidPatterns = [
+    'Private video',
+    'Sign in to confirm your age',
+    'Video unavailable',
+    'This video is not available',
+    'Video has been removed',
+    'This video is no longer available',
+    'This video has been removed by the uploader'
+  ];
+
+  return invalidPatterns.some(pattern => errorMessage.includes(pattern));
+}
+
+/**
+ * Eliminar canción de la base de datos
+ */
+async function deleteSongFromDB(songId, reason) {
+  await dataSource.query(
+    `DELETE FROM songs WHERE id = $1`,
+    [songId]
+  );
+  console.log(`   🗑️  Eliminada de BD: ${reason}`);
+}
+
+/**
  * Descargar MP3 desde YouTube usando yt-dlp
  */
 async function downloadFromYouTube(youtubeId) {
@@ -66,7 +94,7 @@ async function downloadFromYouTube(youtubeId) {
     const ytdlpPath = '/home/crigca/yt-dlp';
     const ffmpegPath = '/home/crigca/ffmpeg-master-latest-linux64-gpl/bin/ffmpeg';
 
-    const command = `${ytdlpPath} -x --audio-format mp3 --audio-quality 0 --ffmpeg-location "${ffmpegPath}" -o "${outputPath}" "${url}"`;
+    const command = `${ytdlpPath} -x --audio-format mp3 --audio-quality 0 --ffmpeg-location "${ffmpegPath}" --user-agent "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36" --extractor-retries 3 --retries 5 --sleep-requests 1 -o "${outputPath}" "${url}"`;
 
     await execAsync(command, {
       timeout: 120000 // 2 minutos timeout
@@ -85,6 +113,9 @@ async function downloadFromYouTube(youtubeId) {
     if (fs.existsSync(outputPath)) {
       fs.unlinkSync(outputPath);
     }
+
+    // Marcar si es un video inválido permanentemente
+    error.isInvalidVideo = isInvalidVideo(error.message);
     throw error;
   }
 }
@@ -212,8 +243,14 @@ async function processDownloadAndUpload() {
       await new Promise(resolve => setTimeout(resolve, 2000));
 
     } catch (error) {
-      stats.errors++;
-      console.log(`   ❌ ERROR: ${error.message}`);
+      // Si es un video inválido permanentemente, eliminarlo de la BD
+      if (error.isInvalidVideo) {
+        await deleteSongFromDB(song.id, error.message.split('\n')[0]);
+        stats.errors++;
+      } else {
+        stats.errors++;
+        console.log(`   ❌ ERROR: ${error.message}`);
+      }
 
       // Limpiar archivo temporal en caso de error
       if (tempFilePath && fs.existsSync(tempFilePath)) {
