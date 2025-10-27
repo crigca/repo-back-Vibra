@@ -96,18 +96,12 @@ export class MusicService {
 
   // Busca canción por ID
   async findSongById(id: string): Promise<Song> {
-    this.logger.log(`🔍 Buscando canción por ID: ${id}`);
-
     const song = await this.songRepository.findOne({ where: { id } });
 
     if (!song) {
-      this.logger.warn(`⚠️ Canción no encontrada con ID: ${id}`);
       throw new NotFoundException(`Canción con ID ${id} no encontrada`);
     }
 
-    this.logger.log(
-      `✅ Canción encontrada: "${song.title}" por ${song.artist}`,
-    );
     return song;
   }
 
@@ -136,31 +130,24 @@ export class MusicService {
     });
   }
 
-  // Obtiene canciones con paginación (SOLO las que tienen Cloudinary URL) - UNA POR GÉNERO
+  // Obtiene canciones con paginación (SOLO las que tienen Cloudinary URL)
   async getAllSongs(limit: number = 50): Promise<Song[]> {
     this.logger.log(
-      `📋 Obteniendo ${limit} canciones ALEATORIAS (una por género, orden aleatorio) con Cloudinary URL`,
+      `📋 Obteniendo ${limit} canciones ALEATORIAS con Cloudinary URL`,
     );
 
-    // Query para obtener una canción aleatoria por cada género
-    // Primero seleccionamos una canción random de cada género
-    // Luego mezclamos el orden de los géneros aleatoriamente
+    // Query para obtener canciones aleatorias con Cloudinary URL
     const songs = await this.songRepository.query(`
-      WITH random_songs_per_genre AS (
-        SELECT DISTINCT ON (genre) *
-        FROM songs
-        WHERE "cloudinaryUrl" IS NOT NULL
-          AND genre IS NOT NULL
-          AND genre != ''
-        ORDER BY genre, RANDOM()
-      )
       SELECT *
-      FROM random_songs_per_genre
+      FROM songs
+      WHERE "cloudinaryUrl" IS NOT NULL
+        AND genre IS NOT NULL
+        AND genre != ''
       ORDER BY RANDOM()
       LIMIT $1
     `, [limit]);
 
-    this.logger.log(`✅ Obtenidas ${songs.length} canciones (una por género, orden aleatorio)`);
+    this.logger.log(`✅ Obtenidas ${songs.length} canciones aleatorias`);
     return songs;
   }
 

@@ -172,33 +172,24 @@ export class PlaylistsService {
 
   // Método helper: buscar o crear canción
   private async findOrCreateSong(addSongDto: AddSongToPlaylistDto): Promise<Song> {
-    this.logger.log(`🔍 Buscando o creando canción`);
-
     // 1. Si viene songId, buscar por ID en BD
     if (addSongDto.songId) {
-      this.logger.log(`🔍 Buscando por songId: ${addSongDto.songId}`);
       try {
         const song = await this.musicService.findSongById(addSongDto.songId);
-        this.logger.log(`✅ Canción encontrada en BD por ID: "${song.title}"`);
         return song;
       } catch (error) {
-        this.logger.log(`⚠️ SongId no encontrado, continuando con youtubeId`);
+        // Continuar con youtubeId si falla
       }
     }
 
     // 2. Si viene youtubeId, buscar por YouTube ID en BD
     if (addSongDto.youtubeId) {
-      this.logger.log(`🔍 Buscando por youtubeId en BD: ${addSongDto.youtubeId}`);
-
       const existingSong = await this.musicService.findSongByYoutubeId(addSongDto.youtubeId);
       if (existingSong) {
-        this.logger.log(`✅ Canción encontrada en BD por youtubeId: "${existingSong.title}"`);
         return existingSong;
       }
 
       // 3. No está en BD, buscar en YouTube API
-      this.logger.log(`🔍 No encontrada en BD, buscando en YouTube API: ${addSongDto.youtubeId}`);
-
       try {
         const youtubeVideo = await this.musicService.getYouTubeVideoById(addSongDto.youtubeId);
 
@@ -207,7 +198,7 @@ export class PlaylistsService {
         }
 
         // 4. Crear nueva canción con datos de YouTube API
-        this.logger.log(`💾 Creando nueva canción desde YouTube API: "${youtubeVideo.title}"`);
+        this.logger.log(`💾 Creando nueva canción desde YouTube: "${youtubeVideo.title}"`);
 
         const createSongDto: CreateSongDto = {
           title: addSongDto.title || youtubeVideo.title,
@@ -220,7 +211,6 @@ export class PlaylistsService {
         };
 
         const newSong = await this.musicService.createSong(createSongDto);
-        this.logger.log(`✅ Nueva canción creada desde YouTube: "${newSong.title}" - ID: ${newSong.id}`);
         return newSong;
 
       } catch (error) {
@@ -228,7 +218,7 @@ export class PlaylistsService {
 
         // 5. Fallback: usar metadatos manuales si están disponibles
         if (addSongDto.title && addSongDto.artist && addSongDto.duration) {
-          this.logger.log(`🔄 Fallback: usando metadatos manuales para crear canción`);
+          this.logger.log(`🔄 Fallback: creando con metadatos manuales`);
 
           const createSongDto: CreateSongDto = {
             title: addSongDto.title,
@@ -239,7 +229,6 @@ export class PlaylistsService {
           };
 
           const newSong = await this.musicService.createSong(createSongDto);
-          this.logger.log(`✅ Nueva canción creada con metadatos manuales: "${newSong.title}"`);
           return newSong;
         }
 
@@ -256,8 +245,6 @@ export class PlaylistsService {
 
   // Agregar canción a playlist (lógica inteligente)
   async addSong(playlistId: string, addSongDto: AddSongToPlaylistDto): Promise<PlaylistSong> {
-    this.logger.log(`🎵 Agregando canción a playlist ${playlistId}`);
-
     return await this.dataSource.transaction(async (manager) => {
       // Verificar que la playlist existe
       const playlist = await manager.findOne(Playlist, { where: { id: playlistId } });
@@ -265,13 +252,13 @@ export class PlaylistsService {
         throw new NotFoundException(`Playlist con ID ${playlistId} no encontrada`);
       }
 
-      // Verificar límite de canciones (máximo 15)
+      // Verificar límite de canciones (máximo 30)
       const currentSongCount = await manager.count(PlaylistSong, {
         where: { playlistId },
       });
 
-      if (currentSongCount >= 15) {
-        throw new BadRequestException('La playlist ha alcanzado el límite máximo de 15 canciones');
+      if (currentSongCount >= 30) {
+        throw new BadRequestException('La playlist ha alcanzado el límite máximo de 30 canciones');
       }
 
       // Buscar o crear la canción
@@ -317,8 +304,6 @@ export class PlaylistsService {
 
       // Actualizar contadores de la playlist
       await this.updatePlaylistCounters(playlistId, manager);
-
-      this.logger.log(`✅ Canción "${song.title}" agregada en posición ${position}`);
 
       // Emitir evento
       this.eventEmitter.emit('playlist.songAdded', {
@@ -487,8 +472,6 @@ export class PlaylistsService {
         }
       );
     }
-
-    this.logger.log(`📊 Contadores actualizados: ${stats.songCount} canciones, ${stats.totalDuration}s total`);
   }
 
   // Regenerar playlist (actualizar con nuevas canciones aleatorias)

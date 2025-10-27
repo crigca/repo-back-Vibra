@@ -14,6 +14,7 @@ import {
   HttpStatus,
   HttpCode,
   ParseBoolPipe,
+  UseGuards,
 } from '@nestjs/common';
 
 import { PlaylistsService } from '../services/playlists.service';
@@ -23,6 +24,8 @@ import { AddSongToPlaylistDto } from '../dto/add-song-playlist.dto';
 import { ReorderSongsDto } from '../dto/reorder-songs.dto';
 import { Playlist } from '../entities/playlist.entity';
 import { PlaylistSong } from '../entities/playlist-song.entity';
+import { JwtAuthGuard } from '../../auth/jwt-auth.guard';
+import { CurrentUser } from '../../auth/decorators/current-user.decorator';
 
 @Controller('playlists')
 export class PlaylistsController {
@@ -32,17 +35,18 @@ export class PlaylistsController {
 
   // ============= CRUD BÁSICO DE PLAYLISTS =============
 
-  // Crear nueva playlist
+  // Crear nueva playlist (requiere autenticación)
   @Post()
+  @UseGuards(JwtAuthGuard)
   @HttpCode(HttpStatus.CREATED)
   async create(
     @Body(ValidationPipe) createPlaylistDto: CreatePlaylistDto,
-    @Query('userId') userId?: string,
+    @CurrentUser() user: any,
   ): Promise<Playlist> {
-    this.logger.log(`💾 POST /playlists - Nombre: "${createPlaylistDto.name}"`);
+    this.logger.log(`💾 POST /playlists - Nombre: "${createPlaylistDto.name}" - Usuario: ${user.username}`);
 
     try {
-      const playlist = await this.playlistsService.create(createPlaylistDto, userId);
+      const playlist = await this.playlistsService.create(createPlaylistDto, user.userId);
 
       this.logger.log(`✅ Playlist creada con ID: ${playlist.id}`);
       return playlist;
@@ -90,11 +94,13 @@ export class PlaylistsController {
     }
   }
 
-  // Actualizar playlist
+  // Actualizar playlist (requiere autenticación)
   @Put(':id')
+  @UseGuards(JwtAuthGuard)
   async update(
     @Param('id', ParseUUIDPipe) id: string,
     @Body(ValidationPipe) updatePlaylistDto: UpdatePlaylistDto,
+    @CurrentUser() user: any,
   ): Promise<Playlist> {
     this.logger.log(`🔄 PUT /playlists/${id}`);
 
@@ -109,10 +115,14 @@ export class PlaylistsController {
     }
   }
 
-  // Eliminar playlist
+  // Eliminar playlist (requiere autenticación)
   @Delete(':id')
+  @UseGuards(JwtAuthGuard)
   @HttpCode(HttpStatus.NO_CONTENT)
-  async remove(@Param('id', ParseUUIDPipe) id: string): Promise<void> {
+  async remove(
+    @Param('id', ParseUUIDPipe) id: string,
+    @CurrentUser() user: any,
+  ): Promise<void> {
     this.logger.log(`🗑️ DELETE /playlists/${id}`);
 
     try {
@@ -143,19 +153,17 @@ export class PlaylistsController {
     }
   }
 
-  // Agregar canción a playlist
+  // Agregar canción a playlist (requiere autenticación)
   @Post(':id/songs')
+  @UseGuards(JwtAuthGuard)
   @HttpCode(HttpStatus.CREATED)
   async addSong(
     @Param('id', ParseUUIDPipe) playlistId: string,
     @Body(ValidationPipe) addSongDto: AddSongToPlaylistDto,
+    @CurrentUser() user: any,
   ): Promise<PlaylistSong> {
-    this.logger.log(`🎵 POST /playlists/${playlistId}/songs - Canción: ${addSongDto.songId}`);
-
     try {
       const playlistSong = await this.playlistsService.addSong(playlistId, addSongDto);
-
-      this.logger.log(`✅ Canción agregada en posición ${playlistSong.position}`);
       return playlistSong;
     } catch (error) {
       this.logger.error(`❌ Error al agregar canción: ${error.message}`);
@@ -163,12 +171,14 @@ export class PlaylistsController {
     }
   }
 
-  // Remover canción específica de playlist
+  // Remover canción específica de playlist (requiere autenticación)
   @Delete(':id/songs/:songId')
+  @UseGuards(JwtAuthGuard)
   @HttpCode(HttpStatus.NO_CONTENT)
   async removeSong(
     @Param('id', ParseUUIDPipe) playlistId: string,
     @Param('songId', ParseUUIDPipe) songId: string,
+    @CurrentUser() user: any,
   ): Promise<void> {
     this.logger.log(`🗑️ DELETE /playlists/${playlistId}/songs/${songId}`);
 
@@ -182,12 +192,14 @@ export class PlaylistsController {
     }
   }
 
-  // Reordenar canciones en playlist
+  // Reordenar canciones en playlist (requiere autenticación)
   @Patch(':id/songs/reorder')
+  @UseGuards(JwtAuthGuard)
   @HttpCode(HttpStatus.NO_CONTENT)
   async reorderSongs(
     @Param('id', ParseUUIDPipe) playlistId: string,
     @Body(ValidationPipe) reorderDto: ReorderSongsDto,
+    @CurrentUser() user: any,
   ): Promise<void> {
     this.logger.log(`🔄 PATCH /playlists/${playlistId}/songs/reorder - ${reorderDto.songs.length} canciones`);
 
@@ -201,9 +213,13 @@ export class PlaylistsController {
     }
   }
 
-  // Regenerar playlist con nuevas canciones aleatorias
+  // Regenerar playlist con nuevas canciones aleatorias (requiere autenticación)
   @Patch(':id/regenerate')
-  async regenerate(@Param('id', ParseUUIDPipe) playlistId: string): Promise<Playlist> {
+  @UseGuards(JwtAuthGuard)
+  async regenerate(
+    @Param('id', ParseUUIDPipe) playlistId: string,
+    @CurrentUser() user: any,
+  ): Promise<Playlist> {
     this.logger.log(`🔄 PATCH /playlists/${playlistId}/regenerate`);
 
     try {
