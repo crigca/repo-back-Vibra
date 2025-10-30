@@ -3,6 +3,7 @@ import { ValidationPipe } from '@nestjs/common';
 import { AppModule } from './app.module';
 import { NestExpressApplication } from '@nestjs/platform-express';
 import { join } from 'path';
+import cookieParser from 'cookie-parser';
 
 async function bootstrap() {
   const app = await NestFactory.create<NestExpressApplication>(AppModule);
@@ -19,8 +20,13 @@ async function bootstrap() {
   // Servir archivos estáticos desde la carpeta public
   app.useStaticAssets(join(__dirname, '..', 'public'));
 
+  app.use(cookieParser()); // ✅ habilita el uso de cookies
+
   // CORS para frontend futuro
-  app.enableCors();
+  app.enableCors({
+    origin: ['http://localhost:5173', 'http://localhost:5174'],
+    credentials: true, // ⚠️ necesario para enviar cookies
+  });
 
   const port = process.env.PORT ?? 3000;
   await app.listen(port, '0.0.0.0');
