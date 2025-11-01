@@ -13,26 +13,26 @@ const TARGET_SONGS = 500;  // Límite seguro para no agotar cuota
 const MAX_SEARCHES = 90;   // 80 búsquedas máximo por día
 const AUDIO_DIR = path.join(__dirname, '..', 'public', 'audio');
 
-// Configuración de tiers (Sistema Híbrido - Opción 4 OPTIMIZADO para calidad oficial)
+// Configuración de tiers (Sistema Híbrido - AJUSTADO para más diversidad tier 3 y 4)
 const TIER_CONFIG = {
   tier1: {
-    weight: 0.60,           // 60% de las búsquedas
-    resultsRange: [10, 15], // 10-15 resultados por artista
+    weight: 0.40,           // 40% de las búsquedas (reducido de 60%)
+    resultsRange: [15, 20], // 15-20 resultados por artista (aumentado)
     minViews: 15000         // Mínimo 15k vistas (permite oficiales de artistas latinos)
   },
   tier2: {
-    weight: 0.25,           // 25% de las búsquedas
-    resultsRange: [7, 10],  // 7-10 resultados por artista
+    weight: 0.25,           // 25% de las búsquedas (igual)
+    resultsRange: [10, 15], // 10-15 resultados por artista (aumentado)
     minViews: 8000          // Mínimo 8k vistas
   },
   tier3: {
-    weight: 0.12,           // 12% de las búsquedas
-    resultsRange: [4, 6],   // 4-6 resultados por artista
+    weight: 0.20,           // 20% de las búsquedas (aumentado de 12%)
+    resultsRange: [8, 12],  // 8-12 resultados por artista (aumentado de 4-6)
     minViews: 2000          // Mínimo 2k vistas
   },
   tier4: {
-    weight: 0.03,           // 3% de las búsquedas
-    resultsRange: [2, 3],   // 2-3 resultados por artista
+    weight: 0.15,           // 15% de las búsquedas (aumentado de 3%)
+    resultsRange: [5, 8],   // 5-8 resultados por artista (aumentado de 2-3)
     minViews: 1000          // Mínimo 1k vistas
   }
 };
