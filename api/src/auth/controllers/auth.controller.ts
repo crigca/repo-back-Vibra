@@ -42,4 +42,21 @@ export class AuthController {
             email: user.email
         };
     }
+
+    @Post('cookie-dev')
+    async devLogin(@Res({ passthrough: true }) res: express.Response) {
+    // ⚠️ Solo para desarrollo: creamos un usuario de prueba
+    const payloadJwt = { sub: '123', email: 'dev@example.com', username: 'devuser' };
+    const token = this.AuthService.signJwtForDev(payloadJwt); // creamos un método en el service
+
+    res.cookie('token_vibra', token, {
+        httpOnly: true,
+        secure: false,
+        sameSite: 'lax',
+        maxAge: 1000 * 60 * 60 * 24 * 7,
+    });
+
+    return { message: 'Dev login successful' };
+    }
+
 }
