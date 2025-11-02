@@ -5,6 +5,7 @@ import { EventEmitterModule } from '@nestjs/event-emitter';
 import { Song } from './entities/song.entity';
 import { MusicService } from './services/music.service';
 import { YoutubeService } from './services/youtube.service';
+import { GenreDetectorService } from './services/genre-detector.service';
 import { MusicController } from './controllers/music.controller';
 
 /**
@@ -17,7 +18,7 @@ import { MusicController } from './controllers/music.controller';
     EventEmitterModule.forRoot(),
   ],
   controllers: [MusicController],
-  providers: [MusicService, YoutubeService],
-  exports: [MusicService, YoutubeService],
+  providers: [MusicService, YoutubeService, GenreDetectorService],
+  exports: [MusicService, YoutubeService, GenreDetectorService],
 })
 export class MusicModule {}

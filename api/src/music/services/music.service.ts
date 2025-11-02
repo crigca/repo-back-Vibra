@@ -3,6 +3,7 @@ import {
   Logger,
   ConflictException,
   NotFoundException,
+  BadRequestException,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
@@ -10,6 +11,7 @@ import { EventEmitter2 } from '@nestjs/event-emitter';
 
 import { Song } from '../entities/song.entity';
 import { YoutubeService, YouTubeSearchResult } from './youtube.service';
+import { GenreDetectorService } from './genre-detector.service';
 import { SearchSongsDto } from '../dto/search-songs.dto';
 import { CreateSongDto } from '../dto/create-song.dto';
 
@@ -22,6 +24,7 @@ export class MusicService {
     @InjectRepository(Song)
     private songRepository: Repository<Song>,
     private youtubeService: YoutubeService,
+    private genreDetector: GenreDetectorService,
     private eventEmitter: EventEmitter2,
   ) {}
 
@@ -54,17 +57,33 @@ export class MusicService {
       `💾 Guardando canción: "${createSongDto.title}" por ${createSongDto.artist}`,
     );
 
-    // Verificar si ya existe
-    const existingSong = await this.songRepository.findOne({
+    // Verificar si ya existe por youtubeId
+    const existingByYoutubeId = await this.songRepository.findOne({
       where: { youtubeId: createSongDto.youtubeId },
     });
 
-    if (existingSong) {
+    if (existingByYoutubeId) {
       this.logger.warn(
         `⚠️ Canción ya existe con youtubeId: ${createSongDto.youtubeId}`,
       );
       throw new ConflictException(
         `La canción con YouTube ID ${createSongDto.youtubeId} ya existe en la base de datos`,
+      );
+    }
+
+    // Verificar si ya existe una canción con el mismo título y artista
+    const existingByTitleArtist = await this.songRepository
+      .createQueryBuilder('song')
+      .where('LOWER(song.title) = LOWER(:title)', { title: createSongDto.title })
+      .andWhere('LOWER(song.artist) = LOWER(:artist)', { artist: createSongDto.artist })
+      .getOne();
+
+    if (existingByTitleArtist) {
+      this.logger.warn(
+        `⚠️ Ya existe una canción con título "${createSongDto.title}" y artista "${createSongDto.artist}"`,
+      );
+      throw new ConflictException(
+        `Ya existe una canción con el título "${createSongDto.title}" del artista "${createSongDto.artist}" en la base de datos`,
       );
     }
 
@@ -268,10 +287,14 @@ export class MusicService {
   }> {
     this.logger.log(`🧠 Búsqueda inteligente con auto-guardado: "${searchDto.query}"`);
 
-    // 1. Buscar primero en la base de datos (SOLO canciones con Cloudinary URL)
+    // 1. Buscar primero en la base de datos (SOLO canciones con Cloudinary URL y duración válida)
     const dbResults = await this.songRepository
       .createQueryBuilder('song')
       .where('song.cloudinaryUrl IS NOT NULL')
+      .andWhere('song.duration >= :minDuration AND song.duration <= :maxDuration', {
+        minDuration: 60,
+        maxDuration: 600
+      })
       .andWhere(
         '(LOWER(song.title) LIKE LOWER(:query) OR LOWER(song.artist) LIKE LOWER(:query))',
         { query: `%${searchDto.query}%` }
@@ -279,6 +302,8 @@ export class MusicService {
       .take(searchDto.maxResults)
       .orderBy('song.viewCount', 'DESC')
       .getMany();
+
+    this.logger.log(`📊 Base de datos devolvió ${dbResults.length} canciones (filtradas por duración 60-600s)`);
 
     // 2. Si encontramos suficientes en BD, devolver solo esos
     if (dbResults.length >= (searchDto.maxResults || 10)) {
@@ -297,19 +322,38 @@ export class MusicService {
     try {
       const youtubeResults = await this.youtubeService.searchVideos(
         searchDto.query,
-        remainingNeeded,
+        remainingNeeded * 2, // Pedir más porque filtraremos por duración
         searchDto.regionCode
       );
 
-      // 4. AUTO-GUARDAR resultados de YouTube en BD (en background)
-      this.autoSaveYouTubeResults(youtubeResults);
+      // Log de todos los resultados de YouTube ANTES de filtrar
+      this.logger.log(`📊 YouTube devolvió ${youtubeResults.length} videos:`);
+      youtubeResults.forEach((video, index) => {
+        const minutes = Math.floor(video.duration / 60);
+        const seconds = video.duration % 60;
+        this.logger.log(`  ${index + 1}. "${video.title}" - ${minutes}:${seconds.toString().padStart(2, '0')} (${video.duration}s)`);
+      });
 
-      this.logger.log(`✅ Búsqueda híbrida: ${dbResults.length} de BD + ${youtubeResults.length} de YouTube`);
+      // 4. FILTRAR por duración ANTES de mostrar al usuario
+      const filteredYoutubeResults = youtubeResults.filter(video => {
+        // Solo canciones entre 1-10 minutos (60-600 segundos)
+        if (video.duration < 60 || video.duration > 600) {
+          this.logger.log(`❌ FILTRADO: "${video.title}" (duración: ${video.duration}s)`);
+          return false;
+        }
+        this.logger.log(`✅ PASA: "${video.title}" (duración: ${video.duration}s)`);
+        return true;
+      }).slice(0, remainingNeeded); // Limitar a la cantidad necesaria
+
+      // 5. AUTO-GUARDAR resultados filtrados de YouTube en BD (en background)
+      this.autoSaveYouTubeResults(filteredYoutubeResults);
+
+      this.logger.log(`✅ Búsqueda híbrida: ${dbResults.length} de BD + ${filteredYoutubeResults.length} de YouTube (${youtubeResults.length - filteredYoutubeResults.length} filtrados por duración)`);
 
       return {
         fromDatabase: dbResults,
-        fromYoutube: youtubeResults,
-        source: dbResults.length > 0 && youtubeResults.length > 0 ? 'mixed' :
+        fromYoutube: filteredYoutubeResults,
+        source: dbResults.length > 0 && filteredYoutubeResults.length > 0 ? 'mixed' :
                dbResults.length > 0 ? 'database' : 'youtube'
       };
 
@@ -323,6 +367,93 @@ export class MusicService {
     }
   }
 
+  // Autocomplete: devuelve sugerencias de artistas únicos basadas en la BD
+  async getAutocompleteSuggestions(query: string, limit: number = 10): Promise<string[]> {
+    if (!query || query.length < 2) {
+      return [];
+    }
+
+    this.logger.log(`💡 Buscando sugerencias para: "${query}"`);
+
+    try {
+      // Buscar artistas únicos que coincidan con el query
+      const artists = await this.songRepository
+        .createQueryBuilder('song')
+        .select('DISTINCT song.artist', 'artist')
+        .where('LOWER(song.artist) LIKE LOWER(:query)', { query: `%${query}%` })
+        .andWhere('song.cloudinaryUrl IS NOT NULL') // Solo artistas con canciones descargadas
+        .orderBy('song.artist', 'ASC')
+        .limit(limit)
+        .getRawMany();
+
+      const suggestions = artists.map(row => row.artist).filter(artist => artist && artist.trim());
+
+      this.logger.log(`✅ Encontradas ${suggestions.length} sugerencias de artistas`);
+      return suggestions;
+    } catch (error) {
+      this.logger.error(`❌ Error en autocomplete: ${error.message}`);
+      return [];
+    }
+  }
+
+  // Lista de palabras prohibidas en títulos (filtrar compilaciones, lives, álbumes completos, etc.)
+  private readonly TITLE_BLACKLIST = [
+    // Mix / Mezclas / Remixes
+    'mix', 'megamix', 'minimix', 'dj mix', 'remix compilation', 'mixed by',
+    'mashup', 'medley', 'mezcla', 'popurri', 'popurrí', 'potpourri',
+
+    // Top / Mejores
+    'top 10', 'top 20', 'top 30', 'top 40', 'top 50', 'top 100',
+    'top songs', 'top hits', 'top music', 'top tracks',
+    'lo mejor', 'the best', 'best of', 'mejores', 'best songs', 'las mejores',
+
+    // Grandes éxitos / Hits
+    'grandes exitos', 'grandes éxitos', 'greatest hits', 'top hits',
+    'hits compilation', 'best hits', 'all hits', 'super hits', 'mega hits',
+
+    // Compilaciones / Colecciones
+    'compilation', 'compilación', 'compilacion',
+    'recopilación', 'recopilacion', 'colección', 'coleccion', 'collection',
+
+    // Álbum completo
+    'full album', 'album completo', 'álbum completo', 'complete album',
+    'disco completo', 'entire album', 'whole album',
+
+    // Playlist / Listas
+    'playlist', 'lista de reproducción', 'lista reproduccion',
+
+    // Horas (videos largos)
+    ' hour', ' hours', ' hora', ' horas', ' hr', ' hrs',
+    '1 hour', '2 hour', '3 hour', '1 hora', '2 hora', '3 hora',
+
+    // Live/Conciertos/Recitales
+    'live concert', 'concierto completo', 'full concert', 'en vivo completo',
+    'live', 'en vivo', 'vivo', 'ao vivo', 'live session', 'live performance',
+    'recital completo', 'recital', 'show completo',
+
+    // Versiones modificadas / No oficiales
+    'cover', 'covers', 'cover version',
+    'nightcore',
+    'sped up', 'spedup', 'speed up', 'fast version',
+    'slowed', 'slowed down', 'reverb', 'slowed + reverb',
+    'acoustic version', 'acoustic',
+    '8d audio', '8d', '16d',
+
+    // Karaoke/Lyrics/Instrumental
+    'karaoke', 'lyrics video', 'letra', 'con letra',
+    'instrumental', 'instrumental version',
+
+    // Otros indicadores de compilación
+    'all songs', 'todas las canciones', 'all tracks', 'todas sus canciones',
+    'discography', 'discografia', 'discografía'
+  ];
+
+  // Verificar si el título contiene palabras prohibidas
+  private hasBannedWords(title: string): boolean {
+    const lowerTitle = title.toLowerCase();
+    return this.TITLE_BLACKLIST.some(word => lowerTitle.includes(word));
+  }
+
   // Auto-guardar resultados de YouTube en background (sin bloquear respuesta)
   private async autoSaveYouTubeResults(youtubeResults: YouTubeSearchResult[]): Promise<void> {
     // Ejecutar en background sin esperar
@@ -331,7 +462,19 @@ export class MusicService {
 
       for (const video of youtubeResults) {
         try {
-          // Verificar si ya existe
+          // FILTRO 1: Verificar si el título tiene palabras prohibidas
+          if (this.hasBannedWords(video.title)) {
+            this.logger.log(`⏭️  Omitiendo "${video.title}" (contiene palabras prohibidas)`);
+            continue;
+          }
+
+          // FILTRO 2: Verificar duración (solo canciones entre 1 min y 10 min)
+          if (video.duration < 60 || video.duration > 600) {
+            this.logger.log(`⏭️  Omitiendo "${video.title}" (duración: ${video.duration}s)`);
+            continue;
+          }
+
+          // FILTRO 3: Verificar si ya existe
           const existing = await this.findSongByYoutubeId(video.id);
           if (existing) {
             continue; // Ya existe, omitir
@@ -365,18 +508,38 @@ export class MusicService {
       throw new NotFoundException(`Video con ID ${youtubeId} no encontrado en YouTube`);
     }
 
-    // 3. Crear objeto CreateSongDto desde datos de YouTube
+    // 3. FILTROS DE CALIDAD - Aplicar antes de guardar
+
+    // FILTRO 1: Verificar si el título tiene palabras prohibidas
+    if (this.hasBannedWords(youtubeVideo.title)) {
+      this.logger.log(`⏭️  Omitiendo "${youtubeVideo.title}" (contiene palabras prohibidas)`);
+      throw new BadRequestException(`El video contiene palabras prohibidas en el título`);
+    }
+
+    // FILTRO 2: Verificar duración (solo canciones entre 1 min y 10 min)
+    if (youtubeVideo.duration < 60 || youtubeVideo.duration > 600) {
+      this.logger.log(`⏭️  Omitiendo "${youtubeVideo.title}" (duración: ${youtubeVideo.duration}s)`);
+      throw new BadRequestException(`La duración del video no es válida para una canción`);
+    }
+
+    // 4. Detectar género automáticamente
+    const detectedGenre = this.genreDetector.detectGenre(
+      youtubeVideo.artist || 'Desconocido',
+      youtubeVideo.title
+    );
+
+    // 5. Crear objeto CreateSongDto desde datos de YouTube
     const createSongDto: CreateSongDto = {
       title: youtubeVideo.title,
       artist: youtubeVideo.artist || 'Desconocido',
-      genre: 'Sin categoría',
+      genre: detectedGenre,
       duration: youtubeVideo.duration || 0,
       youtubeId: youtubeVideo.id,
       viewCount: youtubeVideo.viewCount,
       publishedAt: youtubeVideo.publishedAt
     };
 
-    // 4. Guardar en BD usando el método existente
+    // 5. Guardar en BD usando el método existente
     return await this.createSong(createSongDto);
   }
 
