@@ -243,6 +243,27 @@ export class MusicController {
     }
   }
 
+  // Autocomplete: sugerencias de artistas y canciones
+  @Get('autocomplete')
+  async autocomplete(
+    @Query('query') query: string,
+    @Query('limit') limit?: number,
+  ): Promise<string[]> {
+    const parsedLimit = limit ? parseInt(limit.toString()) : 10;
+
+    this.logger.log(`💡 GET /music/autocomplete - Query: "${query}", Limit: ${parsedLimit}`);
+
+    try {
+      const suggestions = await this.musicService.getAutocompleteSuggestions(query, parsedLimit);
+
+      this.logger.log(`✅ Autocomplete: ${suggestions.length} sugerencias`);
+      return suggestions;
+    } catch (error) {
+      this.logger.error(`❌ Error en autocomplete: ${error.message}`);
+      throw error;
+    }
+  }
+
   // Crear nueva canción en BD (usado por seed script)
   @Post('songs')
   @HttpCode(HttpStatus.CREATED)

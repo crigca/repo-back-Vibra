@@ -176,10 +176,12 @@ export class YoutubeService {
         q: query,
         part: 'snippet',
         type: 'video',
-        maxResults,
+        maxResults: Math.min(maxResults, 20), // Límite máximo de 20 resultados
         regionCode,
-        videoCategoryId: '10',
-        order: 'relevance',
+        videoCategoryId: '10', // Categoría: Música
+        videoDefinition: 'any', // Acepta cualquier definición
+        videoEmbeddable: 'true', // Solo videos que se pueden embeber
+        order: 'relevance', // Ordenar por relevancia
       },
     });
   }

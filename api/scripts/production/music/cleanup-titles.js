@@ -14,6 +14,134 @@ const dataSource = new DataSource({
 
 // Patrones a limpiar del título
 const PATTERNS_TO_REMOVE = [
+  // ============================================
+  // PATRONES NUEVOS REQUERIDOS (más agresivos)
+  // ============================================
+
+  // "videoclip oficial" en cualquier formato
+  /videoclip\s+oficial/gi,
+  /vídeo\s*clip\s+oficial/gi,
+  /video\s*clip\s+oficial/gi,
+  /\(\s*videoclip\s+oficial\s*\)/gi,
+  /\[\s*videoclip\s+oficial\s*\]/gi,
+  /[-–]\s*videoclip\s+oficial/gi,
+
+  // "topic" en cualquier posición
+  /\btopic\b/gi,
+  /\(\s*topic\s*\)/gi,
+  /\[\s*topic\s*\]/gi,
+  /[-–]\s*topic/gi,
+
+  // "music video" en cualquier formato
+  /\bmusic\s+video\b/gi,
+  /\(\s*music\s+video\s*\)/gi,
+  /\[\s*music\s+video\s*\]/gi,
+  /[-–]\s*music\s+video/gi,
+
+  // "lyric video" en cualquier formato
+  /\blyric\s+video\b/gi,
+  /\blyrics\s+video\b/gi,
+  /\(\s*lyric\s+video\s*\)/gi,
+  /\[\s*lyric\s+video\s*\]/gi,
+  /[-–]\s*lyric\s+video/gi,
+
+  // "official lyric video" en cualquier formato
+  /\bofficial\s+lyric\s+video\b/gi,
+  /\bofficial\s+lyrics\s+video\b/gi,
+  /\(\s*official\s+lyric\s+video\s*\)/gi,
+  /\[\s*official\s+lyric\s+video\s*\]/gi,
+  /[-–]\s*official\s+lyric\s+video/gi,
+
+  // "with lyrics" / "whit lyrics" (typo común)
+  /\bwith\s+lyrics\b/gi,
+  /\bwhit\s+lyrics\b/gi, // typo común
+  /\(\s*with\s+lyrics\s*\)/gi,
+  /\[\s*with\s+lyrics\s*\]/gi,
+  /[-–]\s*with\s+lyrics/gi,
+  /\(\s*whit\s+lyrics\s*\)/gi,
+  /\[\s*whit\s+lyrics\s*\]/gi,
+  /[-–]\s*whit\s+lyrics/gi,
+
+  // "subtitulos" / "con subtitulos" / "subtítulos" / "con subtítulos"
+  /\bsubtitulos\b/gi,
+  /\bsubtítulos\b/gi,
+  /\bcon\s+subtitulos\b/gi,
+  /\bcon\s+subtítulos\b/gi,
+  /\(\s*subtitulos\s*\)/gi,
+  /\[\s*subtitulos\s*\]/gi,
+  /[-–]\s*subtitulos/gi,
+  /\(\s*subtítulos\s*\)/gi,
+  /\[\s*subtítulos\s*\]/gi,
+  /[-–]\s*subtítulos/gi,
+  /\(\s*con\s+subtitulos\s*\)/gi,
+  /\[\s*con\s+subtitulos\s*\]/gi,
+  /[-–]\s*con\s+subtitulos/gi,
+  /\(\s*con\s+subtítulos\s*\)/gi,
+  /\[\s*con\s+subtítulos\s*\]/gi,
+  /[-–]\s*con\s+subtítulos/gi,
+
+  // "rare video" en cualquier formato
+  /\brare\s+video\b/gi,
+  /\(\s*rare\s+video\s*\)/gi,
+  /\[\s*rare\s+video\s*\]/gi,
+  /[-–]\s*rare\s+video/gi,
+
+  // "video musical" en cualquier formato
+  /\bvideo\s+musical\b/gi,
+  /\(\s*video\s+musical\s*\)/gi,
+  /\[\s*video\s+musical\s*\]/gi,
+  /[-–]\s*video\s+musical/gi,
+
+  // "youtube" en cualquier posición
+  /\byoutube\b/gi,
+  /\(\s*youtube\s*\)/gi,
+  /\[\s*youtube\s*\]/gi,
+  /[-–]\s*youtube/gi,
+
+  // "official music" en cualquier formato
+  /\bofficial\s+music\b/gi,
+  /\(\s*official\s+music\s*\)/gi,
+  /\[\s*official\s+music\s*\]/gi,
+  /[-–]\s*official\s+music/gi,
+
+  // Calidades de video: HD, 4K, Full HD (standalone)
+  /\bhd\b/gi,
+  /\b4k\b/gi,
+  /\bfull\s+hd\b/gi,
+  /\bhq\b/gi, // High Quality
+  /\(\s*hd\s*\)/gi,
+  /\[\s*hd\s*\]/gi,
+  /[-–]\s*hd/gi,
+  /\(\s*4k\s*\)/gi,
+  /\[\s*4k\s*\]/gi,
+  /[-–]\s*4k/gi,
+  /\(\s*full\s+hd\s*\)/gi,
+  /\[\s*full\s+hd\s*\]/gi,
+  /[-–]\s*full\s+hd/gi,
+  /\(\s*hq\s*\)/gi,
+  /\[\s*hq\s*\]/gi,
+  /[-–]\s*hq/gi,
+
+  // "upgrade" / "hd upgrade" en cualquier formato
+  /\bhd\s+upgrade\b/gi,
+  /\bupgrade\b/gi,
+  /\(\s*upgrade\s*\)/gi,
+  /\[\s*upgrade\s*\]/gi,
+  /[-–]\s*upgrade/gi,
+  /\(\s*hd\s+upgrade\s*\)/gi,
+  /\[\s*hd\s+upgrade\s*\]/gi,
+  /[-–]\s*hd\s+upgrade/gi,
+
+  // "oficial" en cualquier formato (español)
+  /\boficial\b/gi,
+  /\(\s*oficial\s*\)/gi,
+  /\[\s*oficial\s*\]/gi,
+  /[-–]\s*oficial/gi,
+
+  // ============================================
+  // PATRONES ORIGINALES (mantenidos)
+  // ============================================
+
   // Videos oficiales (combinaciones con calidad) - con espacios flexibles
   /\(\s*Official\s+HD\s+Video\s*\)/gi,
   /\(\s*Official\s+HQ\s+Video\s*\)/gi,
@@ -165,18 +293,27 @@ function cleanArtist(artist) {
   // 2. Eliminar emojis
   cleaned = removeEmojis(cleaned);
 
-  // 3. Eliminar sufijos comunes de canales oficiales
+  // 3. Aplicar TODOS los patrones de limpieza (igual que en títulos)
+  PATTERNS_TO_REMOVE.forEach(pattern => {
+    cleaned = cleaned.replace(pattern, '');
+  });
+
+  // 4. Eliminar sufijos comunes de canales oficiales
   cleaned = cleaned
     .replace(/VEVO$/i, '') // "ShakiraVEVO" -> "Shakira"
     .replace(/\s*-\s*Topic$/i, '') // "Shakira - Topic" -> "Shakira"
+    .replace(/\s*Topic$/i, '') // "Shakira Topic" -> "Shakira"
     .replace(/Official$/i, '') // "ShakiraOfficial" -> "Shakira"
+    .replace(/\s*-\s*Official$/i, '') // "Shakira - Official" -> "Shakira"
+    .replace(/YouTube$/i, '') // "ShakiraYouTube" -> "Shakira"
+    .replace(/\s*-\s*YouTube$/i, '') // "Shakira - YouTube" -> "Shakira"
     .trim();
 
-  // 4. Agregar espacio entre palabras sin espacios (camelCase)
+  // 5. Agregar espacio entre palabras sin espacios (camelCase)
   // "SodaStereo" -> "Soda Stereo"
   cleaned = cleaned.replace(/([a-z])([A-Z])/g, '$1 $2');
 
-  // 5. Limpiar espacios múltiples
+  // 6. Limpiar espacios múltiples
   cleaned = cleaned.replace(/\s+/g, ' ').trim();
 
   return cleaned;
