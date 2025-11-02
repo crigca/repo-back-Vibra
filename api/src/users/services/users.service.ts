@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Inject, Injectable } from '@nestjs/common';
 import { CreateUserDto } from '../dto/create-user.dto';
 import { UpdateUserDto } from '../dto/update-user.dto';
 import { Repository } from 'typeorm';
@@ -26,8 +26,18 @@ export class UsersService {
   }
 
   async update(id: string, updateUserDto: UpdateUserDto) {
-    await this.usersRepository.update(id, updateUserDto);
-    return this.findOne(id);
+    try{
+      let userPreUpdate = await this.usersRepository.findOneBy({id})
+      if (!userPreUpdate) {
+        throw new Error('Usuario no encontrado');
+      }
+      const userToSave = {...userPreUpdate, ...updateUserDto}
+
+      const userUpdated = await this.usersRepository.save(userToSave)
+      return userUpdated
+    }catch(err){
+      throw new Error(`Error al actualizar usuario: ${err.message}`);
+    }
   }
 
   remove(id: string) {

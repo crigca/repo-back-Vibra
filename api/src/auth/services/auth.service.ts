@@ -81,4 +81,8 @@ export class AuthService {
             // throw new UnauthorizedException('Google authentication failed');
         }
     }
+
+  signJwtForDev(payload: any): string {
+    return this.jwtService.sign(payload, { expiresIn: '7d' });
+  }
 }

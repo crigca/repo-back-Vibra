@@ -1,9 +1,11 @@
+import { UserHistory } from 'src/user-history/entities/user-history.entity';
 import {
   Entity,
   PrimaryGeneratedColumn,
   Column,
   CreateDateColumn,
   UpdateDateColumn,
+  OneToMany,
 } from 'typeorm';
 
 @Entity({ name: 'users' })
@@ -25,4 +27,8 @@ export class User {
 
   @UpdateDateColumn()
   updatedAt!: Date;
+
+  @OneToMany(() => UserHistory, uh => uh.user)
+  historyEntries: UserHistory[];
+
 }
