@@ -25,9 +25,20 @@ export class UsersService {
     return this.usersRepository.findOneBy({id});
   }
 
-  // update(id: number, updateUserDto: UpdateUserDto) {
-  //   return `This action updates a #${id} user`;
-  // }
+  async update(id: string, updateUserDto: UpdateUserDto) {
+    try{
+      let userPreUpdate = await this.usersRepository.findOneBy({id})
+      if (!userPreUpdate) {
+        throw new Error('Usuario no encontrado');
+      }
+      const userToSave = {...userPreUpdate, ...updateUserDto}
+
+      const userUpdated = await this.usersRepository.save(userToSave)
+      return userUpdated
+    }catch(err){
+      throw new Error(`Error al actualizar usuario: ${err.message}`);
+    }
+  }
 
   remove(id: string) {
     return this.usersRepository.remove({id} as User);
