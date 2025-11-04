@@ -32,9 +32,12 @@ export class UserHistoryController {
     return this.userHistoryService.update(id, updateUserHistoryDto);
   }
 //cancion por cancion
-  @Delete(':id')
-  remove(@Param('id') id: string) {
-    return this.userHistoryService.remove(id);
+  @Delete(':userId/:songId')
+  async removeSongFromUser(
+    @Param('userId') userId: string,
+    @Param('songId') songId: string,
+  ) {
+    return this.userHistoryService.removeSongFromUser(userId, songId);
   }
 
   @Delete('user/:id')

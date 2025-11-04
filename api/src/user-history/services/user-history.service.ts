@@ -89,8 +89,19 @@ export class UserHistoryService {
       }
     }
 
-  remove(id: string) {
-    return this.userHistoryRepository.delete(id);
+  // 🗑️ Borrar UNA canción específica del historial de un usuario
+  async removeSongFromUser(userId: string, entryId: string) {
+    const entry = await this.userHistoryRepository.findOne({
+      where: { id: entryId, user: { id: userId } },
+    });
+
+    if (!entry) {
+      throw new NotFoundException(`Entrada ${entryId} no encontrada para el usuario ${userId}`);
+    }
+
+    await this.userHistoryRepository.remove(entry);
+
+    return { message: `Entrada ${entryId} eliminada del historial del usuario ${userId}` };
   }
 
   async deleteAllByUser(userId: string): Promise<{ deleted: number }> {
