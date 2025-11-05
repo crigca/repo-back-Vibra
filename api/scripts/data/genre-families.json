@@ -1,102 +1,125 @@
 {
   "metal": [
-    "Metal",
-    "HeavyMetal",
-    "HeavyMetalArgentino",
-    "DeathMetal",
-    "ThrashMetal",
-    "BlackMetal",
-    "GlamMetal",
-    "IndustrialMetal"
+    "metal",
+    "heavyMetal",
+    "heavyMetalArgentino",
+    "heavyMetalLatino",
+    "deathMetal",
+    "thrashMetal",
+    "blackMetal",
+    "glamMetal",
+    "industrialMetal"
   ],
   "rock": [
-    "Rock",
-    "RockArgentino",
-    "Rock Nacional",
-    "RockLatino",
-    "AlternativeRock",
-    "IndieRock",
-    "SoftRock"
+    "rock",
+    "rockArgentino",
+    "rockLatino",
+    "alternativeRock",
+    "indieRock",
+    "softRock",
+    "bluesRock",
+    "glamRock",
+    "grunge",
+    "progressiveRock",
+    "popPunk"
   ],
   "cumbia": [
-    "Cumbia",
-    "CumbiaVillera",
-    "Cumbia420",
-    "Cuarteto"
+    "cumbia",
+    "cumbiaVillera",
+    "cumbia420",
+    "cuarteto"
   ],
   "latin": [
-    "Reggaeton",
-    "Bachata",
-    "Salsa",
-    "Merengue",
-    "Tango",
-    "Bolero"
+    "bachata",
+    "salsa",
+    "merengue",
+    "tango",
+    "bolero",
+    "vallenato",
+    "balada"
   ],
   "urban": [
-    "Trap",
-    "Hiphop",
-    "Rap",
-    "Drill",
-    "Reggaeton"
+    "trap",
+    "trapArgentino",
+    "hiphop",
+    "rap",
+    "drill",
+    "reggaeton",
+    "urbanoLatino",
+    "dembow"
   ],
   "electronic": [
-    "Electronic",
-    "Techno",
-    "House",
-    "Trance",
-    "Dubstep",
-    "DrumAndBass",
-    "EdmActual"
+    "techno",
+    "house",
+    "trance",
+    "dubstep",
+    "drumAndBass",
+    "edmActual",
+    "electronicaArgentina",
+    "synthpop"
   ],
   "pop": [
-    "Pop",
-    "PopLatinoActual",
-    "PopLatinoClasico",
-    "Pop Latino",
-    "Pop90s",
-    "Alternative Pop",
-    "Hyperpop"
+    "pop",
+    "popLatinoActual",
+    "popLatinoClasico",
+    "pop90s",
+    "hyperpop"
   ],
   "punk": [
-    "Punk",
-    "HardcorePunk",
-    "Ska"
+    "punk",
+    "hardcorePunk",
+    "ska"
   ],
   "folk": [
-    "FolkloreArgentino",
-    "Country",
-    "Bluegrass",
-    "Folk"
+    "folkloreArgentino",
+    "folkloreColombia",
+    "country",
+    "bluegrass",
+    "folk"
   ],
   "latin_traditional": [
-    "Mariachi",
-    "Ranchera",
-    "Corrido",
-    "CorridosTumbados",
-    "Norteño"
+    "mariachi",
+    "ranchera",
+    "corrido",
+    "corridosTumbados",
+    "norteño"
   ],
   "afro_caribbean": [
-    "Afrobeat",
-    "Reggae",
-    "Dancehall",
-    "SambaPagode"
+    "afrobeat",
+    "reggae",
+    "dancehall",
+    "sambaPagode"
   ],
   "soul_funk": [
-    "Soul",
-    "Funk",
-    "Rb",
-    "Disco"
+    "soul",
+    "funk",
+    "funkRap",
+    "rb",
+    "disco"
   ],
   "alternative": [
-    "Alternative",
-    "AlternativeRock",
-    "IndieRock",
-    "LatinIndie"
+    "latinIndie",
+    "newWave"
   ],
   "chill": [
-    "BossaNova",
-    "Lofi",
-    "Jazz",
-    "Blues"
+    "bossaNova",
+    "lofi",
+    "jazz",
+    "blues",
+    "clasica",
+    "instrumental"
+  ],
+  "world_music": [
+    "musicaBrasilera",
+    "trovaCubana",
+    "sertanejo",
+    "highlife",
+    "opera",
+    "gospel",
+    "flamenco"
+  ],
+  "asian_pop": [
+    "kpop",
+    "jpop"
   ]
 }

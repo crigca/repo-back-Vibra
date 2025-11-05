@@ -26,6 +26,7 @@ import { Playlist } from '../entities/playlist.entity';
 import { PlaylistSong } from '../entities/playlist-song.entity';
 import { JwtAuthGuard } from '../../auth/jwt-auth.guard';
 import { CurrentUser } from '../../auth/decorators/current-user.decorator';
+import { OptionalUser } from '../../auth/decorators/optional-user.decorator';
 
 @Controller('playlists')
 export class PlaylistsController {
@@ -75,16 +76,18 @@ export class PlaylistsController {
     }
   }
 
-  // Obtener playlist por ID
+  // Obtener playlist por ID (autenticación opcional)
   @Get(':id')
   async findOne(
     @Param('id', ParseUUIDPipe) id: string,
     @Query('includeSongs', new ParseBoolPipe({ optional: true })) includeSongs?: boolean,
+    @OptionalUser() user?: any,
   ): Promise<Playlist> {
-    this.logger.log(`🔍 GET /playlists/${id} - Incluir canciones: ${includeSongs}`);
+    const userId = user?.userId;
+    this.logger.log(`🔍 GET /playlists/${id} - Usuario: ${userId || 'anónimo'} - Incluir canciones: ${includeSongs}`);
 
     try {
-      const playlist = await this.playlistsService.findOne(id, includeSongs);
+      const playlist = await this.playlistsService.findOne(id, includeSongs, userId);
 
       this.logger.log(`✅ Playlist encontrada: "${playlist.name}"`);
       return playlist;
