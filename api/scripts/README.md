@@ -1,6 +1,6 @@
-# 📚 Scripts de VIBRA
+# Scripts de Vibra - Documentación Completa
 
-Documentación completa de todos los scripts del proyecto.
+Sistema de scripts para gestión de música, imágenes, playlists y base de datos.
 
 ---
 
@@ -8,375 +8,407 @@ Documentación completa de todos los scripts del proyecto.
 
 ```
 scripts/
-├── production/         # Scripts de producción (listos para usar)
-│   ├── music/         # Gestión de música y MP3
-│   └── images/        # Generación de imágenes con AI
-├── data/              # Archivos de configuración y datos
-├── tests/             # Scripts de prueba y demos
-└── deprecated/        # Scripts obsoletos (no usar)
+├── data/              # Datos maestros (artistas, géneros, prompts)
+├── production/        # Scripts de producción
+│   ├── images/       # Generación de imágenes AI
+│   ├── migrations/   # Migraciones de BD
+│   ├── music/        # Gestión de música y BD
+│   └── playlists/    # Creación de playlists
+├── utilities/         # Herramientas de uso manual
+├── verification/      # Scripts de verificación/chequeo
+├── reports/          # Generación de reportes
+├── tests/            # Scripts de testing
+└── deprecated/       # Scripts obsoletos (archivados)
 ```
+
+---
+
+## 📊 Data (Datos Maestros)
+
+### **artists-data.js** 🎸
+Base de datos de ~2000 artistas organizados por género.
+```bash
+node -e "console.log(require('./data/artists-data.js').artistsByGenre)"
+```
+**Uso**: Detección automática de géneros por artista.
+
+### **genre-families.json** 👨‍👩‍👧‍👦
+Familias de géneros relacionados (metal, rock, cumbia, etc.).
+
+### **genres-tiers.json** 📈
+Clasificación de géneros por popularidad (tier1-tier4).
+
+### **genres.json** 🎵
+Lista completa de géneros válidos del sistema.
+
+### **prompts.json** 🎨
+Prompts para generación de imágenes AI por género.
 
 ---
 
 ## 🎵 Production - Music
 
-Scripts para gestión de canciones y archivos MP3.
+### **master-cleanup.js** ⭐ PRINCIPAL
+Script maestro de limpieza de base de datos.
 
-### `seed-music.js`
-**Descripción:** Busca y guarda canciones de YouTube en la base de datos.
+**Funciones:**
+- Fase 1: Asignación automática de géneros
+- Fase 2: Limpieza de títulos y artistas (241 patrones)
+- Fase 3: Eliminación de duplicados (max 2 por canción)
+- Fase 4: Generación de reportes
 
-**Uso:**
+**Características de limpieza:**
+- Decodificación HTML entities (`&amp;` → `&`)
+- Eliminación emojis (11 rangos Unicode)
+- Separador pipe (`|`) - toma última parte
+- Limpieza nombres artistas (VEVO, Topic, Official)
+- Separación camelCase (`SodaStereo` → `Soda Stereo`)
+- 241 patrones regex (videoclip oficial, topic, lyrics, HD, 4K, etc.)
+
+```bash
+npm run start:dev  # Terminal 1
+node production/music/master-cleanup.js  # Terminal 2
+```
+
+### **update-genres.js** 🔄
+Actualización automática de géneros para canciones "sinCategoria".
+
+```bash
+node production/music/update-genres.js
+```
+
+### **seed-music.js** 🌱
+Poblar base de datos con música desde YouTube.
+
 ```bash
 npm run seed:music
 ```
 
 **Características:**
 - Busca canciones en YouTube por artista/género
-- Filtra automáticamente (duración 1-10 min, sin mixes/compilations)
+- Filtra automáticamente (duración 1-10 min)
 - Guarda hasta 500 canciones por ejecución
-- Límite: 90 búsquedas por día (cuota de API)
+- Límite: 90 búsquedas por día
 
-**Requiere:**
-- Backend corriendo en `localhost:3000`
-- API Key de YouTube en `.env`
+### **download-and-upload-cloudinary.js** ☁️
+Descarga MP3 desde YouTube y sube a Cloudinary.
 
----
-
-### `download-mp3.js`
-**Descripción:** Descarga archivos MP3 desde YouTube para canciones en la DB.
-
-**Uso:**
 ```bash
-npm run download:mp3
+node production/music/download-and-upload-cloudinary.js
 ```
 
-**Características:**
-- Busca canciones con `audioPath: null`
-- Descarga MP3 usando Cobalt API
-- Guarda en `/public/audio/`
-- Actualiza `audioPath` en la DB
+### **sync-cloudinary-urls.js** 🔗
+Sincroniza URLs de Cloudinary en la base de datos.
 
-**Requiere:**
-- Backend corriendo
-- Conexión a internet
-
----
-
-### `sync-audio-paths.js`
-**Descripción:** Sincroniza archivos MP3 en disco con registros en la DB.
-
-**Uso:**
 ```bash
-npm run sync:audio
+node production/music/sync-cloudinary-urls.js
 ```
 
-**Características:**
-- Lee archivos MP3 de `/public/audio/`
-- Busca cada canción por `youtubeId`
-- Actualiza campo `audioPath` en la DB
+### **validate-youtube-ids.js** ✅
+Valida IDs de YouTube en la base de datos.
 
-**Útil cuando:**
-- Los `audioPath` se borraron de la DB
-- Moviste archivos MP3 manualmente
-- Restauraste un backup
-
----
-
-### `cleanup-database.js`
-**Descripción:** Limpia canciones inválidas de la base de datos.
-
-**Uso:**
 ```bash
-npm run cleanup:db
+node production/music/validate-youtube-ids.js
 ```
 
-**Elimina canciones que:**
-- Duración inválida (< 1 min o > 10 min)
-- Sin `youtubeId`
-- Título con palabras prohibidas (mix, best of, compilation)
-- Menos de 1000 vistas en YouTube
+### **cleanup-orphan-mp3.js** 🧹
+Limpia archivos MP3 huérfanos en Cloudinary.
 
-**⚠️ Advertencia:** Este script **elimina registros** permanentemente.
-
----
-
-### `cleanup-orphan-mp3.js`
-**Descripción:** Elimina archivos MP3 que no tienen registro en la DB.
-
-**Uso:**
 ```bash
-npm run cleanup:orphan-mp3
+node production/music/cleanup-orphan-mp3.js
 ```
 
-**Características:**
-- Verifica cada archivo MP3 en disco
-- Busca su registro en la DB por `youtubeId`
-- Elimina archivos sin registro
-- Reporta espacio liberado
+### **cleanup-database.js** 🗄️
+Limpieza general de base de datos.
 
-**Útil para:** Liberar espacio en disco después de limpiar la DB.
-
----
-
-### `validate-youtube-ids.js`
-**Descripción:** Valida que los `youtubeId` en la DB sean válidos.
-
-**Uso:**
 ```bash
-npm run validate:youtube
+node production/music/cleanup-database.js
 ```
-
-**Verifica:**
-- Formato correcto de `youtubeId` (11 caracteres)
-- Que el video exista en YouTube
-- Que el video sea embebible
 
 ---
 
 ## 🖼️ Production - Images
 
-Scripts para generación masiva de imágenes con AI para cada género musical.
-
-### 📋 Requisitos Previos
-
-**IMPORTANTE:** Antes de ejecutar cualquier script de generación, asegúrate de que existan los enlaces simbólicos a los archivos de datos:
+### **generate-by-genre.js** 🎨
+Genera imágenes por género usando AI.
 
 ```bash
-cd scripts/production/images
-ls -la  # Deberías ver: prompts.json, genres.json, genre-families.json
+node production/images/generate-by-genre.js Gospel 5  # 5 imágenes de Gospel
+node production/images/generate-by-genre.js all 2     # 2 por cada género
 ```
 
-Si no existen, créalos:
-```bash
-ln -sf ../../data/prompts.json prompts.json
-ln -sf ../../data/genres.json genres.json
-ln -sf ../../data/genre-families.json genre-families.json
-```
+### **generate-dalle.js** 🤖
+Generación de imágenes con DALL-E 3 (calidad premium).
 
----
-
-### `generate-dalle.js`
-**Descripción:** Genera imágenes usando DALL-E 3 de OpenAI (calidad premium).
-
-**Uso:**
 ```bash
 npm run generate:dalle
 ```
 
 **Características:**
 - Genera 50 imágenes distribuidas por tiers
-- **Tier 1:** 20 imágenes (géneros mainstream)
-- **Tier 2:** 15 imágenes (géneros muy populares)
-- **Tier 3:** 10 imágenes (géneros con audiencia dedicada)
-- **Tier 4:** 5 imágenes (géneros nicho)
-- Sube automáticamente a Cloudinary
-- Guarda metadata en MongoDB
-- Costo: ~$0.04 USD por imagen (total ~$2.00 USD)
+- Costo: ~$0.04 USD por imagen
 - Tiempo: ~3-5 segundos por imagen
 
-**Requiere:**
-- `OPENAI_API_KEY` en `.env`
-- MongoDB conectado
-- Cloudinary configurado
+### **generate-fal.js** 🚀
+Generación de imágenes con FAL AI (rápido y económico).
 
----
-
-### `generate-fal.js`
-**Descripción:** Genera imágenes usando FAL AI (Flux Schnell) - rápido y económico.
-
-**Uso:**
 ```bash
 npm run generate:fal
 ```
 
 **Características:**
 - Genera 100 imágenes distribuidas por tiers
-- **Tier 1:** 40 imágenes
-- **Tier 2:** 30 imágenes
-- **Tier 3:** 15 imágenes
-- **Tier 4:** 15 imágenes
 - Velocidad: ~2-3 segundos por imagen
 - Muy económico comparado con DALL-E
-- Calidad: Buena para visualizaciones rápidas
 
-**Requiere:**
-- `FAL_API_KEY` en `.env`
-- MongoDB conectado
-- Cloudinary configurado
+### **generate-replicate.js** 🔁
+Generación de imágenes con Replicate SDXL (balance calidad/precio).
 
----
-
-### `generate-replicate.js`
-**Descripción:** Genera imágenes usando Replicate SDXL - balance calidad/precio.
-
-**Uso:**
 ```bash
 npm run generate:replicate
 ```
 
-**Características:**
-- Genera 100 imágenes distribuidas por tiers
-- **Tier 1:** 40 imágenes
-- **Tier 2:** 30 imágenes
-- **Tier 3:** 15 imágenes
-- **Tier 4:** 15 imágenes
-- Velocidad: ~5-10 segundos por imagen
-- Balance entre calidad y costo
-- Modelo: Stable Diffusion XL
+### **seed-prompts.js** 💾
+Poblar prompts de generación de imágenes.
 
-**Requiere:**
-- `REPLICATE_API_TOKEN` en `.env`
-- MongoDB conectado
-- Cloudinary configurado
-
----
-
-### `generate-by-genre.js`
-**Descripción:** Genera imágenes para un género específico.
-
-**Uso:**
 ```bash
-node scripts/production/images/generate-by-genre.js Gospel 5  # 5 imágenes de Gospel
-node scripts/production/images/generate-by-genre.js all 2     # 2 por cada género
+node production/images/seed-prompts.js
 ```
 
-**Características:**
-- Permite generar imágenes por género específico
-- Útil para rellenar géneros con pocas imágenes
-- Usa los mismos prompts que los scripts masivos
-
 ---
 
-### `seed-prompts.js`
-**Descripción:** Carga prompts predefinidos en MongoDB.
+## 📂 Production - Playlists
 
-**Uso:**
+### **seed-family-playlists.js** 👨‍👩‍👧‍👦
+Crear playlists por familia de géneros.
+
 ```bash
-node scripts/production/images/seed-prompts.js
+node production/playlists/seed-family-playlists.js
 ```
 
-**Características:**
-- Lee `prompts.json` y `genres.json`
-- Carga todos los prompts en MongoDB
-- Crea 2 prompts por género (base + variation)
-- Útil para inicializar la base de datos
+### **seed-genre-playlists.js** 🎵
+Crear playlists por género individual.
+
+```bash
+node production/playlists/seed-genre-playlists.js
+```
 
 ---
 
-### 🎨 Sistema de Prompts
+## 🔧 Utilities (Uso Manual)
 
-Los prompts se generan aleatoriamente combinando:
+### **reclassify-by-artist.js** 🎯
+Reclasificación manual de canciones por artista.
 
-- **Scene Elements:** Elementos visuales del género
-- **Visual Style:** Estilo artístico y colores
-- **Emotion/Mood:** Sentimientos y atmósfera
-- **Artistic Styles:** 25+ estilos (vintage, cyberpunk, etc.)
-- **Lighting Techniques:** 25+ técnicas de iluminación
-- **Visual Concepts:** Conceptos abstractos musicales
-- **Photographic Compositions:** Ángulos y encuadres
-- **Music Environment Objects:** Objetos del ambiente musical
+**Uso:**
+1. Agregar artistas a `data/artists-data.js`
+2. Ejecutar script:
+```bash
+node utilities/reclassify-by-artist.js
+```
 
-Cada imagen es única gracias a la combinación aleatoria de elementos.
+**Ejemplo:**
+```javascript
+// En artists-data.js
+"alternativeRock": [..., "Electric Callboy"]
+
+// Ejecutar
+node utilities/reclassify-by-artist.js
+// Reclasifica todas las canciones de Electric Callboy a alternativeRock
+```
+
+### **delete-categorized-songs.js** 🗑️
+Elimina canciones que ya tienen categoría válida.
+
+```bash
+node utilities/delete-categorized-songs.js
+```
+
+### **delete-sin-categoria-folder.js** 📁
+Elimina carpeta "sin-categoria" de Cloudinary.
+
+```bash
+node utilities/delete-sin-categoria-folder.js
+```
 
 ---
 
-### 📊 Distribución por Tiers
+## ✅ Verification (Verificación)
 
-Los géneros están organizados en tiers según popularidad:
+### **check-genres-status.js** 📊
+Estado actual de géneros en la BD.
 
-- **Tier 1:** Rock, Cumbia, Reggaeton, Trap, Pop, Metal, etc.
-- **Tier 2:** Bachata, Tango, Techno, House, Hip Hop, etc.
-- **Tier 3:** Soul, Funk, Ska, Punk, Indie Rock, etc.
-- **Tier 4:** Jazz, Blues, Opera, Gospel, Flamenco, etc.
+```bash
+node verification/check-genres-status.js
+```
 
-Ver [genres-tiers.json](scripts/data/genres-tiers.json) para la lista completa.
+**Muestra:**
+- Total de canciones por género
+- Canciones sin categoría
+- Distribución de géneros
+
+### **check-cloudinary-sin-genero.js** ☁️
+Verifica archivos sin género en Cloudinary.
+
+```bash
+node verification/check-cloudinary-sin-genero.js
+```
+
+### **verify-cloudinary-folders.js** 📂
+Verifica estructura de carpetas en Cloudinary.
+
+```bash
+node verification/verify-cloudinary-folders.js
+```
 
 ---
 
-## 📊 Data
+## 📈 Reports (Reportes)
 
-Archivos de configuración y datos estáticos.
+### **export-sin-categoria.js** 📄
+Exporta canciones sin categoría agrupadas por artista.
 
-### `artists-data.js`
-Lista de artistas organizados por género. Usado por `seed-music.js`.
+```bash
+node reports/export-sin-categoria.js
+```
 
-### `genre-families.json`
-Familias de géneros musicales (Rock, Pop, etc.).
-
-### `genres-tiers.json`
-Niveles/tiers de géneros para priorización.
-
-### `genres.json`
-Lista completa de géneros musicales.
-
-### `prompts.json`
-Prompts para generación de imágenes con AI.
+**Genera:**
+- `reports/sin-categoria-por-artista.json` - JSON con artistas y canciones
+- Ordenado por cantidad de canciones por artista
 
 ---
 
 ## 🧪 Tests
 
-Scripts de prueba y demos.
+Scripts de prueba para APIs y servicios:
 
-### `demo-youtube-api.js`
-Demo visual de la integración con YouTube API.
+- `demo-youtube-api.js` - Demo de YouTube API
+- `test-ai-apis.js` - Test de APIs de AI
+- `test-cloudinary.js` - Test de Cloudinary
+- `test-image-generation.js` - Test generación de imágenes
+- `test-services.js` - Test de servicios
+- `test-api-endpoints.sh` - Test de endpoints HTTP
 
-**Uso:**
 ```bash
+node tests/test-cloudinary.js
 npm run demo:youtube
 ```
 
 ---
 
-### `test-ai-apis.js`
-Prueba las APIs de generación de imágenes.
+## 🗄️ Deprecated (Obsoletos)
+
+Scripts archivados que ya cumplieron su función:
+
+- ❌ `cleanup-titles.js` - Migrado a master-cleanup.js
+- ❌ `convert-genres-to-camelcase.js` - Conversión completada
+- ❌ `fix-genre-inconsistencies.js` - Inconsistencias corregidas
+- ❌ `convert-all-jsons-to-camelcase.js` - Conversión completada
+- ❌ `normalize-genres.js` - Normalización completada
+- ❌ `migrate-otros-to-sin-categoria.js` - Migración completada
+- ❌ `fix-otros.js` - Ya no hay "Otros"
+- ❌ `fix-sin-categoria.js` - Funcionalidad duplicada
+- ❌ `check-otros.js` - Ya no hay "Otros"
+- ❌ `generate-fal-backup.js` - Backup obsoleto
+- ❌ `verify-mongodb.js` - MongoDB no se usa
 
 ---
 
-### `test-cloudinary.js`
-Prueba la conexión con Cloudinary.
+## 🚀 Workflows Comunes
 
----
+### Agregar Nuevos Artistas y Reclasificar
 
-### `test-image-generation.js`
-Test de generación de imágenes.
+1. Agregar artistas a `data/artists-data.js`:
+```javascript
+"rock": [..., "Nuevo Artista"]
+```
 
----
-
-### `test-services.js`
-Test general de servicios del backend.
-
----
-
-### `test-api-endpoints.sh`
-Script bash para probar endpoints HTTP.
-
-**Uso:**
+2. Reclasificar canciones:
 ```bash
-bash scripts/tests/test-api-endpoints.sh
+node utilities/reclassify-by-artist.js
+```
+
+3. Verificar resultado:
+```bash
+node verification/check-genres-status.js
+```
+
+### Limpieza Completa de Base de Datos
+
+1. Asegurar servidor corriendo:
+```bash
+npm run start:dev
+```
+
+2. Ejecutar limpieza maestra:
+```bash
+node production/music/master-cleanup.js
+```
+
+3. Revisar reportes generados:
+```bash
+ls -la reports/
+```
+
+### Generar Reporte de Canciones Sin Categoría
+
+```bash
+node reports/export-sin-categoria.js
+cat reports/sin-categoria-por-artista.json
+```
+
+### Sincronizar con Cloudinary
+
+```bash
+# 1. Descargar y subir nuevas canciones
+node production/music/download-and-upload-cloudinary.js
+
+# 2. Sincronizar URLs
+node production/music/sync-cloudinary-urls.js
+
+# 3. Verificar
+node verification/check-cloudinary-sin-genero.js
+```
+
+### Generar Imágenes con AI
+
+```bash
+# Opción A - Calidad Premium (DALL-E 3)
+npm run generate:dalle  # 50 imágenes, ~$2.00 USD
+
+# Opción B - Rápido y Económico (FAL AI)
+npm run generate:fal    # 100 imágenes, muy económico
+
+# Opción C - Balance (Replicate SDXL)
+npm run generate:replicate  # 100 imágenes, precio moderado
 ```
 
 ---
 
-## 🗄️ Deprecated
+## 📝 Notas Importantes
 
-Scripts obsoletos o deprecados. **NO USAR EN PRODUCCIÓN**.
+### Convenciones de Nombres
+- Géneros en **camelCase**: `rockArgentino`, `heavyMetal`, `sinCategoria`
+- Artistas con mayúsculas: `Los Redondos`, `Soda Stereo`
 
-### `verify-mongodb.js`
-⚠️ **Nota:** Aún se usa MongoDB para algunas funcionalidades, pero este script es antiguo.
+### Base de Datos
+- PostgreSQL en Railway
+- ~7000 canciones
+- ~2000 artistas mapeados
+- 90+ géneros
 
-**Descripción:** Verifica conexión con MongoDB Atlas.
+### Cloudinary
+- Carpetas por género en camelCase
+- Formato: `vibra/music/{genre}/{filename}.mp3`
+- Max 2 duplicados por canción
 
----
-
-### `generate-fal-backup.js`
-⚠️ **Deprecado:** Duplicado de `generate-fal.js`.
+### Géneros Especiales
+- `sinCategoria` - Sin clasificar
+- `otros` - **OBSOLETO** (migrado a sinCategoria)
 
 ---
 
 ## 🔑 Variables de Entorno Requeridas
-
-Asegúrate de tener estas variables en tu archivo `.env`:
 
 ```env
 # YouTube API
@@ -399,101 +431,37 @@ CLOUDINARY_API_SECRET=tu_api_secret
 # Database
 DATABASE_URL=postgresql://...
 MONGODB_URI=mongodb+srv://...
+DB_HOST=...
+DB_PORT=...
+DB_USERNAME=...
+DB_PASSWORD=...
+DB_NAME=...
+DB_SSL=true
 ```
-
----
-
-## 📝 Comandos NPM Disponibles
-
-```bash
-# Música
-npm run seed:music           # Buscar y guardar canciones
-npm run download:mp3         # Descargar MP3
-npm run sync:audio           # Sincronizar audioPath
-npm run cleanup:db           # Limpiar canciones inválidas
-npm run cleanup:orphan-mp3   # Eliminar MP3 huérfanos
-npm run validate:youtube     # Validar youtubeIds
-
-# Generación de Imágenes
-npm run generate:dalle       # Generar 50 imágenes con DALL-E 3
-npm run generate:fal         # Generar 100 imágenes con FAL AI
-npm run generate:replicate   # Generar 100 imágenes con Replicate SDXL
-
-# Tests
-npm run demo:youtube         # Demo de YouTube API
-```
-
----
-
-## 🚀 Flujo de Trabajo Recomendado
-
-### Para cargar música nueva:
-
-1. **Buscar canciones:**
-   ```bash
-   npm run seed:music
-   ```
-
-2. **Descargar MP3:**
-   ```bash
-   npm run download:mp3
-   ```
-
-3. **Si hay problemas de sincronización:**
-   ```bash
-   npm run sync:audio
-   ```
-
-4. **Limpiar base de datos (opcional):**
-   ```bash
-   npm run cleanup:db
-   npm run cleanup:orphan-mp3
-   ```
-
----
-
-### Para generar imágenes con AI:
-
-1. **Verificar enlaces simbólicos (solo primera vez):**
-   ```bash
-   cd scripts/production/images
-   ln -sf ../../data/prompts.json prompts.json
-   ln -sf ../../data/genres.json genres.json
-   ln -sf ../../data/genre-families.json genre-families.json
-   cd ../../..
-   ```
-
-2. **Opción A - Calidad Premium (DALL-E 3):**
-   ```bash
-   npm run generate:dalle
-   # Genera 50 imágenes, costo ~$2.00 USD
-   ```
-
-3. **Opción B - Rápido y Económico (FAL AI):**
-   ```bash
-   npm run generate:fal
-   # Genera 100 imágenes, muy económico
-   ```
-
-4. **Opción C - Balance Calidad/Precio (Replicate):**
-   ```bash
-   npm run generate:replicate
-   # Genera 100 imágenes, precio moderado
-   ```
-
-**Nota:** Puedes ejecutar múltiples scripts simultáneamente para generar imágenes con diferentes AIs en paralelo.
 
 ---
 
 ## 📞 Soporte
 
-Si tienes problemas con algún script:
-
-1. Verifica que el backend esté corriendo: `npm run start:dev`
-2. Revisa las variables de entorno en `.env`
-3. Consulta los logs de ejecución
+Para agregar nuevos artistas o géneros, editar:
+- `data/artists-data.js`
+- `data/genres.json`
+- `data/genres-tiers.json`
+- `data/genre-families.json`
 
 ---
 
-**Última actualización:** Octubre 2025
-**Proyecto:** VIBRA - Plataforma de Música
+## 🛠️ Requisitos
+
+- Node.js 18+
+- PostgreSQL (Railway)
+- Cloudinary account
+- YouTube API key
+- API servidor corriendo en `localhost:3000`
+
+---
+
+**Última actualización**: 2025-11-05
+**Total de scripts activos**: 29
+**Total de scripts obsoletos**: 10
+**Proyecto**: VIBRA - Plataforma de Música

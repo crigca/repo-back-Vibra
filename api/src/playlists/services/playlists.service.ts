@@ -17,7 +17,6 @@ import { UpdatePlaylistDto } from '../dto/update-playlist.dto';
 import { AddSongToPlaylistDto } from '../dto/add-song-playlist.dto';
 import { ReorderSongsDto } from '../dto/reorder-songs.dto';
 import { MusicService } from '../../music/services/music.service';
-import { CreateSongDto } from '../../music/dto/create-song.dto';
 
 @Injectable()
 export class PlaylistsService {
@@ -69,12 +68,20 @@ export class PlaylistsService {
 
     const query = this.playlistRepository.createQueryBuilder('playlist');
 
+    // IMPORTANTE: Si se especifica isPublic o userId, aplicar esos filtros
     if (isPublic !== undefined) {
       query.andWhere('playlist.isPublic = :isPublic', { isPublic });
     }
 
     if (userId) {
       query.andWhere('playlist.userId = :userId', { userId });
+    }
+
+    // SEGURIDAD: Si NO se especifica ningún filtro, solo devolver playlists públicas
+    // Esto previene que se expongan playlists privadas de otros usuarios
+    if (isPublic === undefined && !userId) {
+      this.logger.warn('⚠️  No se especificó filtro - devolviendo solo playlists públicas por seguridad');
+      query.andWhere('playlist.isPublic = :defaultPublic', { defaultPublic: true });
     }
 
     // Incluir las primeras 4 canciones para el mosaico
@@ -99,8 +106,8 @@ export class PlaylistsService {
   }
 
   // Obtener playlist por ID con canciones
-  async findOne(id: string, includeSongs: boolean = true): Promise<Playlist> {
-    this.logger.log(`🔍 Buscando playlist por ID: ${id} (incluir canciones: ${includeSongs})`);
+  async findOne(id: string, includeSongs: boolean = true, requestUserId?: string): Promise<Playlist> {
+    this.logger.log(`🔍 Buscando playlist por ID: ${id} (incluir canciones: ${includeSongs}, usuario: ${requestUserId || 'anónimo'})`);
 
     const query = this.playlistRepository.createQueryBuilder('playlist')
       .where('playlist.id = :id', { id });
@@ -119,6 +126,15 @@ export class PlaylistsService {
       throw new NotFoundException(`Playlist con ID ${id} no encontrada`);
     }
 
+    // SEGURIDAD: Validar acceso a playlists privadas
+    if (!playlist.isPublic) {
+      // Si la playlist es privada, solo el dueño puede verla
+      if (!requestUserId || playlist.userId !== requestUserId) {
+        this.logger.warn(`🔒 Usuario no autorizado intentó acceder a playlist privada ${id}`);
+        throw new NotFoundException(`Playlist con ID ${id} no encontrada`);
+      }
+    }
+
     // Transform to include songs array directly
     if (includeSongs && playlist.playlistSongs) {
       (playlist as any).songs = playlist.playlistSongs.map(ps => ps.song);
@@ -132,7 +148,8 @@ export class PlaylistsService {
   async update(id: string, updatePlaylistDto: UpdatePlaylistDto): Promise<Playlist> {
     this.logger.log(`🔄 Actualizando playlist: ${id}`);
 
-    const playlist = await this.findOne(id);
+    // No validar acceso aquí porque el controlador ya valida con JwtAuthGuard
+    const playlist = await this.findOne(id, true, undefined);
 
     Object.assign(playlist, updatePlaylistDto);
 
@@ -155,7 +172,8 @@ export class PlaylistsService {
   async remove(id: string): Promise<void> {
     this.logger.log(`🗑️ Eliminando playlist: ${id}`);
 
-    const playlist = await this.findOne(id);
+    // No validar acceso aquí porque el controlador ya valida con JwtAuthGuard
+    const playlist = await this.findOne(id, true, undefined);
 
     try {
       await this.playlistRepository.remove(playlist);
@@ -170,7 +188,7 @@ export class PlaylistsService {
     }
   }
 
-  // Método helper: buscar o crear canción
+  // Método helper: buscar canción (SOLO busca, NO crea)
   private async findOrCreateSong(addSongDto: AddSongToPlaylistDto): Promise<Song> {
     // 1. Si viene songId, buscar por ID en BD
     if (addSongDto.songId) {
@@ -178,7 +196,7 @@ export class PlaylistsService {
         const song = await this.musicService.findSongById(addSongDto.songId);
         return song;
       } catch (error) {
-        // Continuar con youtubeId si falla
+        throw new NotFoundException(`Canción con ID ${addSongDto.songId} no encontrada en la base de datos`);
       }
     }
 
@@ -189,57 +207,14 @@ export class PlaylistsService {
         return existingSong;
       }
 
-      // 3. No está en BD, buscar en YouTube API
-      try {
-        const youtubeVideo = await this.musicService.getYouTubeVideoById(addSongDto.youtubeId);
-
-        if (!youtubeVideo) {
-          throw new BadRequestException(`Video con ID ${addSongDto.youtubeId} no encontrado en YouTube`);
-        }
-
-        // 4. Crear nueva canción con datos de YouTube API
-        this.logger.log(`💾 Creando nueva canción desde YouTube: "${youtubeVideo.title}"`);
-
-        const createSongDto: CreateSongDto = {
-          title: addSongDto.title || youtubeVideo.title,
-          artist: addSongDto.artist || youtubeVideo.artist,
-          youtubeId: addSongDto.youtubeId,
-          duration: addSongDto.duration || youtubeVideo.duration,
-          genre: addSongDto.genre,
-          publishedAt: youtubeVideo.publishedAt,
-          viewCount: youtubeVideo.viewCount,
-        };
-
-        const newSong = await this.musicService.createSong(createSongDto);
-        return newSong;
-
-      } catch (error) {
-        this.logger.error(`❌ Error al obtener datos de YouTube: ${error.message}`);
-
-        // 5. Fallback: usar metadatos manuales si están disponibles
-        if (addSongDto.title && addSongDto.artist && addSongDto.duration) {
-          this.logger.log(`🔄 Fallback: creando con metadatos manuales`);
-
-          const createSongDto: CreateSongDto = {
-            title: addSongDto.title,
-            artist: addSongDto.artist,
-            youtubeId: addSongDto.youtubeId,
-            duration: addSongDto.duration,
-            genre: addSongDto.genre,
-          };
-
-          const newSong = await this.musicService.createSong(createSongDto);
-          return newSong;
-        }
-
-        throw new BadRequestException(
-          `No se pudo obtener información del video ${addSongDto.youtubeId} desde YouTube. ` +
-          'Proporcione title, artist y duration manualmente.'
-        );
-      }
+      // 3. No está en BD - NO CREAR, lanzar error
+      throw new NotFoundException(
+        `Canción con YouTube ID ${addSongDto.youtubeId} no encontrada en la base de datos. ` +
+        'Las playlists solo pueden contener canciones que ya existen en la base de datos.'
+      );
     }
 
-    // 6. No hay suficiente información
+    // 4. No hay suficiente información
     throw new BadRequestException('Debe proporcionar songId o youtubeId');
   }
 
@@ -417,8 +392,8 @@ export class PlaylistsService {
   async getPlaylistSongs(playlistId: string): Promise<PlaylistSong[]> {
     this.logger.log(`🎵 Obteniendo canciones de playlist: ${playlistId}`);
 
-    // Verificar que la playlist existe
-    await this.findOne(playlistId);
+    // Verificar que la playlist existe (sin validación de acceso)
+    await this.findOne(playlistId, true, undefined);
 
     const playlistSongs = await this.playlistSongRepository.find({
       where: { playlistId },
