@@ -1,4 +1,4 @@
-import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
+import { BadRequestException, ForbiddenException, Injectable, NotFoundException } from '@nestjs/common';
 import { CreateUserHistoryDto } from '../dto/create-user-history.dto';
 import { UpdateUserHistoryDto } from '../dto/update-user-history.dto';
 import { UserHistory } from '../entities/user-history.entity';
@@ -6,6 +6,7 @@ import { Repository } from 'typeorm';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Song } from 'src/music/entities/song.entity';
 import { User } from 'src/users/entities/users.entity';
+import { CurrentUser } from 'src/auth/decorators/current-user.decorator';
 
 @Injectable()
 export class UserHistoryService {
@@ -70,9 +71,21 @@ export class UserHistoryService {
     return this.userHistoryRepository.findBy({id});
   }
 
-  findOneByUser(userId: string) {
-    return this.userHistoryRepository.find({where:{user:{id:userId}},relations: ['song'],order:{playedAt:"DESC"},take:10});
+  async findOneByUser(userId: string, requesterId?: string) {
+  const histories = await this.userHistoryRepository.find({
+    where: { user: { id: userId } },
+    relations: ['song'],
+    order: { playedAt: 'DESC' },
+  });
+
+  if (!histories.length) {
+    throw new NotFoundException('Este usuario no tiene historial');
   }
+
+  return histories;
+}
+
+
 
   async update(id: string, updateUserHistoryDto: UpdateUserHistoryDto) {
       try{
