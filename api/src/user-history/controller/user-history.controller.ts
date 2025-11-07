@@ -1,7 +1,9 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete } from '@nestjs/common';
+import { Controller, Get, Post, Body, Patch, Param, Delete, UseGuards } from '@nestjs/common';
 import { UserHistoryService } from '../services/user-history.service';
 import { CreateUserHistoryDto } from '../dto/create-user-history.dto';
 import { UpdateUserHistoryDto } from '../dto/update-user-history.dto';
+import { JwtAuthGuard } from 'src/auth/jwt-auth.guard';
+import { CurrentUser } from 'src/auth/decorators/current-user.decorator';
 
 @Controller('user-history')
 export class UserHistoryController {
@@ -23,8 +25,12 @@ export class UserHistoryController {
   }
 //historial entero de x user
   @Get('/user/:userId')
-  findOneByUser(@Param('userId') id: string) {
-    return this.userHistoryService.findOneByUser(id);
+  @UseGuards(JwtAuthGuard)
+  findOneByUser(
+    @Param('userId') userId: string,
+    @CurrentUser() currentUser: any,
+  ) {
+    return this.userHistoryService.findOneByUser(userId, currentUser.id);
   }
 
   @Patch(':id')

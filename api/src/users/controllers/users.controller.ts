@@ -1,8 +1,9 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete, UseGuards } from '@nestjs/common';
+import { Controller, Get, Post, Body, Patch, Param, Delete, UseGuards, Query } from '@nestjs/common';
 import { UsersService } from './../services/users.service';
 import { CreateUserDto } from '../dto/create-user.dto';
 import { UpdateUserDto } from '../dto/update-user.dto';
 import { JwtAuthGuard } from '../../auth/jwt-auth.guard';
+import { CurrentUser } from '../../auth/decorators/current-user.decorator';
 
 @UseGuards(JwtAuthGuard)
 @Controller('users')
@@ -19,10 +20,13 @@ export class UsersController {
     return this.usersService.findAll();
   }
 
+  // ✅ Nuevo: devolver perfil con estado follow
   @Get(':id')
-  findOne(@Param('id') id: string) {
-    return this.usersService.findOne(id);
+  findOne(@Param('id') id: string, @CurrentUser() currentUser: any) {
+    return this.usersService.findOneWithRelations(id, currentUser.userId);
   }
+
+
 
   @Patch(':id')
   update(@Param('id') id: string, @Body() updateUserDto: UpdateUserDto) {
@@ -33,4 +37,17 @@ export class UsersController {
   remove(@Param('id') id: string) {
     return this.usersService.remove(id);
   }
+
+  @Get(':id/can-access-history')
+async canAccessHistory(
+  @Param('id') targetUserId: string,
+  @CurrentUser() currentUser: any,
+) {
+  console.log('🟣 Revisando acceso al historial:', {
+    targetUserId,
+    requesterId: currentUser?.id,
+  });
+
+  return this.usersService.canAccessHistory(targetUserId, currentUser?.userId);
+}
 }
