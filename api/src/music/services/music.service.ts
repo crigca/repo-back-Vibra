@@ -287,7 +287,10 @@ export class MusicService {
   }> {
     this.logger.log(`🧠 Búsqueda inteligente con auto-guardado: "${searchDto.query}"`);
 
-    // 1. Buscar primero en la base de datos (SOLO canciones con Cloudinary URL y duración válida)
+    const MAX_DB_RESULTS = 15;
+    const totalMaxResults = searchDto.maxResults || 20;
+
+    // 1. Buscar primero en la base de datos (máximo 15, SOLO canciones con Cloudinary URL y duración válida)
     const dbResults = await this.songRepository
       .createQueryBuilder('song')
       .where('song.cloudinaryUrl IS NOT NULL')
@@ -299,15 +302,18 @@ export class MusicService {
         '(LOWER(song.title) LIKE LOWER(:query) OR LOWER(song.artist) LIKE LOWER(:query))',
         { query: `%${searchDto.query}%` }
       )
-      .take(searchDto.maxResults)
+      .take(Math.min(MAX_DB_RESULTS, totalMaxResults))
       .orderBy('song.viewCount', 'DESC')
       .getMany();
 
-    this.logger.log(`📊 Base de datos devolvió ${dbResults.length} canciones (filtradas por duración 60-600s)`);
+    this.logger.log(`📊 Base de datos devolvió ${dbResults.length} canciones (máximo ${MAX_DB_RESULTS}, filtradas por duración 60-600s)`);
 
-    // 2. Si encontramos suficientes en BD, devolver solo esos
-    if (dbResults.length >= (searchDto.maxResults || 10)) {
-      this.logger.log(`✅ Encontradas ${dbResults.length} canciones en BD (suficientes)`);
+    // 2. Calcular cuántos necesitamos de YouTube para llegar al total
+    const remainingNeeded = totalMaxResults - dbResults.length;
+
+    // 3. Si no necesitamos más, devolver solo los de BD
+    if (remainingNeeded <= 0) {
+      this.logger.log(`✅ Ya tenemos ${dbResults.length} canciones de BD (suficientes)`);
       return {
         fromDatabase: dbResults,
         fromYoutube: [],
@@ -315,9 +321,7 @@ export class MusicService {
       };
     }
 
-    // 3. Si no hay suficientes, complementar con YouTube
-    const remainingNeeded = (searchDto.maxResults || 10) - dbResults.length;
-    this.logger.log(`🔍 Solo ${dbResults.length} en BD, buscando ${remainingNeeded} en YouTube`);
+    this.logger.log(`🔍 Tenemos ${dbResults.length} de BD (máx ${MAX_DB_RESULTS}), buscando ${remainingNeeded} en YouTube para llegar a ${totalMaxResults}`);
 
     try {
       const youtubeResults = await this.youtubeService.searchVideos(

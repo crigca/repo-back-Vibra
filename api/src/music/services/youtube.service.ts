@@ -127,10 +127,12 @@ export class YoutubeService {
 
       const video = videoData.items[0];
 
+      const cleanedTitle = this.cleanTitle(video.snippet.title);
+
       const result: YouTubeSearchResult = {
         id: video.id,
-        title: this.cleanTitle(video.snippet.title),
-        artist: this.extractArtist(video.snippet.title, video.snippet.channelTitle),
+        title: this.extractSongTitle(cleanedTitle),
+        artist: this.extractArtist(cleanedTitle, video.snippet.channelTitle),
         duration: this.parseDuration(video.contentDetails.duration),
         publishedAt: video.snippet.publishedAt,
         viewCount: parseInt(video.statistics?.viewCount || '0'),
@@ -618,11 +620,12 @@ export class YoutubeService {
       })
       .map((item) => {
         const videoDetails = videosMap.get(item.id.videoId);
+        const cleanedTitle = this.cleanTitle(item.snippet.title);
 
         return {
           id: item.id.videoId,
-          title: this.cleanTitle(item.snippet.title),
-          artist: this.extractArtist(item.snippet.title, item.snippet.channelTitle),
+          title: this.extractSongTitle(cleanedTitle),
+          artist: this.extractArtist(cleanedTitle, item.snippet.channelTitle),
           duration: this.parseDuration(
             videoDetails?.contentDetails?.duration || 'PT0S',
           ),
@@ -673,5 +676,35 @@ export class YoutubeService {
     }
 
     return channelTitle;
+  }
+
+  /**
+   * Extrae solo el nombre de la canción del título, removiendo el artista
+   * Ejemplos:
+   *   "Iron Maiden - The Trooper" → "The Trooper"
+   *   "Metallica: Enter Sandman" → "Enter Sandman"
+   *   "Miss Monique | Deep House Mix" → "Deep House Mix"
+   *   "Just a Song" → "Just a Song" (sin cambios)
+   */
+  private extractSongTitle(title: string): string {
+    // Probar múltiples patrones de separación
+    const patterns = [
+      /^[^-:]+\s*[-:]\s*(.+)/,     // "Artista - Canción" o "Artista : Canción"
+      /^[^|]+\s*\|\s*(.+)/,        // "Artista | Canción"
+    ];
+
+    for (const pattern of patterns) {
+      const match = title.match(pattern);
+      if (match) {
+        const extracted = match[1].trim();
+        // Solo retornar si el título extraído tiene sentido (no muy corto)
+        if (extracted.length > 1) {
+          return extracted;
+        }
+      }
+    }
+
+    // Si no coincide con ningún patrón, devolver el título original
+    return title;
   }
 }
