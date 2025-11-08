@@ -32,9 +32,10 @@ export class AuthService {
             });
 
             const payload = ticket.getPayload();
+            console.log('PAYLOAD DE GOOGLE:', payload);
             if (!payload) throw new UnauthorizedException('Invalid Google ID token');
 
-            const { sub: googleId, email, name: username, email_verified } = payload;
+            const { sub: googleId, email, name: username, email_verified,picture } = payload;
 
             if (!email || !email_verified) {
               throw new UnauthorizedException('Google account email not available or not verified');
@@ -53,15 +54,28 @@ export class AuthService {
                   googleId,
                   email,
                   username: username ?? email.split('@')[0],
+                  profileImage: picture,
+                });
+                console.log('USUARIO A CREAR O ACTUALIZAR:', {
+                  googleId,
+                  email,
+                  username,
+                  picture,
                 });
                 await this.userRepository.save(user);
+                console.log('USUARIO GUARDADO:', user);
             } else if (!user.googleId) {
                 // vincular cuenta si email existente sin googleId
                 user.googleId = googleId;
+                user.profileImage = picture;
                 await this.userRepository.save(user);
+            }else {
+              // ✅ ya tiene Google vinculado, actualizar la foto por si cambió
+              user.profileImage = picture;
+              await this.userRepository.save(user);
             }
 
-            const payloadJwt = { sub: user.id, email: user.email, username: user.username  };
+            const payloadJwt = { sub: user.id, email: user.email, username: user.username };
             const token = this.jwtService.sign(payloadJwt, {
                 expiresIn: '7d',
             });

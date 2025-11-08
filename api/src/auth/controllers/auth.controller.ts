@@ -3,10 +3,16 @@ import { AuthService } from '../services/auth.service';
 import { JwtAuthGuard } from '../jwt-auth.guard';
 import { CurrentUser } from '../decorators/current-user.decorator';
 import express from 'express';
+import { User } from 'src/users/entities/users.entity';
+import { Repository } from 'typeorm';
+import { InjectRepository } from '@nestjs/typeorm';
 
 @Controller('auth')
 export class AuthController {
-    constructor(private readonly AuthService: AuthService) {}
+    constructor(private readonly AuthService: AuthService,
+        @InjectRepository(User)
+            private usersRepository: Repository<User>,
+    ) {}
 
     @Post('google')
     async loginWithGoogle(
@@ -35,12 +41,9 @@ export class AuthController {
 
     @Get('me')
     @UseGuards(JwtAuthGuard)
-    async getCurrentUser(@CurrentUser() user: any): Promise<any> {
-        return {
-            userId: user.userId,
-            username: user.username,
-            email: user.email
-        };
+    async getCurrentUser(@CurrentUser() user: any) {
+        const dbUser = await this.usersRepository.findOne({ where: { id: user.userId } });
+        return dbUser; // así devuelve todo lo más reciente de la DB
     }
 
     @Post('cookie-dev')

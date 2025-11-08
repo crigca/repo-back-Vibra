@@ -1,12 +1,11 @@
-import { IsEmail, IsOptional, IsString } from 'class-validator';
+import { IsOptional, IsString, IsIn } from 'class-validator';
 
 export class UpdateUserDto {
-  @IsEmail()
-  email: string;
-
+  @IsOptional()
   @IsString()
-  username: string;
+  username?: string;
 
-  @IsString()
-  googleId: string;
+  @IsOptional()
+  @IsIn(['public', 'private', 'followers', 'followed', 'mutuals'])
+  privacy?: 'public' | 'private' | 'followers' | 'followed' | 'mutuals';
 }
