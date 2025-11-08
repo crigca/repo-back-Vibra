@@ -26,9 +26,9 @@ const IMAGES_PER_TIER = {
   tier4: 15,
 };
 
-const TIERS_CONFIG = require('./genres-tiers.json');
-const PROMPTS_DATA = JSON.parse(fs.readFileSync(path.join(__dirname, 'prompts.json'), 'utf-8'));
-const GENRE_FAMILIES = require('./genre-families.json');
+const TIERS_CONFIG = require('../../data/genres-tiers.json');
+const PROMPTS_DATA = JSON.parse(fs.readFileSync(path.join(__dirname, '../../data/prompts.json'), 'utf-8'));
+const GENRE_FAMILIES = require('../../data/genre-families.json');
 
 // Estilos artísticos
 const ARTISTIC_STYLES = [

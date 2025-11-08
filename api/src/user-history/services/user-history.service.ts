@@ -32,15 +32,41 @@ export class UserHistoryService {
     // 2️⃣ Si hay canción, cargarla (opcional)
     let song: Song | undefined;
     if (songId) {
-      song = await this.songRepository.findOne({ where: { id: songId } }) || undefined;
+      // Validar si songId es un UUID válido (formato: xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx)
+      const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+
+      if (uuidRegex.test(songId)) {
+        // Es un UUID válido, buscar por id
+        song = await this.songRepository.findOne({ where: { id: songId } }) || undefined;
+      } else {
+        // No es UUID, asumir que es youtubeId
+        song = await this.songRepository.findOne({ where: { youtubeId: songId } }) || undefined;
+      }
+    }
+
+    // Si no encontró por songId, intentar con youtubeId del DTO
+    if (!song && youtubeId) {
+      song = await this.songRepository.findOne({ where: { youtubeId } }) || undefined;
     }
 
     // 3️⃣ Buscar si ya existe una entrada para este usuario y canción o youtubeId
+    const whereConditions: any[] = [];
+
+    // Condición 1: Buscar por youtubeId si existe
+    if (youtubeId) {
+      whereConditions.push({ user: { id: user.id }, youtubeId });
+    }
+
+    // Condición 2: Buscar por song.id solo si songId es un UUID válido
+    if (songId) {
+      const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+      if (uuidRegex.test(songId)) {
+        whereConditions.push({ user: { id: user.id }, song: { id: songId } });
+      }
+    }
+
     let userHistory = await this.userHistoryRepository.findOne({
-      where: [
-        { user: { id: user.id }, youtubeId },
-        { user: { id: user.id }, song: { id: songId } },
-      ],
+      where: whereConditions.length > 0 ? whereConditions : undefined,
       relations: ['user', 'song'],
     });
 

@@ -105,10 +105,10 @@ export class PlaylistsController {
     @Body(ValidationPipe) updatePlaylistDto: UpdatePlaylistDto,
     @CurrentUser() user: any,
   ): Promise<Playlist> {
-    this.logger.log(`🔄 PUT /playlists/${id}`);
+    this.logger.log(`🔄 PUT /playlists/${id} - Usuario: ${user.username}`);
 
     try {
-      const playlist = await this.playlistsService.update(id, updatePlaylistDto);
+      const playlist = await this.playlistsService.update(id, updatePlaylistDto, user.userId);
 
       this.logger.log(`✅ Playlist actualizada: "${playlist.name}"`);
       return playlist;
@@ -126,10 +126,10 @@ export class PlaylistsController {
     @Param('id', ParseUUIDPipe) id: string,
     @CurrentUser() user: any,
   ): Promise<void> {
-    this.logger.log(`🗑️ DELETE /playlists/${id}`);
+    this.logger.log(`🗑️ DELETE /playlists/${id} - Usuario: ${user.username}`);
 
     try {
-      await this.playlistsService.remove(id);
+      await this.playlistsService.remove(id, user.userId);
 
       this.logger.log(`✅ Playlist eliminada exitosamente`);
     } catch (error) {

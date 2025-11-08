@@ -67,7 +67,7 @@ const promptSchema = new mongoose.Schema(
 const Prompt = mongoose.model('Prompt', promptSchema);
 
 // Cargar prompts desde JSON
-const promptsPath = path.join(__dirname, 'prompts.json');
+const promptsPath = path.join(__dirname, '../../data/prompts.json');
 const PROMPTS_DATA = JSON.parse(fs.readFileSync(promptsPath, 'utf-8'));
 
 /**

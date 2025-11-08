@@ -37,7 +37,7 @@ promptSchema.index({ promptText: 'text' });
 const Prompt = mongoose.model('Prompt', promptSchema);
 
 // Cargar prompts desde archivo JSON
-const promptsPath = path.join(__dirname, 'prompts.json');
+const promptsPath = path.join(__dirname, '../../data/prompts.json');
 const BASE_PROMPTS = JSON.parse(fs.readFileSync(promptsPath, 'utf-8'));
 
 // Template de prompts por categoría
@@ -74,7 +74,7 @@ async function seedPrompts() {
     console.log('✅ Connected to MongoDB\n');
 
     // Cargar géneros
-    const genresPath = path.join(__dirname, 'genres.json');
+    const genresPath = path.join(__dirname, '../../data/genres.json');
     const genres = JSON.parse(fs.readFileSync(genresPath, 'utf-8'));
 
     console.log(`📊 Processing ${genres.length} genres\n`);

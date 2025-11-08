@@ -148,7 +148,8 @@ async function uploadToCloudinary(filePath, youtubeId, genre) {
 }
 
 /**
- * Obtener canciones sin cloudinaryUrl
+ * Obtener canciones sin cloudinaryUrl (SOLO CON GÉNERO VÁLIDO)
+ * Excluye: NULL, vacío, y "Sin categoría"
  */
 async function getSongsWithoutCloudinary(limit) {
   const result = await dataSource.query(
@@ -156,6 +157,11 @@ async function getSongsWithoutCloudinary(limit) {
      FROM songs
      WHERE ("cloudinaryUrl" IS NULL OR "cloudinaryUrl" = '')
      AND "youtubeId" IS NOT NULL
+     AND genre IS NOT NULL
+     AND genre != ''
+     AND genre != 'Sin categoría'
+     AND genre != 'Sin Categoria'
+     AND genre != 'Otros'
      LIMIT $1`,
     [limit]
   );

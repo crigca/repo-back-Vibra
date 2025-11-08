@@ -204,6 +204,400 @@ export class YoutubeService {
     });
   }
 
+  // Lista negra de contenido no musical
+  private isNonMusicalContent(title: string, channelTitle: string): boolean {
+    const blacklist = [
+      // Humoristas y entretenimiento
+      'bananero',
+      'sketch',
+      'comedia',
+      'comedy',
+      'stand up',
+      'standup',
+      'monólogo',
+      'monologo',
+      'parodia',
+      'parody',
+      'satira',
+      'satire',
+
+      // Tutoriales y educación
+      'tutorial',
+      'how to',
+      'como hacer',
+      'curso',
+      'course',
+      'clase',
+      'lesson',
+      'aprende',
+      'learn',
+      'enseña',
+      'teach',
+      'guia',
+      'guide',
+
+      // Reviews y tecnología
+      'review',
+      'unboxing',
+      'analisis',
+      'analysis',
+      'comparison',
+      'comparativa',
+      'specs',
+      'caracteristicas',
+      'prueba',
+      'test',
+
+      // Gaming
+      'gameplay',
+      'playthrough',
+      'let\'s play',
+      'walkthrough',
+      'speedrun',
+      'gaming',
+      'gamer',
+      'stream',
+      'twitch',
+
+      // Podcasts y entrevistas
+      'podcast',
+      'interview',
+      'entrevista',
+      'charla',
+      'talk show',
+      'conversacion',
+      'conversation',
+
+      // Documentales e historia
+      'documental',
+      'documentary',
+      'reportaje',
+      'investigacion',
+      'investigation',
+      'historia',
+      'history',
+      'historical',
+      'historico',
+      'archivo',
+      'archive',
+      'footage',
+      'grabacion',
+      'recording',
+      'anno',
+      'año',
+      'year',
+      'century',
+      'siglo',
+      'epoca',
+      'era',
+      'periodo',
+      'period',
+      'arrivo',
+      'llegada',
+      'arrival',
+      'aeropuerto',
+      'airport',
+
+      // Trailers y promoción
+      'trailer',
+      'teaser',
+      'promo',
+      'anuncio',
+      'ad',
+      'comercial',
+      'making of',
+      'behind the scenes',
+      'detras de camaras',
+
+      // Reacciones
+      'reaccion',
+      'reaction',
+      'reacts',
+      'reacciona',
+      'first time',
+      'primera vez',
+
+      // Política
+      'politico',
+      'politica',
+      'discurso',
+      'milei',
+      'cristina',
+      'macri',
+      'massa',
+      'alberto',
+      'fernandez',
+      'kicillof',
+      'bullrich',
+      'larreta',
+      'debate',
+      'elecciones',
+      'elections',
+      'gobierno',
+      'government',
+      'congreso',
+      'senado',
+      'diputados',
+      'presidente',
+      'president',
+
+      // Noticias
+      'conferencia',
+      'press conference',
+      'noticia',
+      'news',
+      'noticias',
+      'breaking news',
+      'ultima hora',
+      'urgente',
+      'en vivo',
+      'live',
+      'directo',
+
+      // Vlogs y lifestyle
+      'vlog',
+      'daily vlog',
+      'mi dia',
+      'my day',
+      'rutina',
+      'routine',
+
+      // Challenges y pranks
+      'challenge',
+      'desafio',
+      'reto',
+      'prank',
+      'broma',
+      'trolleo',
+      'trolling',
+
+      // Compilaciones y rankings
+      'top 10',
+      'top 5',
+      'compilation',
+      'compilacion',
+      'highlights',
+      'mejores momentos',
+      'best moments',
+      'fails',
+      'fracasos',
+
+      // Resúmenes y explicaciones
+      'resumen',
+      'summary',
+      'explicacion',
+      'explained',
+      'breakdown',
+      'critica',
+      'opinion',
+      'comentario',
+      'commentary',
+
+      // Comparaciones y versus
+      'vs',
+      'versus',
+      'vs.',
+      'batalla',
+      'battle',
+
+      // Motivación y autoayuda
+      'motivacion',
+      'motivation',
+      'inspiracion',
+      'inspiration',
+      'autoayuda',
+      'self help',
+      'consejo',
+      'advice',
+
+      // Fitness y deportes (no musicales)
+      'entrenamiento',
+      'workout',
+      'ejercicio',
+      'exercise',
+      'fitness',
+      'gym',
+
+      // Cocina
+      'receta',
+      'recipe',
+      'cocina',
+      'cooking',
+      'chef',
+
+      // Belleza y moda
+      'makeup',
+      'maquillaje',
+      'belleza',
+      'beauty',
+      'fashion',
+      'moda',
+      'haul',
+
+      // Historia y guerras
+      'nazi',
+      'nazismo',
+      'fascist',
+      'fascista',
+      'fascismo',
+      'war',
+      'guerra',
+      'wwii',
+      'ww2',
+      'ww1',
+      'wwi',
+      'world war',
+      'segunda guerra',
+      'primera guerra',
+      'vietnam',
+      'cold war',
+      'guerra fria',
+      'batalla de',
+      'battle of',
+      'invasion',
+      'invasion de',
+      'dictator',
+      'dictador',
+      'dictadura',
+      'dictatorship',
+      'regime',
+      'regimen',
+      'military',
+      'militar',
+      'ejercito',
+      'army',
+      'troops',
+      'tropas',
+      'soldiers',
+      'soldados',
+      'combat',
+      'combate',
+      'bombardero',
+      'bomber',
+      'bombing',
+      'bombardeo',
+
+      // Figuras históricas y políticas específicas
+      'peron',
+      'peronismo',
+      'peronista',
+      'evita',
+      'eva peron',
+      'pinochet',
+      'hitler',
+      'stalin',
+      'mussolini',
+      'franco',
+      'che guevara',
+      'fidel castro',
+      'mao',
+      'lenin',
+      'trotsky',
+
+      // Biografías y documentales históricos
+      'biography',
+      'biografia',
+      'biopic',
+      'life of',
+      'vida de',
+      'story of',
+      'historia de',
+      'the story',
+      'la historia',
+      'who was',
+      'quien fue',
+      'rise and fall',
+      'auge y caida',
+      'legacy',
+      'legado',
+      'death of',
+      'muerte de',
+      'assassination',
+      'asesinato',
+
+      // Medios históricos y archivo
+      'newsreel',
+      'noticiario',
+      'footage antiguo',
+      'vintage footage',
+      'old footage',
+      'archivo historico',
+      'historical archive',
+      'rare footage',
+      'metraje raro',
+      'original footage',
+      'metraje original',
+      'restored',
+      'restaurado',
+      'remastered footage',
+      'colorized',
+      'coloreado',
+
+      // Décadas y períodos históricos
+      '1910s',
+      '1920s',
+      '1930s',
+      '1940s',
+      '1950s',
+      'años 10',
+      'años 20',
+      'años 30',
+      'años 40',
+      'años 50',
+      'decada de',
+      'decade of',
+
+      // Revoluciones y movimientos políticos
+      'revolucion',
+      'revolution',
+      'revolucionario',
+      'revolutionary',
+      'golpe de estado',
+      'coup',
+      'uprising',
+      'levantamiento',
+      'manifestacion',
+      'protest',
+      'protesta',
+
+      // Religión y papado
+      'papa ',
+      'pope ',
+      'vaticano',
+      'vatican',
+      'iglesia',
+      'church',
+      'religion',
+      'religious',
+      'religioso',
+      'catolico',
+      'catholic',
+
+      // Ciencia y descubrimientos
+      'scientist',
+      'cientifico',
+      'discovery',
+      'descubrimiento',
+      'invention',
+      'invencion',
+      'inventor',
+
+      // Otros
+      'asmr',
+      'sorteo',
+      'giveaway',
+      'concurso',
+      'contest',
+      'ganar',
+      'win',
+      'gratis',
+      'free',
+    ];
+
+    const searchText = `${title} ${channelTitle}`.toLowerCase();
+    return blacklist.some(term => searchText.includes(term));
+  }
+
   // Formatear resultados
   private formatSearchResults(
     searchData: any,
@@ -216,6 +610,12 @@ export class YoutubeService {
 
     return searchData.items
       .filter((item) => item.id.kind === 'youtube#video')
+      .filter((item) => {
+        // Filtrar contenido no musical
+        const title = this.cleanTitle(item.snippet.title);
+        const channelTitle = item.snippet.channelTitle;
+        return !this.isNonMusicalContent(title, channelTitle);
+      })
       .map((item) => {
         const videoDetails = videosMap.get(item.id.videoId);
 

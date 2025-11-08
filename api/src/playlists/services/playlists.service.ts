@@ -145,11 +145,11 @@ export class PlaylistsService {
   }
 
   // Actualizar playlist
-  async update(id: string, updatePlaylistDto: UpdatePlaylistDto): Promise<Playlist> {
-    this.logger.log(`🔄 Actualizando playlist: ${id}`);
+  async update(id: string, updatePlaylistDto: UpdatePlaylistDto, userId?: string): Promise<Playlist> {
+    this.logger.log(`🔄 Actualizando playlist: ${id} (usuario: ${userId || 'anónimo'})`);
 
-    // No validar acceso aquí porque el controlador ya valida con JwtAuthGuard
-    const playlist = await this.findOne(id, true, undefined);
+    // Validar acceso del usuario a la playlist
+    const playlist = await this.findOne(id, true, userId);
 
     Object.assign(playlist, updatePlaylistDto);
 
@@ -169,11 +169,11 @@ export class PlaylistsService {
   }
 
   // Eliminar playlist
-  async remove(id: string): Promise<void> {
-    this.logger.log(`🗑️ Eliminando playlist: ${id}`);
+  async remove(id: string, userId?: string): Promise<void> {
+    this.logger.log(`🗑️ Eliminando playlist: ${id} (usuario: ${userId || 'anónimo'})`);
 
-    // No validar acceso aquí porque el controlador ya valida con JwtAuthGuard
-    const playlist = await this.findOne(id, true, undefined);
+    // Validar acceso del usuario a la playlist
+    const playlist = await this.findOne(id, true, userId);
 
     try {
       await this.playlistRepository.remove(playlist);
