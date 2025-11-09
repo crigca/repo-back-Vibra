@@ -39,15 +39,33 @@ export class UsersController {
   }
 
   @Get(':id/can-access-history')
-async canAccessHistory(
-  @Param('id') targetUserId: string,
-  @CurrentUser() currentUser: any,
-) {
-  console.log('🟣 Revisando acceso al historial:', {
-    targetUserId,
-    requesterId: currentUser?.id,
-  });
+  async canAccessHistory(
+    @Param('id') targetUserId: string,
+    @CurrentUser() currentUser: any,
+  ) {
+    console.log('🟣 Revisando acceso al historial:', {
+      targetUserId,
+      requesterId: currentUser?.id,
+    });
 
-  return this.usersService.canAccessHistory(targetUserId, currentUser?.userId);
-}
+    return this.usersService.canAccessHistory(targetUserId, currentUser?.userId);
+  }
+
+  // ✅ Obtener lista de seguidores
+  @Get(':targetUserId/followers')
+  async getFollowers(
+    @Param('targetUserId') targetUserId: string,
+    @Query('currentUserId') currentUserId: string,
+  ) {
+    return this.usersService.getFollowers(targetUserId, currentUserId);
+  }
+
+  // ✅ Obtener lista de seguidos
+  @Get(':targetUserId/following')
+  async getFollowing(
+    @Param('targetUserId') targetUserId: string,
+    @Query('currentUserId') currentUserId: string,
+  ) {
+    return this.usersService.getFollowing(targetUserId, currentUserId);
+  }
 }
