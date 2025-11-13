@@ -98,20 +98,33 @@ export class UserHistoryService {
   }
 
   async findOneByUser(userId: string, requesterId?: string) {
-  const histories = await this.userHistoryRepository.find({
-    where: { user: { id: userId } },
-    relations: ['song'],
-    order: { playedAt: 'DESC' },
-  });
+    const histories = await this.userHistoryRepository.find({
+      where: { user: { id: userId } },
+      relations: ['song'],
+      order: { playedAt: 'DESC' },
+    });
 
-  if (!histories.length) {
-    throw new NotFoundException('Este usuario no tiene historial');
+    if (!histories.length) {
+      throw new NotFoundException('Este usuario no tiene historial');
+    }
+
+    return histories;
   }
 
-  return histories;
-}
+  async findLimitedByUser(userId: string, requesterId?: string) {
+    const histories = await this.userHistoryRepository.find({
+      where: { user: { id: userId } },
+      relations: ['song'],
+      order: { playedAt: 'DESC' },
+      take: 20, // 👈 este es el límite
+    });
 
+    if (!histories.length) {
+      throw new NotFoundException('Este usuario no tiene historial');
+    }
 
+    return histories;
+  }
 
   async update(id: string, updateUserHistoryDto: UpdateUserHistoryDto) {
       try{
