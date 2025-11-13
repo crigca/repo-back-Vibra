@@ -33,6 +33,15 @@ export class UserHistoryController {
     return this.userHistoryService.findOneByUser(userId, currentUser.id);
   }
 
+  // Obtener máximo 20 del historial de un usuario
+  @Get('/user/:userId/limited')
+  @UseGuards(JwtAuthGuard)
+  findLimitedByUser(
+    @Param('userId') userId: string,
+    @CurrentUser() currentUser: any,
+  ) {
+    return this.userHistoryService.findLimitedByUser(userId, currentUser.id);
+  }
   @Patch(':id')
   update(@Param('id') id: string, @Body() updateUserHistoryDto: UpdateUserHistoryDto) {
     return this.userHistoryService.update(id, updateUserHistoryDto);
