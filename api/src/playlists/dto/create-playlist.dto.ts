@@ -11,7 +11,7 @@ export class CreatePlaylistDto {
   @IsString()
   @IsNotEmpty()
   @MinLength(1, { message: 'El nombre no puede estar vacío' })
-  @MaxLength(200, { message: 'El nombre no puede exceder 200 caracteres' })
+  @MaxLength(30, { message: 'El nombre no puede exceder 30 caracteres' })
   name: string;
 
   @IsOptional()

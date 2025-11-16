@@ -1,0 +1,133 @@
+{
+  "metal": [
+    "heavyMetal",
+    "heavyMetalArgentino",
+    "heavyMetalLatino",
+    "deathMetal",
+    "thrashMetal",
+    "blackMetal",
+    "glamMetal",
+    "industrialMetal"
+  ],
+  "rock": [
+    "rock",
+    "rockArgentino",
+    "rockLatino",
+    "alternativeRock",
+    "indieRock",
+    "softRock",
+    "bluesRock",
+    "glamRock",
+    "grunge",
+    "progressiveRock",
+    "popPunk"
+  ],
+  "cumbia": [
+    "cumbia",
+    "cumbiaVillera",
+    "cumbia420",
+    "cuarteto"
+  ],
+  "latin": [
+    "bachata",
+    "salsa",
+    "merengue",
+    "tango",
+    "bolero",
+    "vallenato",
+    "balada"
+  ],
+  "urban": [
+    "trap",
+    "trapArgentino",
+    "hiphop",
+    "rap",
+    "drill",
+    "reggaeton",
+    "urbanoLatino",
+    "dembow"
+  ],
+  "electronic": [
+    "techno",
+    "house",
+    "trance",
+    "dubstep",
+    "drumAndBass",
+    "edm",
+    "edmActual",
+    "electronic",
+    "electronicaArgentina",
+    "synthpop"
+  ],
+  "pop": [
+    "pop",
+    "popLatinoActual",
+    "popLatinoClasico",
+    "pop90s",
+    "hyperpop"
+  ],
+  "punk": [
+    "punk",
+    "hardcorePunk",
+    "ska"
+  ],
+  "folk": [
+    "folkloreArgentino",
+    "folkloreColombia",
+    "country",
+    "bluegrass",
+    "folk"
+  ],
+  "latin_traditional": [
+    "mariachi",
+    "ranchera",
+    "corrido",
+    "corridosTumbados",
+    "norteño"
+  ],
+  "afro_caribbean": [
+    "afrobeat",
+    "reggae",
+    "dancehall",
+    "sambaPagode"
+  ],
+  "soul_funk": [
+    "soul",
+    "funk",
+    "funkRap",
+    "rb",
+    "disco"
+  ],
+  "alternative": [
+    "latinIndie",
+    "newWave"
+  ],
+  "chill": [
+    "bossaNova",
+    "lofi",
+    "jazz",
+    "blues",
+    "instrumental",
+    "arregladores",
+    "autoresCompositores"
+  ],
+  "world_music": [
+    "musicaBrasilera",
+    "trovaCubana",
+    "sertanejo",
+    "highlife",
+    "flamenco"
+  ],
+  "asian_pop": [
+    "kpop",
+    "jpop"
+  ],
+  "infantil": [
+    "infantil"
+  ],
+  "clasica": [
+    "clasica",
+    "opera",
+    "gospel"
+  ]
+}

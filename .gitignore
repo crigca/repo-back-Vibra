@@ -1,0 +1,14 @@
+api/*-player-script.js
+api/public/
+/node_modules/
+.env
+*.mp3
+*.wav
+*.zip
+*.log
+/api/scripts/production/public/audio/
+/api/scripts/production/music/temp_downloads/
+/api/scripts/production/**/*.webm
+/api/scripts/production/**/*.mp4
+/api/scripts/production/**/*.ytdl
+/api/scripts/production/**/*.part

@@ -127,10 +127,12 @@ export class YoutubeService {
 
       const video = videoData.items[0];
 
+      const cleanedTitle = this.cleanTitle(video.snippet.title);
+
       const result: YouTubeSearchResult = {
         id: video.id,
-        title: this.cleanTitle(video.snippet.title),
-        artist: this.extractArtist(video.snippet.title, video.snippet.channelTitle),
+        title: this.extractSongTitle(cleanedTitle),
+        artist: this.extractArtist(cleanedTitle, video.snippet.channelTitle),
         duration: this.parseDuration(video.contentDetails.duration),
         publishedAt: video.snippet.publishedAt,
         viewCount: parseInt(video.statistics?.viewCount || '0'),
@@ -176,10 +178,12 @@ export class YoutubeService {
         q: query,
         part: 'snippet',
         type: 'video',
-        maxResults,
+        maxResults: Math.min(maxResults, 20), // Límite máximo de 20 resultados
         regionCode,
-        videoCategoryId: '10',
-        order: 'relevance',
+        videoCategoryId: '10', // Categoría: Música
+        videoDefinition: 'any', // Acepta cualquier definición
+        videoEmbeddable: 'true', // Solo videos que se pueden embeber
+        order: 'relevance', // Ordenar por relevancia
       },
     });
   }
@@ -202,6 +206,411 @@ export class YoutubeService {
     });
   }
 
+  // Lista negra de contenido no musical
+  private isNonMusicalContent(title: string, channelTitle: string): boolean {
+    const blacklist = [
+      // Humoristas y entretenimiento
+      'bananero',
+      'sketch',
+      'comedia',
+      'comedy',
+      'stand up',
+      'standup',
+      'monólogo',
+      'monologo',
+      'parodia',
+      'parody',
+      'satira',
+      'satire',
+
+      // Tutoriales y educación
+      'tutorial',
+      'how to',
+      'como hacer',
+      'curso',
+      'course',
+      'clase',
+      'lesson',
+      'aprende',
+      'learn',
+      'enseña',
+      'teach',
+      'guia',
+      'guide',
+
+      // Reviews y tecnología
+      'review',
+      'unboxing',
+      'analisis',
+      'analysis',
+      'comparison',
+      'comparativa',
+      'specs',
+      'caracteristicas',
+      'prueba',
+      'test',
+
+      // Gaming
+      'gameplay',
+      'playthrough',
+      'let\'s play',
+      'walkthrough',
+      'speedrun',
+      'gaming',
+      'gamer',
+      'stream',
+      'twitch',
+
+      // Podcasts y entrevistas
+      'podcast',
+      'interview',
+      'entrevista',
+      'charla',
+      'talk show',
+      'conversacion',
+      'conversation',
+
+      // VEVO y contenido promocional
+      'vevo news',
+      'vevo interview',
+      'vevocertified',
+      '#vevocertified',
+      'vevo certified',
+      'vevo lift',
+      'award presentation',
+      'fan interview',
+      'artist interview',
+
+      // Documentales e historia
+      'documental',
+      'documentary',
+      'reportaje',
+      'investigacion',
+      'investigation',
+      'historia',
+      'history',
+      'historical',
+      'historico',
+      'archivo',
+      'archive',
+      'footage',
+      'grabacion',
+      'recording',
+      'anno',
+      'año',
+      'year',
+      'century',
+      'siglo',
+      'epoca',
+      'era',
+      'periodo',
+      'period',
+      'arrivo',
+      'llegada',
+      'arrival',
+      'aeropuerto',
+      'airport',
+
+      // Trailers y promoción
+      'trailer',
+      'teaser',
+      'promo',
+      'anuncio',
+      'ad',
+      'comercial',
+      'making of',
+      'behind the scenes',
+      'detras de camaras',
+
+      // Reacciones
+      'reaccion',
+      'reaction',
+      'reacts',
+      'reacciona',
+      'first time',
+      'primera vez',
+
+      // Política
+      'politico',
+      'politica',
+      'discurso',
+      'milei',
+      'cristina',
+      'macri',
+      'massa',
+      'alberto',
+      'fernandez',
+      'kicillof',
+      'bullrich',
+      'larreta',
+      'debate',
+      'elecciones',
+      'elections',
+      'gobierno',
+      'government',
+      'congreso',
+      'senado',
+      'diputados',
+      'presidente',
+      'president',
+
+      // Noticias
+      'conferencia',
+      'press conference',
+      'noticia',
+      'news',
+      'noticias',
+      'breaking news',
+      'ultima hora',
+      'urgente',
+      'en vivo',
+      'live',
+      'directo',
+
+      // Vlogs y lifestyle
+      'vlog',
+      'daily vlog',
+      'mi dia',
+      'my day',
+      'rutina',
+      'routine',
+
+      // Challenges y pranks
+      'challenge',
+      'desafio',
+      'reto',
+      'prank',
+      'broma',
+      'trolleo',
+      'trolling',
+
+      // Compilaciones y rankings
+      'top 10',
+      'top 5',
+      'compilation',
+      'compilacion',
+      'highlights',
+      'mejores momentos',
+      'best moments',
+      'fails',
+      'fracasos',
+
+      // Resúmenes y explicaciones
+      'resumen',
+      'summary',
+      'explicacion',
+      'explained',
+      'breakdown',
+      'critica',
+      'opinion',
+      'comentario',
+      'commentary',
+
+      // Comparaciones y versus
+      'vs',
+      'versus',
+      'vs.',
+      'batalla',
+      'battle',
+
+      // Motivación y autoayuda
+      'motivacion',
+      'motivation',
+      'inspiracion',
+      'inspiration',
+      'autoayuda',
+      'self help',
+      'consejo',
+      'advice',
+
+      // Fitness y deportes (no musicales)
+      'entrenamiento',
+      'workout',
+      'ejercicio',
+      'exercise',
+      'fitness',
+      'gym',
+
+      // Cocina
+      'receta',
+      'recipe',
+      'cocina',
+      'cooking',
+      'chef',
+
+      // Belleza y moda
+      'makeup',
+      'maquillaje',
+      'belleza',
+      'beauty',
+      'fashion',
+      'moda',
+      'haul',
+
+      // Historia y guerras
+      'nazi',
+      'nazismo',
+      'fascist',
+      'fascista',
+      'fascismo',
+      'war',
+      'guerra',
+      'wwii',
+      'ww2',
+      'ww1',
+      'wwi',
+      'world war',
+      'segunda guerra',
+      'primera guerra',
+      'vietnam',
+      'cold war',
+      'guerra fria',
+      'batalla de',
+      'battle of',
+      'invasion',
+      'invasion de',
+      'dictator',
+      'dictador',
+      'dictadura',
+      'dictatorship',
+      'regime',
+      'regimen',
+      'military',
+      'militar',
+      'ejercito',
+      'army',
+      'troops',
+      'tropas',
+      'soldiers',
+      'soldados',
+      'combat',
+      'combate',
+      'bombardero',
+      'bomber',
+      'bombing',
+      'bombardeo',
+
+      // Figuras históricas y políticas específicas
+      'peron',
+      'peronismo',
+      'peronista',
+      'evita',
+      'eva peron',
+      'pinochet',
+      'hitler',
+      'stalin',
+      'mussolini',
+      'franco',
+      'che guevara',
+      'fidel castro',
+      'mao',
+      'lenin',
+      'trotsky',
+
+      // Biografías y documentales históricos
+      'biography',
+      'biografia',
+      'biopic',
+      'life of',
+      'vida de',
+      'story of',
+      'historia de',
+      'the story',
+      'la historia',
+      'who was',
+      'quien fue',
+      'rise and fall',
+      'auge y caida',
+      'legacy',
+      'legado',
+      'death of',
+      'muerte de',
+      'assassination',
+      'asesinato',
+
+      // Medios históricos y archivo
+      'newsreel',
+      'noticiario',
+      'footage antiguo',
+      'vintage footage',
+      'old footage',
+      'archivo historico',
+      'historical archive',
+      'rare footage',
+      'metraje raro',
+      'original footage',
+      'metraje original',
+      'restored',
+      'restaurado',
+      'remastered footage',
+      'colorized',
+      'coloreado',
+
+      // Décadas y períodos históricos
+      '1910s',
+      '1920s',
+      '1930s',
+      '1940s',
+      '1950s',
+      'años 10',
+      'años 20',
+      'años 30',
+      'años 40',
+      'años 50',
+      'decada de',
+      'decade of',
+
+      // Revoluciones y movimientos políticos
+      'revolucion',
+      'revolution',
+      'revolucionario',
+      'revolutionary',
+      'golpe de estado',
+      'coup',
+      'uprising',
+      'levantamiento',
+      'manifestacion',
+      'protest',
+      'protesta',
+
+      // Religión y papado
+      'papa ',
+      'pope ',
+      'vaticano',
+      'vatican',
+      'iglesia',
+      'church',
+      'religion',
+      'religious',
+      'religioso',
+      'catolico',
+      'catholic',
+
+      // Ciencia y descubrimientos
+      'scientist',
+      'cientifico',
+      'discovery',
+      'descubrimiento',
+      'invention',
+      'invencion',
+      'inventor',
+
+      // Otros
+      'asmr',
+      'sorteo',
+      'giveaway',
+      'concurso',
+      'contest',
+      'ganar',
+      'win',
+      'gratis',
+      'free',
+    ];
+
+    const searchText = `${title} ${channelTitle}`.toLowerCase();
+    return blacklist.some(term => searchText.includes(term));
+  }
+
   // Formatear resultados
   private formatSearchResults(
     searchData: any,
@@ -214,13 +623,20 @@ export class YoutubeService {
 
     return searchData.items
       .filter((item) => item.id.kind === 'youtube#video')
+      .filter((item) => {
+        // Filtrar contenido no musical
+        const title = this.cleanTitle(item.snippet.title);
+        const channelTitle = item.snippet.channelTitle;
+        return !this.isNonMusicalContent(title, channelTitle);
+      })
       .map((item) => {
         const videoDetails = videosMap.get(item.id.videoId);
+        const cleanedTitle = this.cleanTitle(item.snippet.title);
 
         return {
           id: item.id.videoId,
-          title: this.cleanTitle(item.snippet.title),
-          artist: this.extractArtist(item.snippet.title, item.snippet.channelTitle),
+          title: this.extractSongTitle(cleanedTitle),
+          artist: this.extractArtist(cleanedTitle, item.snippet.channelTitle),
           duration: this.parseDuration(
             videoDetails?.contentDetails?.duration || 'PT0S',
           ),
@@ -271,5 +687,35 @@ export class YoutubeService {
     }
 
     return channelTitle;
+  }
+
+  /**
+   * Extrae solo el nombre de la canción del título, removiendo el artista
+   * Ejemplos:
+   *   "Iron Maiden - The Trooper" → "The Trooper"
+   *   "Metallica: Enter Sandman" → "Enter Sandman"
+   *   "Miss Monique | Deep House Mix" → "Deep House Mix"
+   *   "Just a Song" → "Just a Song" (sin cambios)
+   */
+  private extractSongTitle(title: string): string {
+    // Probar múltiples patrones de separación
+    const patterns = [
+      /^[^-:]+\s*[-:]\s*(.+)/,     // "Artista - Canción" o "Artista : Canción"
+      /^[^|]+\s*\|\s*(.+)/,        // "Artista | Canción"
+    ];
+
+    for (const pattern of patterns) {
+      const match = title.match(pattern);
+      if (match) {
+        const extracted = match[1].trim();
+        // Solo retornar si el título extraído tiene sentido (no muy corto)
+        if (extracted.length > 1) {
+          return extracted;
+        }
+      }
+    }
+
+    // Si no coincide con ningún patrón, devolver el título original
+    return title;
   }
 }

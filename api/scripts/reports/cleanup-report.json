@@ -1,0 +1,23 @@
+{
+  "timestamp": "2025-11-16T11:49:31.484Z",
+  "stats": {
+    "total": 6738,
+    "phase1": {
+      "genresAssigned": 0,
+      "genresOtros": 0,
+      "errors": 0
+    },
+    "phase2": {
+      "titlesClean": 0,
+      "artistsClean": 0,
+      "errors": 0
+    },
+    "phase3": {
+      "groupsAnalyzed": 6411,
+      "duplicatesRemoved": 0,
+      "duplicatesKept": 0,
+      "errors": 0
+    }
+  },
+  "uncategorizedSongs": []
+}

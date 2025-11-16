@@ -6,7 +6,7 @@ import {
   BadRequestException,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository, DataSource } from 'typeorm';
+import { Repository, DataSource, In } from 'typeorm';
 import { EventEmitter2 } from '@nestjs/event-emitter';
 
 import { Playlist } from '../entities/playlist.entity';
@@ -17,7 +17,6 @@ import { UpdatePlaylistDto } from '../dto/update-playlist.dto';
 import { AddSongToPlaylistDto } from '../dto/add-song-playlist.dto';
 import { ReorderSongsDto } from '../dto/reorder-songs.dto';
 import { MusicService } from '../../music/services/music.service';
-import { CreateSongDto } from '../../music/dto/create-song.dto';
 
 @Injectable()
 export class PlaylistsService {
@@ -42,6 +41,32 @@ export class PlaylistsService {
     );
 
     try {
+      // Validar límite de 15 playlists por usuario
+      if (userId) {
+        const userPlaylistsCount = await this.playlistRepository.count({
+          where: { userId, isPublic: false },
+        });
+
+        if (userPlaylistsCount >= 15) {
+          this.logger.warn(`⚠️  Usuario ${userId} alcanzó el límite de 15 playlists`);
+          throw new BadRequestException(
+            'Has alcanzado el límite de 15 playlists. Elimina una para crear otra.'
+          );
+        }
+
+        // Validar nombre duplicado para el mismo usuario
+        const duplicateName = await this.playlistRepository.findOne({
+          where: { userId, name: createPlaylistDto.name, isPublic: false },
+        });
+
+        if (duplicateName) {
+          this.logger.warn(`⚠️  Usuario ${userId} ya tiene una playlist llamada "${createPlaylistDto.name}"`);
+          throw new BadRequestException(
+            'Ya tienes una playlist con ese nombre. Elige otro nombre.'
+          );
+        }
+      }
+
       const playlist = this.playlistRepository.create({
         ...createPlaylistDto,
         userId,
@@ -69,6 +94,7 @@ export class PlaylistsService {
 
     const query = this.playlistRepository.createQueryBuilder('playlist');
 
+    // IMPORTANTE: Si se especifica isPublic o userId, aplicar esos filtros
     if (isPublic !== undefined) {
       query.andWhere('playlist.isPublic = :isPublic', { isPublic });
     }
@@ -77,17 +103,37 @@ export class PlaylistsService {
       query.andWhere('playlist.userId = :userId', { userId });
     }
 
-    const playlists = await query
-      .orderBy('playlist.updatedAt', 'DESC')
-      .getMany();
+    // SEGURIDAD: Si NO se especifica ningún filtro, solo devolver playlists públicas
+    // Esto previene que se expongan playlists privadas de otros usuarios
+    if (isPublic === undefined && !userId) {
+      this.logger.warn('⚠️  No se especificó filtro - devolviendo solo playlists públicas por seguridad');
+      query.andWhere('playlist.isPublic = :defaultPublic', { defaultPublic: true });
+    }
+
+    // Incluir las primeras 4 canciones para el mosaico
+    query
+      .leftJoinAndSelect('playlist.playlistSongs', 'playlistSong')
+      .leftJoinAndSelect('playlistSong.song', 'song')
+      .orderBy('playlist.displayOrder', 'ASC')
+      .addOrderBy('playlist.updatedAt', 'DESC')
+      .addOrderBy('playlistSong.position', 'ASC');
+
+    const playlists = await query.getMany();
+
+    // Limitar a solo las primeras 4 canciones por playlist (para el mosaico)
+    playlists.forEach(playlist => {
+      if (playlist.playlistSongs && playlist.playlistSongs.length > 4) {
+        playlist.playlistSongs = playlist.playlistSongs.slice(0, 4);
+      }
+    });
 
     this.logger.log(`✅ Obtenidas ${playlists.length} playlists`);
     return playlists;
   }
 
   // Obtener playlist por ID con canciones
-  async findOne(id: string, includeSongs: boolean = false): Promise<Playlist> {
-    this.logger.log(`🔍 Buscando playlist por ID: ${id} (incluir canciones: ${includeSongs})`);
+  async findOne(id: string, includeSongs: boolean = true, requestUserId?: string): Promise<Playlist> {
+    this.logger.log(`🔍 Buscando playlist por ID: ${id} (incluir canciones: ${includeSongs}, usuario: ${requestUserId || 'anónimo'})`);
 
     const query = this.playlistRepository.createQueryBuilder('playlist')
       .where('playlist.id = :id', { id });
@@ -106,15 +152,44 @@ export class PlaylistsService {
       throw new NotFoundException(`Playlist con ID ${id} no encontrada`);
     }
 
+    // SEGURIDAD: Validar acceso a playlists privadas
+    if (!playlist.isPublic) {
+      // Si la playlist es privada, solo el dueño puede verla
+      if (!requestUserId || playlist.userId !== requestUserId) {
+        this.logger.warn(`🔒 Usuario no autorizado intentó acceder a playlist privada ${id}`);
+        throw new NotFoundException(`Playlist con ID ${id} no encontrada`);
+      }
+    }
+
+    // Transform to include songs array directly
+    if (includeSongs && playlist.playlistSongs) {
+      (playlist as any).songs = playlist.playlistSongs.map(ps => ps.song);
+    }
+
     this.logger.log(`✅ Playlist encontrada: "${playlist.name}"`);
     return playlist;
   }
 
   // Actualizar playlist
-  async update(id: string, updatePlaylistDto: UpdatePlaylistDto): Promise<Playlist> {
-    this.logger.log(`🔄 Actualizando playlist: ${id}`);
+  async update(id: string, updatePlaylistDto: UpdatePlaylistDto, userId?: string): Promise<Playlist> {
+    this.logger.log(`🔄 Actualizando playlist: ${id} (usuario: ${userId || 'anónimo'})`);
 
-    const playlist = await this.findOne(id);
+    // Validar acceso del usuario a la playlist
+    const playlist = await this.findOne(id, true, userId);
+
+    // Si se está cambiando el nombre, validar que no exista duplicado
+    if (updatePlaylistDto.name && updatePlaylistDto.name !== playlist.name && userId) {
+      const duplicateName = await this.playlistRepository.findOne({
+        where: { userId, name: updatePlaylistDto.name, isPublic: false },
+      });
+
+      if (duplicateName && duplicateName.id !== id) {
+        this.logger.warn(`⚠️  Usuario ${userId} ya tiene una playlist llamada "${updatePlaylistDto.name}"`);
+        throw new BadRequestException(
+          'Ya tienes una playlist con ese nombre. Elige otro nombre.'
+        );
+      }
+    }
 
     Object.assign(playlist, updatePlaylistDto);
 
@@ -134,10 +209,11 @@ export class PlaylistsService {
   }
 
   // Eliminar playlist
-  async remove(id: string): Promise<void> {
-    this.logger.log(`🗑️ Eliminando playlist: ${id}`);
+  async remove(id: string, userId?: string): Promise<void> {
+    this.logger.log(`🗑️ Eliminando playlist: ${id} (usuario: ${userId || 'anónimo'})`);
 
-    const playlist = await this.findOne(id);
+    // Validar acceso del usuario a la playlist
+    const playlist = await this.findOne(id, true, userId);
 
     try {
       await this.playlistRepository.remove(playlist);
@@ -152,94 +228,38 @@ export class PlaylistsService {
     }
   }
 
-  // Método helper: buscar o crear canción
+  // Método helper: buscar canción (SOLO busca, NO crea)
   private async findOrCreateSong(addSongDto: AddSongToPlaylistDto): Promise<Song> {
-    this.logger.log(`🔍 Buscando o creando canción`);
-
     // 1. Si viene songId, buscar por ID en BD
     if (addSongDto.songId) {
-      this.logger.log(`🔍 Buscando por songId: ${addSongDto.songId}`);
       try {
         const song = await this.musicService.findSongById(addSongDto.songId);
-        this.logger.log(`✅ Canción encontrada en BD por ID: "${song.title}"`);
         return song;
       } catch (error) {
-        this.logger.log(`⚠️ SongId no encontrado, continuando con youtubeId`);
+        throw new NotFoundException(`Canción con ID ${addSongDto.songId} no encontrada en la base de datos`);
       }
     }
 
     // 2. Si viene youtubeId, buscar por YouTube ID en BD
     if (addSongDto.youtubeId) {
-      this.logger.log(`🔍 Buscando por youtubeId en BD: ${addSongDto.youtubeId}`);
-
       const existingSong = await this.musicService.findSongByYoutubeId(addSongDto.youtubeId);
       if (existingSong) {
-        this.logger.log(`✅ Canción encontrada en BD por youtubeId: "${existingSong.title}"`);
         return existingSong;
       }
 
-      // 3. No está en BD, buscar en YouTube API
-      this.logger.log(`🔍 No encontrada en BD, buscando en YouTube API: ${addSongDto.youtubeId}`);
-
-      try {
-        const youtubeVideo = await this.musicService.getYouTubeVideoById(addSongDto.youtubeId);
-
-        if (!youtubeVideo) {
-          throw new BadRequestException(`Video con ID ${addSongDto.youtubeId} no encontrado en YouTube`);
-        }
-
-        // 4. Crear nueva canción con datos de YouTube API
-        this.logger.log(`💾 Creando nueva canción desde YouTube API: "${youtubeVideo.title}"`);
-
-        const createSongDto: CreateSongDto = {
-          title: addSongDto.title || youtubeVideo.title,
-          artist: addSongDto.artist || youtubeVideo.artist,
-          youtubeId: addSongDto.youtubeId,
-          duration: addSongDto.duration || youtubeVideo.duration,
-          genre: addSongDto.genre,
-          publishedAt: youtubeVideo.publishedAt,
-          viewCount: youtubeVideo.viewCount,
-        };
-
-        const newSong = await this.musicService.createSong(createSongDto);
-        this.logger.log(`✅ Nueva canción creada desde YouTube: "${newSong.title}" - ID: ${newSong.id}`);
-        return newSong;
-
-      } catch (error) {
-        this.logger.error(`❌ Error al obtener datos de YouTube: ${error.message}`);
-
-        // 5. Fallback: usar metadatos manuales si están disponibles
-        if (addSongDto.title && addSongDto.artist && addSongDto.duration) {
-          this.logger.log(`🔄 Fallback: usando metadatos manuales para crear canción`);
-
-          const createSongDto: CreateSongDto = {
-            title: addSongDto.title,
-            artist: addSongDto.artist,
-            youtubeId: addSongDto.youtubeId,
-            duration: addSongDto.duration,
-            genre: addSongDto.genre,
-          };
-
-          const newSong = await this.musicService.createSong(createSongDto);
-          this.logger.log(`✅ Nueva canción creada con metadatos manuales: "${newSong.title}"`);
-          return newSong;
-        }
-
-        throw new BadRequestException(
-          `No se pudo obtener información del video ${addSongDto.youtubeId} desde YouTube. ` +
-          'Proporcione title, artist y duration manualmente.'
-        );
-      }
+      // 3. No está en BD - NO CREAR, lanzar error
+      throw new NotFoundException(
+        `Canción con YouTube ID ${addSongDto.youtubeId} no encontrada en la base de datos. ` +
+        'Las playlists solo pueden contener canciones que ya existen en la base de datos.'
+      );
     }
 
-    // 6. No hay suficiente información
+    // 4. No hay suficiente información
     throw new BadRequestException('Debe proporcionar songId o youtubeId');
   }
 
   // Agregar canción a playlist (lógica inteligente)
   async addSong(playlistId: string, addSongDto: AddSongToPlaylistDto): Promise<PlaylistSong> {
-    this.logger.log(`🎵 Agregando canción a playlist ${playlistId}`);
-
     return await this.dataSource.transaction(async (manager) => {
       // Verificar que la playlist existe
       const playlist = await manager.findOne(Playlist, { where: { id: playlistId } });
@@ -247,13 +267,13 @@ export class PlaylistsService {
         throw new NotFoundException(`Playlist con ID ${playlistId} no encontrada`);
       }
 
-      // Verificar límite de canciones (máximo 15)
+      // Verificar límite de canciones (máximo 30)
       const currentSongCount = await manager.count(PlaylistSong, {
         where: { playlistId },
       });
 
-      if (currentSongCount >= 15) {
-        throw new BadRequestException('La playlist ha alcanzado el límite máximo de 15 canciones');
+      if (currentSongCount >= 30) {
+        throw new BadRequestException('La playlist ha alcanzado el límite máximo de 30 canciones');
       }
 
       // Buscar o crear la canción
@@ -299,8 +319,6 @@ export class PlaylistsService {
 
       // Actualizar contadores de la playlist
       await this.updatePlaylistCounters(playlistId, manager);
-
-      this.logger.log(`✅ Canción "${song.title}" agregada en posición ${position}`);
 
       // Emitir evento
       this.eventEmitter.emit('playlist.songAdded', {
@@ -377,7 +395,7 @@ export class PlaylistsService {
       // Validar que todas las canciones están en la playlist
       const songIds = reorderDto.songs.map(s => s.songId);
       const playlistSongs = await manager.find(PlaylistSong, {
-        where: { playlistId, songId: { $in: songIds } as any },
+        where: { playlistId, songId: In(songIds) },
       });
 
       if (playlistSongs.length !== songIds.length) {
@@ -411,11 +429,11 @@ export class PlaylistsService {
   }
 
   // Obtener canciones de una playlist
-  async getPlaylistSongs(playlistId: string): Promise<PlaylistSong[]> {
-    this.logger.log(`🎵 Obteniendo canciones de playlist: ${playlistId}`);
+  async getPlaylistSongs(playlistId: string, requestUserId?: string): Promise<PlaylistSong[]> {
+    this.logger.log(`🎵 Obteniendo canciones de playlist: ${playlistId} (usuario: ${requestUserId || 'anónimo'})`);
 
-    // Verificar que la playlist existe
-    await this.findOne(playlistId);
+    // Verificar que la playlist existe Y validar acceso
+    await this.findOne(playlistId, true, requestUserId);
 
     const playlistSongs = await this.playlistSongRepository.find({
       where: { playlistId },
@@ -469,7 +487,213 @@ export class PlaylistsService {
         }
       );
     }
+  }
 
-    this.logger.log(`📊 Contadores actualizados: ${stats.songCount} canciones, ${stats.totalDuration}s total`);
+  // Agregar múltiples canciones a playlist en batch
+  async addSongsBatch(playlistId: string, songIds: string[]): Promise<PlaylistSong[]> {
+    this.logger.log(`📦 Agregando ${songIds.length} canciones en batch a playlist ${playlistId}`);
+
+    return await this.dataSource.transaction(async (manager) => {
+      // Verificar que la playlist existe
+      const playlist = await manager.findOne(Playlist, { where: { id: playlistId } });
+      if (!playlist) {
+        throw new NotFoundException(`Playlist con ID ${playlistId} no encontrada`);
+      }
+
+      // Verificar límite de canciones
+      const currentSongCount = await manager.count(PlaylistSong, {
+        where: { playlistId },
+      });
+
+      if (currentSongCount + songIds.length > 30) {
+        throw new BadRequestException(
+          `No se pueden agregar ${songIds.length} canciones. La playlist tiene ${currentSongCount} canciones y el límite es 30`
+        );
+      }
+
+      // Verificar que todas las canciones existen en la BD
+      const songs = await manager.find(Song, {
+        where: { id: In(songIds) },
+      });
+
+      if (songs.length !== songIds.length) {
+        throw new NotFoundException('Una o más canciones no existen en la base de datos');
+      }
+
+      // Verificar que ninguna canción ya está en la playlist
+      const existingSongs = await manager.find(PlaylistSong, {
+        where: { playlistId, songId: In(songIds) },
+      });
+
+      if (existingSongs.length > 0) {
+        const duplicateSongIds = existingSongs.map(ps => ps.songId);
+        throw new ConflictException(
+          `Una o más canciones ya están en la playlist: ${duplicateSongIds.join(', ')}`
+        );
+      }
+
+      // Obtener la última posición
+      const lastPosition = await manager
+        .createQueryBuilder(PlaylistSong, 'ps')
+        .select('MAX(ps.position)', 'maxPosition')
+        .where('ps.playlistId = :playlistId', { playlistId })
+        .getRawOne();
+
+      let position = (lastPosition?.maxPosition || 0) + 1;
+
+      // Crear PlaylistSongs
+      const playlistSongs: PlaylistSong[] = [];
+      for (const songId of songIds) {
+        const playlistSong = manager.create(PlaylistSong, {
+          playlistId,
+          songId,
+          position: position++,
+        });
+        const saved = await manager.save(PlaylistSong, playlistSong);
+        playlistSongs.push(saved);
+      }
+
+      // Actualizar contadores de la playlist
+      await this.updatePlaylistCounters(playlistId, manager);
+
+      this.logger.log(`✅ ${playlistSongs.length} canciones agregadas exitosamente`);
+
+      // Emitir evento
+      this.eventEmitter.emit('playlist.songsBatchAdded', {
+        playlistId,
+        songIds,
+        count: playlistSongs.length,
+      });
+
+      return playlistSongs;
+    });
+  }
+
+  // Reemplazar todas las canciones de una playlist
+  async replaceSongs(playlistId: string, songIds: string[]): Promise<void> {
+    this.logger.log(`🔄 Reemplazando todas las canciones de playlist ${playlistId} con ${songIds.length} nuevas canciones`);
+    this.logger.debug(`📋 Song IDs recibidos: ${JSON.stringify(songIds)}`);
+
+    return await this.dataSource.transaction(async (manager) => {
+      // Verificar que la playlist existe
+      const playlist = await manager.findOne(Playlist, { where: { id: playlistId } });
+      if (!playlist) {
+        throw new NotFoundException(`Playlist con ID ${playlistId} no encontrada`);
+      }
+
+      // Verificar límite de canciones
+      if (songIds.length > 30) {
+        throw new BadRequestException('No se pueden agregar más de 30 canciones a una playlist');
+      }
+
+      // Verificar que todas las canciones existen en la BD
+      const songs = await manager.find(Song, {
+        where: { id: In(songIds) },
+      });
+
+      this.logger.debug(`✅ Canciones encontradas en BD: ${songs.length} de ${songIds.length}`);
+      if (songs.length > 0) {
+        this.logger.debug(`📋 Primeras canciones encontradas: ${songs.slice(0, 3).map(s => s.id).join(', ')}`);
+      }
+
+      if (songs.length !== songIds.length) {
+        // Encontrar qué IDs no existen
+        const foundIds = songs.map(s => s.id);
+        const missingIds = songIds.filter(id => !foundIds.includes(id));
+        this.logger.error(`❌ IDs faltantes: ${missingIds.join(', ')}`);
+        throw new NotFoundException('Una o más canciones no existen en la base de datos');
+      }
+
+      // Eliminar todas las canciones actuales
+      await manager.delete(PlaylistSong, { playlistId });
+
+      // Agregar las nuevas canciones
+      let position = 1;
+      for (const songId of songIds) {
+        const playlistSong = manager.create(PlaylistSong, {
+          playlistId,
+          songId,
+          position: position++,
+        });
+        await manager.save(PlaylistSong, playlistSong);
+      }
+
+      // Actualizar contadores
+      await this.updatePlaylistCounters(playlistId, manager);
+
+      this.logger.log(`✅ Canciones reemplazadas: ${songIds.length} nuevas canciones`);
+
+      // Emitir evento
+      this.eventEmitter.emit('playlist.songsReplaced', {
+        playlistId,
+        newSongIds: songIds,
+        count: songIds.length,
+      });
+    });
+  }
+
+  // Regenerar playlist (actualizar con nuevas canciones aleatorias)
+  async regeneratePlaylist(playlistId: string): Promise<Playlist> {
+    this.logger.log(`🔄 Regenerando playlist: ${playlistId}`);
+
+    return await this.dataSource.transaction(async (manager) => {
+      // Verificar que la playlist existe
+      const playlist = await manager.findOne(Playlist, { where: { id: playlistId } });
+      if (!playlist) {
+        throw new NotFoundException(`Playlist con ID ${playlistId} no encontrada`);
+      }
+
+      // Solo regenerar playlists públicas (generadas automáticamente)
+      if (!playlist.isPublic || playlist.userId) {
+        throw new BadRequestException('Solo se pueden regenerar playlists automáticas');
+      }
+
+      // Eliminar todas las canciones actuales
+      await manager.delete(PlaylistSong, { playlistId });
+
+      // Obtener género de la playlist
+      const genre = playlist.genre;
+      if (!genre) {
+        throw new BadRequestException('La playlist no tiene un género asignado');
+      }
+
+      // Obtener 24 canciones aleatorias del mismo género
+      const randomSongs = await manager.query(`
+        SELECT id, title, artist, duration
+        FROM songs
+        WHERE "cloudinaryUrl" IS NOT NULL
+          AND genre = $1
+        ORDER BY RANDOM()
+        LIMIT 24
+      `, [genre]);
+
+      // Agregar las nuevas canciones
+      let position = 1;
+      for (const song of randomSongs) {
+        const playlistSong = manager.create(PlaylistSong, {
+          playlistId,
+          songId: song.id,
+          position: position++,
+        });
+        await manager.save(PlaylistSong, playlistSong);
+      }
+
+      // Actualizar contadores
+      await this.updatePlaylistCounters(playlistId, manager);
+
+      // Obtener playlist actualizada
+      const updatedPlaylist = await manager.findOne(Playlist, { where: { id: playlistId } });
+
+      if (!updatedPlaylist) {
+        throw new NotFoundException(`No se pudo obtener la playlist actualizada`);
+      }
+
+      this.logger.log(`✅ Playlist regenerada: "${updatedPlaylist.name}" con ${randomSongs.length} canciones`);
+
+      // Emitir evento
+      this.eventEmitter.emit('playlist.regenerated', { playlistId });
+
+      return updatedPlaylist;
+    });
   }
 }

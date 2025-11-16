@@ -6,7 +6,7 @@ import {
   Min,
   Max,
 } from 'class-validator';
-import { Transform } from 'class-transformer';
+import { Type } from 'class-transformer';
 
 /**
  * DTO para búsqueda de canciones en YouTube
@@ -17,8 +17,8 @@ export class SearchSongsDto {
   query: string;
 
   @IsOptional()
+  @Type(() => Number)
   @IsNumber()
-  @Transform(({ value }) => parseInt(value, 10))
   @Min(1, { message: 'maxResults debe ser al menos 1' })
   @Max(50, { message: 'maxResults no puede ser mayor a 50' })
   maxResults?: number = 10;

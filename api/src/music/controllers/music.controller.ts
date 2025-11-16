@@ -3,6 +3,7 @@ import {
   Get,
   Post,
   Put,
+  Patch,
   Delete,
   Body,
   Param,
@@ -53,7 +54,8 @@ export class MusicController {
     @Query('limit') limit?: number,
     @Query('offset') offset?: number,
   ): Promise<Song[]> {
-    const parsedLimit = limit ? parseInt(limit.toString()) : 50;
+    // Límite máximo de 100 canciones por petición
+    const parsedLimit = limit ? Math.min(parseInt(limit.toString()), 100) : 50;
     const parsedOffset = offset ? parseInt(offset.toString()) : 0;
 
     this.logger.log(
@@ -61,12 +63,54 @@ export class MusicController {
     );
 
     try {
-      const songs = await this.musicService.getAllSongs(
+      const songs = await this.musicService.getAllSongs(parsedLimit, parsedOffset);
+
+      this.logger.log(`✅ Obtenidas ${songs.length} canciones`);
+      return songs;
+    } catch (error) {
+      this.logger.error(`❌ Error al obtener canciones: ${error.message}`);
+      throw error;
+    }
+  }
+
+  // Obtener canciones ALEATORIAS (para "Descubre Nueva Música")
+  @Get('songs/random')
+  async getRandomSongs(@Query('limit') limit?: number): Promise<Song[]> {
+    const parsedLimit = limit ? Math.min(parseInt(limit.toString()), 50) : 25;
+
+    this.logger.log(`🎲 GET /music/songs/random - Limit: ${parsedLimit}`);
+
+    try {
+      const songs = await this.musicService.getRandomSongs(parsedLimit);
+
+      this.logger.log(`✅ Obtenidas ${songs.length} canciones aleatorias`);
+      return songs;
+    } catch (error) {
+      this.logger.error(`❌ Error al obtener canciones aleatorias: ${error.message}`);
+      throw error;
+    }
+  }
+
+  // Obtener TODAS las canciones sin filtros (para script de limpieza)
+  @Get('songs/all-raw')
+  async getAllSongsRaw(
+    @Query('limit') limit?: number,
+    @Query('offset') offset?: number,
+  ): Promise<Song[]> {
+    const parsedLimit = limit ? parseInt(limit.toString()) : 500;
+    const parsedOffset = offset ? parseInt(offset.toString()) : 0;
+
+    this.logger.log(
+      `📋 GET /music/songs/all-raw - Limit: ${parsedLimit}, Offset: ${parsedOffset}`,
+    );
+
+    try {
+      const songs = await this.musicService.getAllSongsRaw(
         parsedLimit,
         parsedOffset,
       );
 
-      this.logger.log(`✅ Obtenidas ${songs.length} canciones`);
+      this.logger.log(`✅ Obtenidas ${songs.length} canciones sin filtros`);
       return songs;
     } catch (error) {
       this.logger.error(`❌ Error al obtener canciones: ${error.message}`);
@@ -89,6 +133,7 @@ export class MusicController {
       throw error;
     }
   }
+
 
   // Obtener canción por ID
   @Get('songs/:id')
@@ -219,6 +264,27 @@ export class MusicController {
     }
   }
 
+  // Autocomplete: sugerencias de artistas y canciones
+  @Get('autocomplete')
+  async autocomplete(
+    @Query('query') query: string,
+    @Query('limit') limit?: number,
+  ): Promise<string[]> {
+    const parsedLimit = limit ? parseInt(limit.toString()) : 10;
+
+    this.logger.log(`💡 GET /music/autocomplete - Query: "${query}", Limit: ${parsedLimit}`);
+
+    try {
+      const suggestions = await this.musicService.getAutocompleteSuggestions(query, parsedLimit);
+
+      this.logger.log(`✅ Autocomplete: ${suggestions.length} sugerencias`);
+      return suggestions;
+    } catch (error) {
+      this.logger.error(`❌ Error en autocomplete: ${error.message}`);
+      throw error;
+    }
+  }
+
   // Crear nueva canción en BD (usado por seed script)
   @Post('songs')
   @HttpCode(HttpStatus.CREATED)
@@ -269,6 +335,31 @@ export class MusicController {
     }
   ): Promise<Song> {
     this.logger.log(`🔄 PUT /music/songs/${id}`);
+
+    try {
+      const song = await this.musicService.updateSong(id, updateData);
+
+      this.logger.log(`✅ Canción actualizada: "${song.title}"`);
+      return song;
+    } catch (error) {
+      this.logger.error(`❌ Error al actualizar canción: ${error.message}`);
+      throw error;
+    }
+  }
+
+  // Actualizar parcialmente canción (usado por scripts)
+  @Patch('songs/:id')
+  async patchSong(
+    @Param('id', ParseUUIDPipe) id: string,
+    @Body() updateData: {
+      cloudinaryUrl?: string;
+      title?: string;
+      artist?: string;
+      genre?: string;
+      duration?: number;
+    }
+  ): Promise<Song> {
+    this.logger.log(`🔄 PATCH /music/songs/${id}`);
 
     try {
       const song = await this.musicService.updateSong(id, updateData);

@@ -1,9 +1,12 @@
 import { NestFactory } from '@nestjs/core';
 import { ValidationPipe } from '@nestjs/common';
 import { AppModule } from './app.module';
+import { NestExpressApplication } from '@nestjs/platform-express';
+import { join } from 'path';
+import cookieParser from 'cookie-parser';
 
 async function bootstrap() {
-  const app = await NestFactory.create(AppModule);
+  const app = await NestFactory.create<NestExpressApplication>(AppModule);
 
   // ValidationPipe global (whitelist, forbidNonWhitelisted)
   app.useGlobalPipes(
@@ -14,9 +17,19 @@ async function bootstrap() {
     }),
   );
 
-  // CORS para frontend futuro
-  app.enableCors();
+  // Servir archivos estáticos desde la carpeta public
+  app.useStaticAssets(join(__dirname, '..', 'public'));
 
-  await app.listen(process.env.PORT ?? 3000);
+  app.use(cookieParser()); // ✅ habilita el uso de cookies
+
+  // CORS para frontend futuro
+  app.enableCors({
+    origin: ['http://localhost:5173', 'http://localhost:5174'],
+    credentials: true, // ⚠️ necesario para enviar cookies
+  });
+
+  const port = process.env.PORT ?? 3000;
+  await app.listen(port, '0.0.0.0');
+  console.log(`🚀 Backend corriendo en http://0.0.0.0:${port}`);
 }
 bootstrap();

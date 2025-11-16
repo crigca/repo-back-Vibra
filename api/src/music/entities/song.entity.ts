@@ -35,6 +35,9 @@ export class Song {
   @Column({ nullable: true })
   publishedAt?: Date;
 
+  @Column({ length: 500, nullable: true })
+  cloudinaryUrl?: string; // URL de Cloudinary (ejemplo: "https://res.cloudinary.com/.../vibra/music/rock/abc123.mp3")
+
   @CreateDateColumn()
   createdAt!: Date;
 

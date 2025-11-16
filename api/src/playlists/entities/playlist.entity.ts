@@ -9,7 +9,7 @@ import {
   JoinColumn,
   Index,
 } from 'typeorm';
-import { User } from '../../users/users.entity';
+import { User } from '../../users/entities/users.entity';
 import { PlaylistSong } from './playlist-song.entity';
 
 @Entity({ name: 'playlists' })
@@ -17,8 +17,8 @@ export class Playlist {
   @PrimaryGeneratedColumn('uuid')
   id!: string;
 
-  @Column({ length: 200 })
-  name!: string;
+  @Column({ length: 30, nullable: true })
+  name?: string;
 
   @Column({ type: 'text', nullable: true })
   description?: string;
@@ -34,11 +34,19 @@ export class Playlist {
   @Column({ length: 1000, nullable: true })
   coverImageUrl?: string;
 
+  @Column({ length: 100, nullable: true })
+  @Index()
+  genre?: string;
+
   @Column({ default: 0 })
   totalDuration!: number;
 
   @Column({ default: 0 })
   songCount!: number;
+
+  @Column({ type: 'integer', default: 0 })
+  @Index()
+  displayOrder!: number;
 
   @CreateDateColumn()
   createdAt!: Date;
@@ -58,7 +66,7 @@ export class Playlist {
   }
 
   getName(): string {
-    return this.name;
+    return this.name || 'Sin nombre';
   }
 
   getUserId(): string | null {
