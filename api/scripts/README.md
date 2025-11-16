@@ -1,6 +1,6 @@
-# Scripts de Vibra - Documentación Completa
+# Scripts de Vibra - Producción
 
-Sistema de scripts para gestión de música, imágenes, playlists y base de datos.
+Sistema limpio y simple para gestión de música e imágenes.
 
 ---
 
@@ -11,14 +11,9 @@ scripts/
 ├── data/              # Datos maestros (artistas, géneros, prompts)
 ├── production/        # Scripts de producción
 │   ├── images/       # Generación de imágenes AI
-│   ├── migrations/   # Migraciones de BD
-│   ├── music/        # Gestión de música y BD
+│   ├── music/        # Gestión de música
 │   └── playlists/    # Creación de playlists
-├── utilities/         # Herramientas de uso manual
-├── verification/      # Scripts de verificación/chequeo
-├── reports/          # Generación de reportes
-├── tests/            # Scripts de testing
-└── deprecated/       # Scripts obsoletos (archivados)
+└── cleanup-orphaned-cloudinary-files.js  # Limpieza de archivos huérfanos
 ```
 
 ---
@@ -26,11 +21,9 @@ scripts/
 ## 📊 Data (Datos Maestros)
 
 ### **artists-data.js** 🎸
-Base de datos de ~2000 artistas organizados por género.
-```bash
-node -e "console.log(require('./data/artists-data.js').artistsByGenre)"
-```
-**Uso**: Detección automática de géneros por artista.
+Base de datos de ~1,841 artistas organizados por 95+ géneros.
+
+**Uso**: Detección automática de géneros por artista en master-cleanup.js
 
 ### **genre-families.json** 👨‍👩‍👧‍👦
 Familias de géneros relacionados (metal, rock, cumbia, etc.).
@@ -48,94 +41,47 @@ Prompts para generación de imágenes AI por género.
 
 ## 🎵 Production - Music
 
-### **master-cleanup.js** ⭐ PRINCIPAL
+### **master-cleanup.js** ⭐ SCRIPT PRINCIPAL DE MÚSICA
+
 Script maestro de limpieza de base de datos.
 
-**Funciones:**
-- Fase 1: Asignación automática de géneros
-- Fase 2: Limpieza de títulos y artistas (241 patrones)
-- Fase 3: Eliminación de duplicados (max 2 por canción)
-- Fase 4: Generación de reportes
+**3 Fases:**
+1. **Asignación de géneros**: Detecta artista en artists-data.js → asigna género. Si no encuentra → marca como "sin-categoria" (cuarentena)
+2. **Limpieza de títulos y artistas**: Elimina 241 patrones (VEVO, Topic, Official, emojis, HTML entities, etc.)
+3. **Eliminación de duplicados**: Mantiene máximo 2 versiones por canción (las de más vistas)
 
 **Características de limpieza:**
 - Decodificación HTML entities (`&amp;` → `&`)
-- Eliminación emojis (11 rangos Unicode)
+- Eliminación de emojis (11 rangos Unicode)
 - Separador pipe (`|`) - toma última parte
-- Limpieza nombres artistas (VEVO, Topic, Official)
+- Limpieza nombres artistas (VEVO, Topic, Official, YouTube)
 - Separación camelCase (`SodaStereo` → `Soda Stereo`)
 - 241 patrones regex (videoclip oficial, topic, lyrics, HD, 4K, etc.)
 
-```bash
-npm run start:dev  # Terminal 1
-node production/music/master-cleanup.js  # Terminal 2
-```
-
-### **update-genres.js** 🔄
-Actualización automática de géneros para canciones "sinCategoria".
+**Genera reporte CSV**:
+- `scripts/output/uncategorized-songs.csv` - Canciones en cuarentena para revisión manual
 
 ```bash
-node production/music/update-genres.js
+npm run cleanup:master
 ```
-
-### **seed-music.js** 🌱
-Poblar base de datos con música desde YouTube.
-
-```bash
-npm run seed:music
-```
-
-**Características:**
-- Busca canciones en YouTube por artista/género
-- Filtra automáticamente (duración 1-10 min)
-- Guarda hasta 500 canciones por ejecución
-- Límite: 90 búsquedas por día
 
 ### **download-and-upload-cloudinary.js** ☁️
+
 Descarga MP3 desde YouTube y sube a Cloudinary.
 
-```bash
-node production/music/download-and-upload-cloudinary.js
-```
-
-### **sync-cloudinary-urls.js** 🔗
-Sincroniza URLs de Cloudinary en la base de datos.
-
-```bash
-node production/music/sync-cloudinary-urls.js
-```
-
-### **validate-youtube-ids.js** ✅
-Valida IDs de YouTube en la base de datos.
+**Características:**
+- Solo procesa canciones con género válido (excluye "sin-categoria")
+- Organiza por carpetas: `vibra/music/{género}/`
+- Elimina automáticamente videos inválidos/privados de la BD
+- Límite: 500 canciones por ejecución
 
 ```bash
-node production/music/validate-youtube-ids.js
-```
-
-### **cleanup-orphan-mp3.js** 🧹
-Limpia archivos MP3 huérfanos en Cloudinary.
-
-```bash
-node production/music/cleanup-orphan-mp3.js
-```
-
-### **cleanup-database.js** 🗄️
-Limpieza general de base de datos.
-
-```bash
-node production/music/cleanup-database.js
+npm run download:upload:cloudinary
 ```
 
 ---
 
 ## 🖼️ Production - Images
-
-### **generate-by-genre.js** 🎨
-Genera imágenes por género usando AI.
-
-```bash
-node production/images/generate-by-genre.js Gospel 5  # 5 imágenes de Gospel
-node production/images/generate-by-genre.js all 2     # 2 por cada género
-```
 
 ### **generate-dalle.js** 🤖
 Generación de imágenes con DALL-E 3 (calidad premium).
@@ -168,219 +114,50 @@ Generación de imágenes con Replicate SDXL (balance calidad/precio).
 npm run generate:replicate
 ```
 
-### **seed-prompts.js** 💾
-Poblar prompts de generación de imágenes.
-
-```bash
-node production/images/seed-prompts.js
-```
-
 ---
 
-## 📂 Production - Playlists
+## 🧹 Mantenimiento
 
-### **seed-family-playlists.js** 👨‍👩‍👧‍👦
-Crear playlists por familia de géneros.
+### **cleanup-orphaned-cloudinary-files.js**
 
-```bash
-node production/playlists/seed-family-playlists.js
-```
-
-### **seed-genre-playlists.js** 🎵
-Crear playlists por género individual.
-
-```bash
-node production/playlists/seed-genre-playlists.js
-```
-
----
-
-## 🔧 Utilities (Uso Manual)
-
-### **reclassify-by-artist.js** 🎯
-Reclasificación manual de canciones por artista.
+Limpia archivos MP3 huérfanos en Cloudinary (archivos que ya no tienen canción en la BD).
 
 **Uso:**
-1. Agregar artistas a `data/artists-data.js`
-2. Ejecutar script:
 ```bash
-node utilities/reclassify-by-artist.js
-```
+# Ver reporte (sin eliminar)
+node scripts/cleanup-orphaned-cloudinary-files.js
 
-**Ejemplo:**
-```javascript
-// En artists-data.js
-"alternativeRock": [..., "Electric Callboy"]
-
-// Ejecutar
-node utilities/reclassify-by-artist.js
-// Reclasifica todas las canciones de Electric Callboy a alternativeRock
-```
-
-### **delete-categorized-songs.js** 🗑️
-Elimina canciones que ya tienen categoría válida.
-
-```bash
-node utilities/delete-categorized-songs.js
-```
-
-### **delete-sin-categoria-folder.js** 📁
-Elimina carpeta "sin-categoria" de Cloudinary.
-
-```bash
-node utilities/delete-sin-categoria-folder.js
+# Eliminar archivos huérfanos
+node scripts/cleanup-orphaned-cloudinary-files.js --delete
 ```
 
 ---
 
-## ✅ Verification (Verificación)
+## 🚀 Workflow de Producción
 
-### **check-genres-status.js** 📊
-Estado actual de géneros en la BD.
-
-```bash
-node verification/check-genres-status.js
-```
-
-**Muestra:**
-- Total de canciones por género
-- Canciones sin categoría
-- Distribución de géneros
-
-### **check-cloudinary-sin-genero.js** ☁️
-Verifica archivos sin género en Cloudinary.
+### Flujo completo de nuevas canciones:
 
 ```bash
-node verification/check-cloudinary-sin-genero.js
-```
+# 1. Usuario agrega canciones desde el buscador del frontend
+#    → Se insertan en la BD vía POST /music/save-from-youtube
 
-### **verify-cloudinary-folders.js** 📂
-Verifica estructura de carpetas en Cloudinary.
+# 2. Correr limpieza maestra
+npm run cleanup:master
 
-```bash
-node verification/verify-cloudinary-folders.js
-```
+# 3. Revisar reporte de cuarentena
+cat scripts/output/uncategorized-songs.csv
 
----
+# 4. Agregar artistas legítimos a data/artists-data.js
+# Editar: scripts/data/artists-data.js
 
-## 📈 Reports (Reportes)
+# 5. Volver a correr limpieza (asigna géneros a los nuevos artistas)
+npm run cleanup:master
 
-### **export-sin-categoria.js** 📄
-Exporta canciones sin categoría agrupadas por artista.
+# 6. Subir a Cloudinary (solo sube canciones con género válido)
+npm run download:upload:cloudinary
 
-```bash
-node reports/export-sin-categoria.js
-```
-
-**Genera:**
-- `reports/sin-categoria-por-artista.json` - JSON con artistas y canciones
-- Ordenado por cantidad de canciones por artista
-
----
-
-## 🧪 Tests
-
-Scripts de prueba para APIs y servicios:
-
-- `demo-youtube-api.js` - Demo de YouTube API
-- `test-ai-apis.js` - Test de APIs de AI
-- `test-cloudinary.js` - Test de Cloudinary
-- `test-image-generation.js` - Test generación de imágenes
-- `test-services.js` - Test de servicios
-- `test-api-endpoints.sh` - Test de endpoints HTTP
-
-```bash
-node tests/test-cloudinary.js
-npm run demo:youtube
-```
-
----
-
-## 🗄️ Deprecated (Obsoletos)
-
-Scripts archivados que ya cumplieron su función:
-
-- ❌ `cleanup-titles.js` - Migrado a master-cleanup.js
-- ❌ `convert-genres-to-camelcase.js` - Conversión completada
-- ❌ `fix-genre-inconsistencies.js` - Inconsistencias corregidas
-- ❌ `convert-all-jsons-to-camelcase.js` - Conversión completada
-- ❌ `normalize-genres.js` - Normalización completada
-- ❌ `migrate-otros-to-sin-categoria.js` - Migración completada
-- ❌ `fix-otros.js` - Ya no hay "Otros"
-- ❌ `fix-sin-categoria.js` - Funcionalidad duplicada
-- ❌ `check-otros.js` - Ya no hay "Otros"
-- ❌ `generate-fal-backup.js` - Backup obsoleto
-- ❌ `verify-mongodb.js` - MongoDB no se usa
-
----
-
-## 🚀 Workflows Comunes
-
-### Agregar Nuevos Artistas y Reclasificar
-
-1. Agregar artistas a `data/artists-data.js`:
-```javascript
-"rock": [..., "Nuevo Artista"]
-```
-
-2. Reclasificar canciones:
-```bash
-node utilities/reclassify-by-artist.js
-```
-
-3. Verificar resultado:
-```bash
-node verification/check-genres-status.js
-```
-
-### Limpieza Completa de Base de Datos
-
-1. Asegurar servidor corriendo:
-```bash
-npm run start:dev
-```
-
-2. Ejecutar limpieza maestra:
-```bash
-node production/music/master-cleanup.js
-```
-
-3. Revisar reportes generados:
-```bash
-ls -la reports/
-```
-
-### Generar Reporte de Canciones Sin Categoría
-
-```bash
-node reports/export-sin-categoria.js
-cat reports/sin-categoria-por-artista.json
-```
-
-### Sincronizar con Cloudinary
-
-```bash
-# 1. Descargar y subir nuevas canciones
-node production/music/download-and-upload-cloudinary.js
-
-# 2. Sincronizar URLs
-node production/music/sync-cloudinary-urls.js
-
-# 3. Verificar
-node verification/check-cloudinary-sin-genero.js
-```
-
-### Generar Imágenes con AI
-
-```bash
-# Opción A - Calidad Premium (DALL-E 3)
-npm run generate:dalle  # 50 imágenes, ~$2.00 USD
-
-# Opción B - Rápido y Económico (FAL AI)
-npm run generate:fal    # 100 imágenes, muy económico
-
-# Opción C - Balance (Replicate SDXL)
-npm run generate:replicate  # 100 imágenes, precio moderado
+# 7. (Opcional) Limpiar archivos huérfanos de Cloudinary
+node scripts/cleanup-orphaned-cloudinary-files.js --delete
 ```
 
 ---
@@ -388,23 +165,22 @@ npm run generate:replicate  # 100 imágenes, precio moderado
 ## 📝 Notas Importantes
 
 ### Convenciones de Nombres
-- Géneros en **camelCase**: `rockArgentino`, `heavyMetal`, `sinCategoria`
-- Artistas con mayúsculas: `Los Redondos`, `Soda Stereo`
+- Géneros en **camelCase**: `rockArgentino`, `heavyMetal`, `sin-categoria`
+- Artistas con mayúsculas correctas: `Los Redondos`, `Soda Stereo`, `AC/DC`
 
 ### Base de Datos
 - PostgreSQL en Railway
-- ~7000 canciones
-- ~2000 artistas mapeados
-- 90+ géneros
+- ~7,000 canciones
+- ~1,841 artistas mapeados
+- 95+ géneros
 
 ### Cloudinary
 - Carpetas por género en camelCase
-- Formato: `vibra/music/{genre}/{filename}.mp3`
-- Max 2 duplicados por canción
+- Formato: `vibra/music/{genre}/{youtubeId}.mp3`
+- Max 2 versiones por canción (las de más vistas)
 
 ### Géneros Especiales
-- `sinCategoria` - Sin clasificar
-- `otros` - **OBSOLETO** (migrado a sinCategoria)
+- `sin-categoria` - Cuarentena para revisión manual (no se sube a Cloudinary)
 
 ---
 
@@ -428,26 +204,24 @@ CLOUDINARY_CLOUD_NAME=tu_cloud_name
 CLOUDINARY_API_KEY=tu_api_key
 CLOUDINARY_API_SECRET=tu_api_secret
 
-# Database
-DATABASE_URL=postgresql://...
-MONGODB_URI=mongodb+srv://...
-DB_HOST=...
-DB_PORT=...
-DB_USERNAME=...
-DB_PASSWORD=...
-DB_NAME=...
-DB_SSL=true
+# Database (Railway PostgreSQL)
+DB_HOST=junction.proxy.rlwy.net
+DB_PORT=26286
+DB_USERNAME=postgres
+DB_PASSWORD=tu_password
+DB_NAME=railway
+DB_SSL=false
 ```
 
 ---
 
-## 📞 Soporte
+## 📞 Mantenimiento de Data
 
 Para agregar nuevos artistas o géneros, editar:
-- `data/artists-data.js`
-- `data/genres.json`
-- `data/genres-tiers.json`
-- `data/genre-families.json`
+- `data/artists-data.js` - Artistas por género
+- `data/genres.json` - Lista de géneros válidos
+- `data/genres-tiers.json` - Clasificación por popularidad
+- `data/genre-families.json` - Familias de géneros
 
 ---
 
@@ -456,12 +230,27 @@ Para agregar nuevos artistas o géneros, editar:
 - Node.js 18+
 - PostgreSQL (Railway)
 - Cloudinary account
-- YouTube API key
-- API servidor corriendo en `localhost:3000`
+- YouTube API key (para descarga de MP3)
+- yt-dlp y ffmpeg instalados (para descarga)
 
 ---
 
-**Última actualización**: 2025-11-05
-**Total de scripts activos**: 29
-**Total de scripts obsoletos**: 10
+## 📋 Scripts Activos
+
+**Música (2):**
+- `npm run cleanup:master` - Limpieza y organización de BD
+- `npm run download:upload:cloudinary` - Descarga y subida a CDN
+
+**Imágenes (3):**
+- `npm run generate:dalle` - Generación con DALL-E 3
+- `npm run generate:fal` - Generación con FAL AI
+- `npm run generate:replicate` - Generación con Replicate
+
+**Mantenimiento (1):**
+- `node scripts/cleanup-orphaned-cloudinary-files.js` - Limpieza de CDN
+
+---
+
+**Última actualización**: 2025-11-15
+**Total de scripts activos**: 6
 **Proyecto**: VIBRA - Plataforma de Música

@@ -7,6 +7,7 @@ import { MusicService } from './services/music.service';
 import { YoutubeService } from './services/youtube.service';
 import { GenreDetectorService } from './services/genre-detector.service';
 import { MusicController } from './controllers/music.controller';
+import { ImagesModule } from '../images/images.module';
 
 /**
  * Módulo de música con integración de YouTube
@@ -16,6 +17,7 @@ import { MusicController } from './controllers/music.controller';
     TypeOrmModule.forFeature([Song]),
     ConfigModule,
     EventEmitterModule.forRoot(),
+    ImagesModule, // Para acceder a CloudinaryService
   ],
   controllers: [MusicController],
   providers: [MusicService, YoutubeService, GenreDetectorService],

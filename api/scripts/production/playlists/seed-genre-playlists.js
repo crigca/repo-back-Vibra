@@ -1,7 +1,7 @@
 /**
  * Script para generar playlists automáticas por género
  *
- * Crea una playlist por cada género con 24 canciones aleatorias
+ * Crea una playlist por cada género con 30 canciones aleatorias
  * Las playlists se ordenan según genres-tiers.json
  */
 
@@ -60,6 +60,66 @@ function shuffleArray(array) {
   return shuffled;
 }
 
+// Función para convertir camelCase a formato legible con mayúsculas
+function camelCaseToDisplayName(camelCase) {
+  // Casos especiales con nombres personalizados
+  const specialCases = {
+    'urbanoLatino': 'Urbano Latino',
+    'popLatinoActual': 'Pop Latino Actual',
+    'popLatinoClasico': 'Pop Latino Clásico',
+    'rockArgentino': 'Rock Argentino',
+    'cumbiaVillera': 'Cumbia Villera',
+    'cumbia420': 'Cumbia 420',
+    'trapArgentino': 'Trap Argentino',
+    'rockLatino': 'Rock Latino',
+    'kpop': 'K-Pop',
+    'jpop': 'J-Pop',
+    'folkloreArgentino': 'Folklore Argentino',
+    'heavyMetal': 'Heavy Metal',
+    'heavyMetalArgentino': 'Heavy Metal Argentino',
+    'heavyMetalLatino': 'Heavy Metal Latino',
+    'hiphop': 'Hip Hop',
+    'musicaBrasilera': 'Música Brasilera',
+    'deathMetal': 'Death Metal',
+    'thrashMetal': 'Thrash Metal',
+    'rb': 'R&B',
+    'alternativeRock': 'Alternative Rock',
+    'indieRock': 'Indie Rock',
+    'latinIndie': 'Latin Indie',
+    'softRock': 'Soft Rock',
+    'pop90s': 'Pop 90s',
+    'bossaNova': 'Bossa Nova',
+    'sambaPagode': 'Samba Pagode',
+    'electronicaArgentina': 'Electrónica Argentina',
+    'funkRap': 'Funk Rap',
+    'newWave': 'New Wave',
+    'synthpop': 'Synthpop',
+    'popPunk': 'Pop Punk',
+    'hyperpop': 'Hyperpop',
+    'blackMetal': 'Black Metal',
+    'glamMetal': 'Glam Metal',
+    'glamRock': 'Glam Rock',
+    'industrialMetal': 'Industrial Metal',
+    'hardcorePunk': 'Hardcore Punk',
+    'drumAndBass': 'Drum and Bass',
+    'corridosTumbados': 'Corridos Tumbados',
+    'bluesRock': 'Blues Rock',
+    'edmActual': 'EDM Actual',
+    'progressiveRock': 'Progressive Rock',
+    'trovaCubana': 'Trova Cubana',
+    'folkloreColombia': 'Folklore Colombia',
+    'autoresCompositores': 'Autores Compositores',
+    'sinCategoria': 'Sin Categoría',
+  };
+
+  if (specialCases[camelCase]) {
+    return specialCases[camelCase];
+  }
+
+  // Para casos no especiales, capitalizar la primera letra
+  return camelCase.charAt(0).toUpperCase() + camelCase.slice(1);
+}
+
 async function main() {
   const client = new Client({
     connectionString: DATABASE_URL,
@@ -84,14 +144,14 @@ async function main() {
     for (const genre of genres) {
       console.log(`\n🎵 Procesando género: ${genre}`);
 
-      // Buscar 24 canciones aleatorias de este género
+      // Buscar 30 canciones aleatorias de este género (case-insensitive)
       const songsResult = await client.query(`
         SELECT id, title, artist
         FROM songs
-        WHERE genre = $1
+        WHERE LOWER(REPLACE(genre, ' ', '')) = LOWER($1)
           AND "cloudinaryUrl" IS NOT NULL
         ORDER BY RANDOM()
-        LIMIT 24
+        LIMIT 30
       `, [genre]);
 
       const songs = songsResult.rows;
@@ -104,11 +164,14 @@ async function main() {
 
       console.log(`  ✅ Encontradas ${songs.length} canciones`);
 
-      // Verificar si ya existe una playlist para este género
+      // Generar nombre legible para el frontend
+      const displayName = camelCaseToDisplayName(genre);
+
+      // Verificar si ya existe una playlist para este género (buscar por genre, no por name)
       const existingResult = await client.query(`
         SELECT id, "songCount"
         FROM playlists
-        WHERE name = $1
+        WHERE genre = $1
           AND "userId" IS NULL
           AND "isPublic" = true
       `, [genre]);
@@ -120,12 +183,12 @@ async function main() {
         playlistId = existingResult.rows[0].id;
         console.log(`  🔄 Actualizando playlist existente: ${playlistId}`);
 
-        // Actualizar el campo genre si no existe
+        // Actualizar nombre legible y asegurar que genre esté correcto
         await client.query(`
           UPDATE playlists
-          SET genre = $1
-          WHERE id = $2
-        `, [genre, playlistId]);
+          SET name = $1, genre = $2
+          WHERE id = $3
+        `, [displayName, genre, playlistId]);
 
         // Eliminar canciones anteriores
         await client.query(`
@@ -135,23 +198,23 @@ async function main() {
 
         updated++;
       } else {
-        // Crear nueva playlist
+        // Crear nueva playlist con nombre legible
         const createResult = await client.query(`
           INSERT INTO playlists (name, description, genre, "isPublic", "userId", "songCount", "totalDuration")
           VALUES ($1, $2, $3, true, NULL, 0, 0)
           RETURNING id
         `, [
-          genre,
-          `Playlist automática de ${genre} con 24 canciones seleccionadas aleatoriamente`,
+          displayName,
+          `Las mejores canciones de ${displayName} seleccionadas para ti`,
           genre
         ]);
 
         playlistId = createResult.rows[0].id;
-        console.log(`  ✨ Playlist creada: ${playlistId}`);
+        console.log(`  ✨ Playlist creada: ${playlistId} - ${displayName}`);
         created++;
       }
 
-      // Agregar las 24 canciones a la playlist
+      // Agregar las 30 canciones a la playlist
       let totalDuration = 0;
       for (let i = 0; i < songs.length; i++) {
         const song = songs[i];

@@ -22,9 +22,12 @@ import { CreatePlaylistDto } from '../dto/create-playlist.dto';
 import { UpdatePlaylistDto } from '../dto/update-playlist.dto';
 import { AddSongToPlaylistDto } from '../dto/add-song-playlist.dto';
 import { ReorderSongsDto } from '../dto/reorder-songs.dto';
+import { AddSongsBatchDto } from '../dto/add-songs-batch.dto';
+import { ReplaceSongsDto } from '../dto/replace-songs.dto';
 import { Playlist } from '../entities/playlist.entity';
 import { PlaylistSong } from '../entities/playlist-song.entity';
 import { JwtAuthGuard } from '../../auth/jwt-auth.guard';
+import { OptionalJwtAuthGuard } from '../../auth/optional-jwt-auth.guard';
 import { CurrentUser } from '../../auth/decorators/current-user.decorator';
 import { OptionalUser } from '../../auth/decorators/optional-user.decorator';
 
@@ -78,6 +81,7 @@ export class PlaylistsController {
 
   // Obtener playlist por ID (autenticación opcional)
   @Get(':id')
+  @UseGuards(OptionalJwtAuthGuard)
   async findOne(
     @Param('id', ParseUUIDPipe) id: string,
     @Query('includeSongs', new ParseBoolPipe({ optional: true })) includeSongs?: boolean,
@@ -140,13 +144,18 @@ export class PlaylistsController {
 
   // ============= GESTIÓN DE CANCIONES EN PLAYLISTS =============
 
-  // Obtener canciones de una playlist
+  // Obtener canciones de una playlist (autenticación opcional)
   @Get(':id/songs')
-  async getPlaylistSongs(@Param('id', ParseUUIDPipe) id: string): Promise<PlaylistSong[]> {
-    this.logger.log(`🎵 GET /playlists/${id}/songs`);
+  @UseGuards(OptionalJwtAuthGuard)
+  async getPlaylistSongs(
+    @Param('id', ParseUUIDPipe) id: string,
+    @OptionalUser() user?: any,
+  ): Promise<PlaylistSong[]> {
+    const userId = user?.userId;
+    this.logger.log(`🎵 GET /playlists/${id}/songs - Usuario: ${userId || 'anónimo'}`);
 
     try {
-      const songs = await this.playlistsService.getPlaylistSongs(id);
+      const songs = await this.playlistsService.getPlaylistSongs(id, userId);
 
       this.logger.log(`✅ Obtenidas ${songs.length} canciones de la playlist`);
       return songs;
@@ -191,6 +200,54 @@ export class PlaylistsController {
       this.logger.log(`✅ Canción removida de la playlist`);
     } catch (error) {
       this.logger.error(`❌ Error al remover canción: ${error.message}`);
+      throw error;
+    }
+  }
+
+  // Agregar múltiples canciones a playlist en batch (requiere autenticación)
+  @Post(':id/songs/batch')
+  @UseGuards(JwtAuthGuard)
+  @HttpCode(HttpStatus.CREATED)
+  async addSongsBatch(
+    @Param('id', ParseUUIDPipe) playlistId: string,
+    @Body(ValidationPipe) batchDto: AddSongsBatchDto,
+    @CurrentUser() user: any,
+  ): Promise<PlaylistSong[]> {
+    this.logger.log(`📦 POST /playlists/${playlistId}/songs/batch - ${batchDto.songs.length} canciones`);
+
+    try {
+      // Extraer solo los songIds del DTO
+      const songIds = batchDto.songs
+        .filter(song => song.songId)
+        .map(song => song.songId as string);
+
+      const playlistSongs = await this.playlistsService.addSongsBatch(playlistId, songIds);
+
+      this.logger.log(`✅ ${playlistSongs.length} canciones agregadas en batch`);
+      return playlistSongs;
+    } catch (error) {
+      this.logger.error(`❌ Error al agregar canciones en batch: ${error.message}`);
+      throw error;
+    }
+  }
+
+  // Reemplazar todas las canciones de una playlist (requiere autenticación)
+  @Put(':id/songs')
+  @UseGuards(JwtAuthGuard)
+  @HttpCode(HttpStatus.NO_CONTENT)
+  async replaceSongs(
+    @Param('id', ParseUUIDPipe) playlistId: string,
+    @Body(ValidationPipe) replaceDto: ReplaceSongsDto,
+    @CurrentUser() user: any,
+  ): Promise<void> {
+    this.logger.log(`🔄 PUT /playlists/${playlistId}/songs - ${replaceDto.songIds.length} canciones`);
+
+    try {
+      await this.playlistsService.replaceSongs(playlistId, replaceDto.songIds);
+
+      this.logger.log(`✅ Canciones reemplazadas exitosamente`);
+    } catch (error) {
+      this.logger.error(`❌ Error al reemplazar canciones: ${error.message}`);
       throw error;
     }
   }

@@ -10,7 +10,6 @@ import {
 } from 'typeorm';
 import { Playlist } from './playlist.entity';
 import { Song } from '../../music/entities/song.entity';
-import { User } from '../../users/entities/users.entity';
 
 @Entity({ name: 'playlist_songs' })
 @Unique(['playlistId', 'songId'])
@@ -33,9 +32,6 @@ export class PlaylistSong {
   @CreateDateColumn()
   addedAt!: Date;
 
-  @Column({ type: 'uuid', nullable: true })
-  addedByUserId?: string;
-
   @ManyToOne(() => Playlist, (playlist) => playlist.playlistSongs, {
     onDelete: 'CASCADE',
   })
@@ -45,8 +41,4 @@ export class PlaylistSong {
   @ManyToOne(() => Song, { onDelete: 'CASCADE' })
   @JoinColumn({ name: 'songId' })
   song!: Song;
-
-  @ManyToOne(() => User, { nullable: true })
-  @JoinColumn({ name: 'addedByUserId' })
-  addedByUser?: User;
 }

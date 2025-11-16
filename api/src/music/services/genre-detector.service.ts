@@ -133,43 +133,30 @@ export class GenreDetectorService {
    * Detecta el género de una canción basándose en el artista y/o título
    * @param artist - Nombre del artista
    * @param title - Título de la canción (opcional, para palabras clave)
-   * @returns Género detectado o 'Sin categoría' si no se puede determinar
+   * @returns Género detectado en camelCase o null si no se puede determinar
    */
-  detectGenre(artist: string, title?: string): string {
+  detectGenre(artist: string, title?: string): string | null {
     // Normalizar artista
     const normalizedArtist = this.normalizeString(artist);
 
     // 1. Buscar por artista exacto
     const genreKey = this.artistGenreMap.get(normalizedArtist);
     if (genreKey) {
-      const mappedGenre = this.genreNormalizationMap.get(genreKey.toLowerCase());
-      const finalGenre = mappedGenre || this.capitalizeGenre(genreKey);
-      this.logger.log(`🎵 Género detectado para "${artist}": ${finalGenre}`);
-      return finalGenre;
+      this.logger.log(`🎵 Género detectado para "${artist}": ${genreKey} (camelCase)`);
+      return genreKey; // Devolver en camelCase original
     }
 
     // 2. Buscar por coincidencia parcial en el nombre del artista
     for (const [artistKey, genreKey] of this.artistGenreMap.entries()) {
       if (normalizedArtist.includes(artistKey) || artistKey.includes(normalizedArtist)) {
-        const mappedGenre = this.genreNormalizationMap.get(genreKey.toLowerCase());
-        const finalGenre = mappedGenre || this.capitalizeGenre(genreKey);
-        this.logger.log(`🎵 Género detectado (parcial) para "${artist}": ${finalGenre}`);
-        return finalGenre;
+        this.logger.log(`🎵 Género detectado (parcial) para "${artist}": ${genreKey} (camelCase)`);
+        return genreKey; // Devolver en camelCase original
       }
     }
 
-    // 3. Si no se encontró por artista, intentar detectar por palabras clave en el título
-    if (title) {
-      const genreFromTitle = this.detectGenreFromTitle(title);
-      if (genreFromTitle !== 'Sin categoría') {
-        this.logger.log(`🎵 Género detectado por título "${title}": ${genreFromTitle}`);
-        return genreFromTitle;
-      }
-    }
-
-    // 4. Si no se pudo detectar, devolver 'Sin categoría'
+    // 3. Si no se encontró, devolver null (sin clasificar)
     this.logger.warn(`⚠️ No se pudo detectar género para "${artist}" - "${title || 'sin título'}"`);
-    return 'Sin categoría';
+    return null;
   }
 
   /**
