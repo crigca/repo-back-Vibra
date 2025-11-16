@@ -123,4 +123,56 @@ export class UsersService {
     }
   }
 
+
+  // ✅ Lista de seguidores
+  async getFollowers(targetUserId: string, currentUserId: string) {
+    const targetUser = await this.usersRepository.findOne({
+      where: { id: targetUserId },
+      relations: ['followers'],
+    });
+
+    if (!targetUser) throw new NotFoundException('Usuario no encontrado');
+
+    // Buscamos el usuario actual para saber a quién sigue
+    const currentUser = await this.usersRepository.findOne({
+      where: { id: currentUserId },
+      relations: ['following'],
+    });
+
+    const followingIds = new Set(currentUser?.following.map(u => u.id));
+
+    // Mapeamos la respuesta
+    return targetUser.followers.map(follower => ({
+      id: follower.id,
+      username: follower.username,
+      profileImage: follower.profileImage,
+      isFollowedByCurrentUser: followingIds.has(follower.id),
+    }));
+  }
+
+  // ✅ Lista de seguidos
+  async getFollowing(targetUserId: string, currentUserId: string) {
+    const targetUser = await this.usersRepository.findOne({
+      where: { id: targetUserId },
+      relations: ['following'],
+    });
+
+    if (!targetUser) throw new NotFoundException('Usuario no encontrado');
+
+    // Buscamos el usuario actual para saber a quién sigue
+    const currentUser = await this.usersRepository.findOne({
+      where: { id: currentUserId },
+      relations: ['following'],
+    });
+
+    const followingIds = new Set(currentUser?.following.map(u => u.id));
+
+    // Mapeamos la respuesta
+    return targetUser.following.map(userFollowed => ({
+      id: userFollowed.id,
+      username: userFollowed.username,
+      profileImage: userFollowed.profileImage,
+      isFollowedByCurrentUser: followingIds.has(userFollowed.id),
+    }));
+  }
 }
