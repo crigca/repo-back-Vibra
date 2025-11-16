@@ -173,21 +173,37 @@ export class MusicService {
   }
 
   // Obtiene canciones con paginación (SOLO las que tienen Cloudinary URL)
-  async getAllSongs(limit: number = 50): Promise<Song[]> {
+  async getAllSongs(limit: number = 50, offset: number = 0): Promise<Song[]> {
     this.logger.log(
-      `📋 Obteniendo ${limit} canciones ALEATORIAS con Cloudinary URL`,
+      `📋 Obteniendo ${limit} canciones con Cloudinary URL (offset: ${offset})`,
     );
 
-    // Query para obtener canciones aleatorias con Cloudinary URL
-    const songs = await this.songRepository.query(`
-      SELECT *
-      FROM songs
-      WHERE "cloudinaryUrl" IS NOT NULL
-        AND genre IS NOT NULL
-        AND genre != ''
-      ORDER BY RANDOM()
-      LIMIT $1
-    `, [limit]);
+    const songs = await this.songRepository
+      .createQueryBuilder('song')
+      .where('song.cloudinaryUrl IS NOT NULL')
+      .andWhere('song.genre IS NOT NULL')
+      .andWhere("song.genre != ''")
+      .orderBy('song.id', 'ASC')
+      .skip(offset)
+      .take(limit)
+      .getMany();
+
+    this.logger.log(`✅ Obtenidas ${songs.length} canciones (offset: ${offset})`);
+    return songs;
+  }
+
+  // Obtiene canciones ALEATORIAS (para Descubre Nueva Música)
+  async getRandomSongs(limit: number = 25): Promise<Song[]> {
+    this.logger.log(`🎲 Obteniendo ${limit} canciones aleatorias`);
+
+    const songs = await this.songRepository
+      .createQueryBuilder('song')
+      .where('song.cloudinaryUrl IS NOT NULL')
+      .andWhere('song.genre IS NOT NULL')
+      .andWhere("song.genre != ''")
+      .orderBy('RANDOM()')
+      .take(limit)
+      .getMany();
 
     this.logger.log(`✅ Obtenidas ${songs.length} canciones aleatorias`);
     return songs;
@@ -222,9 +238,12 @@ export class MusicService {
   async findSongsByGenre(genre: string, limit: number = 20): Promise<Song[]> {
     this.logger.log(`🎵 Buscando canciones de género: ${genre}`);
 
+    // Convertir género a lowercase para búsqueda case-insensitive
+    const genreLower = genre.toLowerCase();
+
     const songs = await this.songRepository
       .createQueryBuilder('song')
-      .where('song.genre = :genre', { genre })
+      .where('LOWER(song.genre) = :genre', { genre: genreLower })
       .andWhere('song.cloudinaryUrl IS NOT NULL')
       .orderBy('song.createdAt', 'DESC')
       .take(limit)

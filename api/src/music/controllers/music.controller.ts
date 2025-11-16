@@ -48,24 +48,45 @@ export class MusicController {
     }
   }
 
-  // Obtener canciones con paginación (ALEATORIAS con audio disponible)
+  // Obtener canciones con paginación
   @Get('songs')
   async getAllSongs(
     @Query('limit') limit?: number,
+    @Query('offset') offset?: number,
   ): Promise<Song[]> {
-    const parsedLimit = limit ? parseInt(limit.toString()) : 50;
+    // Límite máximo de 100 canciones por petición
+    const parsedLimit = limit ? Math.min(parseInt(limit.toString()), 100) : 50;
+    const parsedOffset = offset ? parseInt(offset.toString()) : 0;
 
     this.logger.log(
-      `📋 GET /music/songs - Limit: ${parsedLimit} (aleatorias)`,
+      `📋 GET /music/songs - Limit: ${parsedLimit}, Offset: ${parsedOffset}`,
     );
 
     try {
-      const songs = await this.musicService.getAllSongs(parsedLimit);
+      const songs = await this.musicService.getAllSongs(parsedLimit, parsedOffset);
+
+      this.logger.log(`✅ Obtenidas ${songs.length} canciones`);
+      return songs;
+    } catch (error) {
+      this.logger.error(`❌ Error al obtener canciones: ${error.message}`);
+      throw error;
+    }
+  }
+
+  // Obtener canciones ALEATORIAS (para "Descubre Nueva Música")
+  @Get('songs/random')
+  async getRandomSongs(@Query('limit') limit?: number): Promise<Song[]> {
+    const parsedLimit = limit ? Math.min(parseInt(limit.toString()), 50) : 25;
+
+    this.logger.log(`🎲 GET /music/songs/random - Limit: ${parsedLimit}`);
+
+    try {
+      const songs = await this.musicService.getRandomSongs(parsedLimit);
 
       this.logger.log(`✅ Obtenidas ${songs.length} canciones aleatorias`);
       return songs;
     } catch (error) {
-      this.logger.error(`❌ Error al obtener canciones: ${error.message}`);
+      this.logger.error(`❌ Error al obtener canciones aleatorias: ${error.message}`);
       throw error;
     }
   }

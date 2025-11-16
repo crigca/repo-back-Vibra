@@ -17,8 +17,8 @@ export class Playlist {
   @PrimaryGeneratedColumn('uuid')
   id!: string;
 
-  @Column({ length: 200 })
-  name!: string;
+  @Column({ length: 30, nullable: true })
+  name?: string;
 
   @Column({ type: 'text', nullable: true })
   description?: string;
@@ -66,7 +66,7 @@ export class Playlist {
   }
 
   getName(): string {
-    return this.name;
+    return this.name || 'Sin nombre';
   }
 
   getUserId(): string | null {

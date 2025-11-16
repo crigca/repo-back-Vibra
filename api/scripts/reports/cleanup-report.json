@@ -1,5 +1,5 @@
 {
-  "timestamp": "2025-11-16T11:09:51.932Z",
+  "timestamp": "2025-11-16T11:49:31.484Z",
   "stats": {
     "total": 6738,
     "phase1": {
@@ -8,8 +8,8 @@
       "errors": 0
     },
     "phase2": {
-      "titlesClean": 6,
-      "artistsClean": 2,
+      "titlesClean": 0,
+      "artistsClean": 0,
       "errors": 0
     },
     "phase3": {

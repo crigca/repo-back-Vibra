@@ -27,6 +27,10 @@ export class PlaylistGeneratorService {
     soul_funk: 'Soul & Funk',
     alternative: 'Alternative',
     chill: 'Chill',
+    world_music: 'World Music',
+    asian_pop: 'Asian Pop',
+    infantil: 'Infantil',
+    clasica: 'Clásica',
   };
 
   constructor(
@@ -46,7 +50,6 @@ export class PlaylistGeneratorService {
     this.logger.log('🔄 Iniciando regeneración de playlists por familias...');
 
     let created = 0;
-    let skipped = 0;
 
     // Cargar familias desde el archivo JSON
     const familiesPath = path.join(
@@ -96,13 +99,11 @@ export class PlaylistGeneratorService {
 
       if (songs.length === 0) {
         this.logger.warn(
-          `⚠️  No hay canciones para la familia "${familyName}" - Saltando`,
+          `⚠️  No hay canciones para la familia "${familyName}" - Creando playlist vacía`,
         );
-        skipped++;
-        continue;
+      } else {
+        this.logger.log(`✅ Encontradas ${songs.length} canciones`);
       }
-
-      this.logger.log(`✅ Encontradas ${songs.length} canciones`);
 
       // Crear nueva playlist con displayOrder aleatorio
       const displayOrder = randomOrder[familyIndex];
@@ -158,12 +159,12 @@ export class PlaylistGeneratorService {
 
     const result = {
       created,
-      skipped,
-      total: created + skipped,
+      skipped: 0,
+      total: created,
     };
 
     this.logger.log('✅ Regeneración de playlists completada');
-    this.logger.log(`📊 Resumen: ${created} creadas, ${skipped} saltadas`);
+    this.logger.log(`📊 Resumen: ${created} playlists creadas (algunas pueden estar vacías)`);
 
     return result;
   }
