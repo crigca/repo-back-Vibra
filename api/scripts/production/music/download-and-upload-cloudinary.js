@@ -149,7 +149,7 @@ async function uploadToCloudinary(filePath, youtubeId, genre) {
 
 /**
  * Obtener canciones sin cloudinaryUrl (SOLO CON GÉNERO VÁLIDO)
- * Excluye: NULL, vacío, y "Sin categoría"
+ * Excluye: NULL, vacío, "Sin categoría", "sinCategoria" y "Otros"
  */
 async function getSongsWithoutCloudinary(limit) {
   const result = await dataSource.query(
@@ -161,6 +161,7 @@ async function getSongsWithoutCloudinary(limit) {
      AND genre != ''
      AND genre != 'Sin categoría'
      AND genre != 'Sin Categoria'
+     AND genre != 'sinCategoria'
      AND genre != 'Otros'
      LIMIT $1`,
     [limit]

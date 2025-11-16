@@ -1,6 +1,5 @@
 {
   "metal": [
-    "metal",
     "heavyMetal",
     "heavyMetalArgentino",
     "heavyMetalLatino",
@@ -54,7 +53,9 @@
     "trance",
     "dubstep",
     "drumAndBass",
+    "edm",
     "edmActual",
+    "electronic",
     "electronicaArgentina",
     "synthpop"
   ],
@@ -106,20 +107,27 @@
     "lofi",
     "jazz",
     "blues",
-    "clasica",
-    "instrumental"
+    "instrumental",
+    "arregladores",
+    "autoresCompositores"
   ],
   "world_music": [
     "musicaBrasilera",
     "trovaCubana",
     "sertanejo",
     "highlife",
-    "opera",
-    "gospel",
     "flamenco"
   ],
   "asian_pop": [
     "kpop",
     "jpop"
+  ],
+  "infantil": [
+    "infantil"
+  ],
+  "clasica": [
+    "clasica",
+    "opera",
+    "gospel"
   ]
 }

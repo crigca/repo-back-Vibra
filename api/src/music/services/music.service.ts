@@ -12,6 +12,7 @@ import { EventEmitter2 } from '@nestjs/event-emitter';
 import { Song } from '../entities/song.entity';
 import { YoutubeService, YouTubeSearchResult } from './youtube.service';
 import { GenreDetectorService } from './genre-detector.service';
+import { CloudinaryService } from '../../images/services/cloudinary.service';
 import { SearchSongsDto } from '../dto/search-songs.dto';
 import { CreateSongDto } from '../dto/create-song.dto';
 
@@ -25,6 +26,7 @@ export class MusicService {
     private songRepository: Repository<Song>,
     private youtubeService: YoutubeService,
     private genreDetector: GenreDetectorService,
+    private cloudinaryService: CloudinaryService,
     private eventEmitter: EventEmitter2,
   ) {}
 
@@ -88,8 +90,29 @@ export class MusicService {
     }
 
     try {
+      // Detectar género automáticamente si no viene en el DTO
+      let detectedGenre = createSongDto.genre;
+
+      if (!detectedGenre) {
+        this.logger.log(`🔍 Intentando detectar género automáticamente para "${createSongDto.artist}"...`);
+        const genreFromDetector = this.genreDetector.detectGenre(
+          createSongDto.artist,
+          createSongDto.title
+        );
+
+        if (genreFromDetector) {
+          detectedGenre = genreFromDetector;
+          this.logger.log(`✅ Género detectado automáticamente: ${detectedGenre}`);
+        } else {
+          // Si no se detecta, guardar como "sinCategoria" para revisión manual
+          detectedGenre = 'sinCategoria';
+          this.logger.warn(`⚠️ No se pudo detectar género automáticamente - guardar como "sinCategoria" para revisión manual`);
+        }
+      }
+
       const songData = {
         ...createSongDto,
+        genre: detectedGenre, // Siempre tiene un valor (detectado o "sinCategoria")
         publishedAt: createSongDto.publishedAt
           ? new Date(createSongDto.publishedAt)
           : undefined,
@@ -100,7 +123,7 @@ export class MusicService {
       const savedSong = await this.songRepository.save(song);
 
       this.logger.log(
-        `✅ Canción guardada exitosamente con ID: ${savedSong.id}`,
+        `✅ Canción guardada exitosamente con ID: ${savedSong.id} - Género: ${detectedGenre}`,
       );
 
       // Emitir evento
@@ -527,16 +550,22 @@ export class MusicService {
     }
 
     // 4. Detectar género automáticamente
-    const detectedGenre = this.genreDetector.detectGenre(
+    let detectedGenre = this.genreDetector.detectGenre(
       youtubeVideo.artist || 'Desconocido',
       youtubeVideo.title
     );
+
+    // Si no se detectó, asignar "sinCategoria" para revisión manual
+    if (!detectedGenre) {
+      detectedGenre = 'sinCategoria';
+      this.logger.warn(`⚠️ No se pudo detectar género para "${youtubeVideo.artist}" - guardar como "sinCategoria"`);
+    }
 
     // 5. Crear objeto CreateSongDto desde datos de YouTube
     const createSongDto: CreateSongDto = {
       title: youtubeVideo.title,
       artist: youtubeVideo.artist || 'Desconocido',
-      genre: detectedGenre,
+      genre: detectedGenre, // Siempre tiene un valor (detectado o "sinCategoria")
       duration: youtubeVideo.duration || 0,
       youtubeId: youtubeVideo.id,
       viewCount: youtubeVideo.viewCount,
@@ -637,9 +666,40 @@ export class MusicService {
     const song = await this.findSongById(id);
 
     try {
+      // Eliminar de la base de datos primero
       await this.songRepository.remove(song);
 
-      this.logger.log(`✅ Canción eliminada exitosamente: "${song.title}"`);
+      this.logger.log(`✅ Canción eliminada de BD: "${song.title}"`);
+
+      // Eliminar de Cloudinary si existe
+      if (song.cloudinaryUrl) {
+        try {
+          // Extraer publicId de la URL de Cloudinary
+          // Formato: https://res.cloudinary.com/dwafwm6uk/video/upload/v1234567/vibra/music/GENRE/YOUTUBE_ID.mp3
+          const publicIdMatch = song.cloudinaryUrl.match(/\/vibra\/music\/[^\/]+\/(.+?)\.mp3/);
+
+          if (publicIdMatch) {
+            const youtubeId = publicIdMatch[1];
+            const genre = song.genre || 'unknown';
+            const publicId = `vibra/music/${genre}/${youtubeId}`;
+
+            this.logger.log(`🗑️ Eliminando audio de Cloudinary: ${publicId}`);
+            const deleted = await this.cloudinaryService.deleteAudio(publicId);
+
+            if (deleted) {
+              this.logger.log(`✅ Audio eliminado de Cloudinary: ${publicId}`);
+            } else {
+              this.logger.warn(`⚠️ Audio no encontrado en Cloudinary: ${publicId}`);
+            }
+          } else {
+            this.logger.warn(`⚠️ No se pudo extraer publicId de URL: ${song.cloudinaryUrl}`);
+          }
+        } catch (cloudinaryError) {
+          // No fallar toda la operación si Cloudinary falla
+          this.logger.error(`❌ Error al eliminar de Cloudinary: ${cloudinaryError.message}`);
+          this.logger.warn(`⚠️ La canción fue eliminada de BD pero no de Cloudinary`);
+        }
+      }
 
       // Emitir evento
       this.eventEmitter.emit('song.deleted', { song });

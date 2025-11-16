@@ -270,6 +270,17 @@ export class YoutubeService {
       'conversacion',
       'conversation',
 
+      // VEVO y contenido promocional
+      'vevo news',
+      'vevo interview',
+      'vevocertified',
+      '#vevocertified',
+      'vevo certified',
+      'vevo lift',
+      'award presentation',
+      'fan interview',
+      'artist interview',
+
       // Documentales e historia
       'documental',
       'documentary',

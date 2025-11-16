@@ -415,7 +415,52 @@ function cleanTitle(title, artist = '', cleanedArtist = '') {
 }
 
 /**
+ * Convierte un string a camelCase
+ * "Luis Fonsi" -> "luisFonsi"
+ * "AC/DC" -> "acDc"
+ * "The Rolling Stones" -> "theRollingStones"
+ */
+function toCamelCase(str) {
+  if (!str) return '';
+
+  // Limpiar caracteres especiales pero preservar números
+  let cleaned = str
+    .trim()
+    // Eliminar caracteres especiales excepto letras, números y espacios
+    .replace(/[^\p{L}\p{N}\s]/gu, ' ')
+    // Normalizar espacios múltiples
+    .replace(/\s+/g, ' ')
+    .trim();
+
+  // Si está vacío después de limpiar, usar el original sin espacios
+  if (!cleaned) {
+    cleaned = str.replace(/\s+/g, '');
+  }
+
+  // Dividir en palabras
+  const words = cleaned.split(' ');
+
+  // Convertir a camelCase
+  const camelCase = words
+    .map((word, index) => {
+      if (!word) return '';
+
+      // Primera palabra en minúscula
+      if (index === 0) {
+        return word.charAt(0).toLowerCase() + word.slice(1).toLowerCase();
+      }
+
+      // Resto de palabras: primera letra mayúscula
+      return word.charAt(0).toUpperCase() + word.slice(1).toLowerCase();
+    })
+    .join('');
+
+  return camelCase || str.replace(/\s+/g, '').toLowerCase();
+}
+
+/**
  * Limpia el nombre del artista eliminando sufijos VEVO, Topic, emojis, HTML entities, etc.
+ * Y convierte a camelCase para mantener consistencia en la DB
  */
 function cleanArtist(artist) {
   if (!artist) return artist;
@@ -450,6 +495,11 @@ function cleanArtist(artist) {
 
   // 6. Limpiar espacios múltiples
   cleaned = cleaned.replace(/\s+/g, ' ').trim();
+
+  // 7. NO convertir a camelCase - dejar nombres legibles
+  // "Luis Fonsi" -> "Luis Fonsi"
+  // "The Rolling Stones" -> "The Rolling Stones"
+  // cleaned = toCamelCase(cleaned); // DESHABILITADO
 
   return cleaned;
 }
@@ -526,7 +576,7 @@ async function phase1AssignGenres(songs) {
     const song = songs[i];
 
     // Si ya tiene género, skip
-    if (song.genre && song.genre !== 'Otros') {
+    if (song.genre && song.genre !== 'sin-categoria') {
       continue;
     }
 
@@ -544,13 +594,13 @@ async function phase1AssignGenres(songs) {
         stats.phase1.errors++;
       }
     } else {
-      // Género NO encontrado → Asignar "Otros"
-      const success = await updateSong(song.id, { genre: 'Otros' });
+      // Género NO encontrado → Asignar "sin-categoria" (CUARENTENA)
+      const success = await updateSong(song.id, { genre: 'sin-categoria' });
 
       if (success) {
-        console.log(`⚠️  [${i + 1}/${songs.length}] "${song.title}" por "${song.artist}" → Otros`);
+        console.log(`⚠️  [${i + 1}/${songs.length}] "${song.title}" por "${song.artist}" → sin-categoria (CUARENTENA)`);
         stats.phase1.genresOtros++;
-        song.genre = 'Otros';
+        song.genre = 'sin-categoria';
 
         // Guardar para reporte
         uncategorizedSongs.push({
@@ -739,7 +789,7 @@ function printFinalSummary() {
 
   console.log('FASE 1: Asignación de Géneros');
   console.log(`  ✅ Géneros detectados y asignados: ${stats.phase1.genresAssigned}`);
-  console.log(`  ⚠️  Asignadas a "Otros": ${stats.phase1.genresOtros}`);
+  console.log(`  ⚠️  Asignadas a "sin-categoria" (CUARENTENA): ${stats.phase1.genresOtros}`);
   console.log(`  ❌ Errores: ${stats.phase1.errors}\n`);
 
   console.log('FASE 2: Limpieza de Títulos');
@@ -754,8 +804,9 @@ function printFinalSummary() {
   console.log(`  ❌ Errores: ${stats.phase3.errors}\n`);
 
   if (uncategorizedSongs.length > 0) {
-    console.log(`⚠️  ${uncategorizedSongs.length} canciones asignadas a "Otros"`);
-    console.log(`   Revisa el archivo: ${OUTPUT_DIR}/uncategorized-songs.csv\n`);
+    console.log(`⚠️  ${uncategorizedSongs.length} canciones en CUARENTENA ("sin-categoria")`);
+    console.log(`   Revisa manualmente y agrega artistas legítimos a artists-data.js`);
+    console.log(`   Reporte CSV: ${OUTPUT_DIR}/uncategorized-songs.csv\n`);
   }
 
   console.log('✅ LIMPIEZA MAESTRA COMPLETADA!\n');

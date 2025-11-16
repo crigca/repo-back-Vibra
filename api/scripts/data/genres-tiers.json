@@ -101,7 +101,9 @@
       "blues",
       "bluesRock",
       "dubstep",
+      "edm",
       "edmActual",
+      "electronic",
       "lofi",
       "drill",
       "bolero",
@@ -113,8 +115,7 @@
       "arregladores",
       "autoresCompositores",
       "infantil",
-      "instrumental",
-      "sinCategoria"
+      "instrumental"
     ]
   }
 }
