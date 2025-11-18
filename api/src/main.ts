@@ -22,9 +22,15 @@ async function bootstrap() {
 
   app.use(cookieParser()); // ✅ habilita el uso de cookies
 
-  // CORS para frontend futuro
+  // CORS para frontend
+  const allowedOrigins = [
+    'http://localhost:5173',
+    'http://localhost:5174',
+    process.env.FRONTEND_URL,
+  ].filter(Boolean) as string[]; // Elimina valores undefined/null
+
   app.enableCors({
-    origin: ['http://localhost:5173', 'http://localhost:5174'],
+    origin: allowedOrigins,
     credentials: true, // ⚠️ necesario para enviar cookies
   });
 
