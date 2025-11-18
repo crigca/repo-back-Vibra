@@ -1,7 +1,7 @@
 {
-  "timestamp": "2025-11-16T11:49:31.484Z",
+  "timestamp": "2025-11-18T17:51:00.690Z",
   "stats": {
-    "total": 6738,
+    "total": 8542,
     "phase1": {
       "genresAssigned": 0,
       "genresOtros": 0,
@@ -13,7 +13,7 @@
       "errors": 0
     },
     "phase3": {
-      "groupsAnalyzed": 6411,
+      "groupsAnalyzed": 8104,
       "duplicatesRemoved": 0,
       "duplicatesKept": 0,
       "errors": 0

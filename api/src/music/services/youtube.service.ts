@@ -608,7 +608,11 @@ export class YoutubeService {
     ];
 
     const searchText = `${title} ${channelTitle}`.toLowerCase();
-    return blacklist.some(term => searchText.includes(term));
+    // Usar regex con word boundaries para evitar falsos positivos (ej: "pantera" no debe detectar "peron")
+    return blacklist.some(term => {
+      const regex = new RegExp(`\\b${term.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}\\b`, 'i');
+      return regex.test(searchText);
+    });
   }
 
   // Formatear resultados
