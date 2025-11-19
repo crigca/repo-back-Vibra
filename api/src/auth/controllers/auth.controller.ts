@@ -29,8 +29,8 @@ export class AuthController {
         // 2️⃣ Crear la cookie con el token
         res.cookie('token_vibra', token, {
             httpOnly: true,   // 🔒 no accesible por JS
-            secure: false,    // ⚠️ true si usás HTTPS
-            sameSite: 'lax', // necesario si front y back usan distintos puertos
+            secure: process.env.NODE_ENV === "production",    // ⚠️ true si usás HTTPS
+            sameSite: process.env.NODE_ENV === "production" ? "none" : "lax", // necesario si front y back usan distintos puertos
             maxAge: 1000 * 60 * 60 * 24 * 7, // 7 días
         });
 
@@ -54,8 +54,8 @@ export class AuthController {
 
     res.cookie('token_vibra', token, {
         httpOnly: true,
-        secure: false,
-        sameSite: 'lax',
+        secure: process.env.NODE_ENV === "production",
+        sameSite: process.env.NODE_ENV === "production" ? "none" : "lax",
         maxAge: 1000 * 60 * 60 * 24 * 7,
     });
 
