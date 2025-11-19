@@ -240,6 +240,37 @@ export class ImagesService {
   }
 
   /**
+   * Obtiene imágenes aleatorias ignorando el género.
+   */
+  private async getRandomImages(
+    limit: number,
+  ): Promise<GeneratedImageDocument[]> {
+    this.logger.debug(`Fetching ${limit} random images as fallback.`);
+    try {
+      const images = await this.generatedImageModel
+        .aggregate([
+          { $match: { isActive: true } },
+          { $sample: { size: limit } }, // Usamos $sample para aleatoriedad
+        ])
+        .option({ lean: true }) // <--- ¡AQUÍ ESTÁ LA CLAVE!
+        .exec();
+
+      // El tipo de retorno debe ser adaptado. Si usas 'lean', realmente
+      // devuelve `GeneratedImageDocument[]` con tipos planos (FlattenMaps).
+      // Para simplificar, puedes usar `any[]` si el tipo genérico es muy complejo,
+      // o definir un tipo `GeneratedImageLean` si prefieres estricta tipificación.
+      // Asumiendo que GeneratedImageDocument es el Documento de Mongoose,
+      // usamos `any[]` o `GeneratedImageDocument[]` con un casting ligero.
+      return images as any[]; // Usamos 'any' para evitar la complejidad de 'FlattenMaps'
+      // O mejor aún, definimos el tipo exacto para 'lean' si es posible,
+      // pero por ahora, el casting es el camino más rápido.
+    } catch (error) {
+      this.logger.error(`Error fetching random images: ${error.message}`);
+      return [];
+    }
+  }
+
+  /**
    * Obtiene estadísticas de imágenes generadas
    */
   async getImageStats(): Promise<any> {
@@ -292,81 +323,121 @@ export class ImagesService {
    * @returns Array de imágenes balanceadas + imágenes generándose
    */
   async getBalancedImagesForPlayback(
-    genre: string,
-    durationSeconds: number,
+      genre: string,
+      durationSeconds: number,
   ): Promise<{ images: any[]; breakdown: any; generating: boolean }> {
-    try {
-      // Calcular imágenes totales necesarias (1 cada 5 segundos = 12 por minuto)
-      const totalImages = Math.ceil(durationSeconds / 5);
+      try {
+          // Calcular imágenes totales necesarias
+          const totalImages = Math.ceil(durationSeconds / 5);
 
-      // Calcular distribución
-      const fromDB = Math.round(totalImages * 0.33); // 33%
-      const fromFAL = Math.round(totalImages * 0.42); // 42%
-      const fromReplicate = Math.round(totalImages * 0.17); // 17%
-      const fromDALLE = Math.ceil(totalImages * 0.08); // 8%
+          // Calcular distribución
+          const fromDB = Math.round(totalImages * 0.33);
+          const fromFAL = Math.round(totalImages * 0.42);
+          const fromReplicate = Math.round(totalImages * 0.17);
+          const fromDALLE = Math.ceil(totalImages * 0.08);
 
-      this.logger.log(
-        `📊 Balanced mix for ${durationSeconds}s: ${totalImages} total (DB:${fromDB}, FAL:${fromFAL}, Replicate:${fromReplicate}, DALL-E:${fromDALLE})`,
-      );
+          this.logger.log(
+              `📊 Balanced mix for ${durationSeconds}s: ${totalImages} total (DB:${fromDB}, FAL:${fromFAL}, Replicate:${fromReplicate}, DALL-E:${fromDALLE})`,
+          );
 
-      // 1. Obtener TODAS las imágenes actuales del género
-      const allImages = await this.generatedImageModel
-        .find({ genre, isActive: true })
-        .sort({ createdAt: -1 })
-        .limit(totalImages)
-        .lean();
+          // 1. Obtener TODAS las imágenes actuales del género
+          let allImages = await this.generatedImageModel
+              .find({ genre, isActive: true })
+              .sort({ createdAt: -1 })
+              .limit(totalImages)
+              .lean() as any[];;
 
-      // 2. Marcar las imágenes con su origen
-      const images = allImages.map((img: any) => ({
-        id: img._id,
-        imageUrl: img.imageUrl,
-        thumbnailUrl: img.thumbnailUrl,
-        generator: img.generator,
-        source: 'precached',
-        createdAt: img.createdAt,
-      }));
+          // ----------------------------------------------------
+          // 💡 Ajuste #1: Calcular cuántas imágenes son realmente del género solicitado
+          const genreImagesCount = allImages.length;
+          // ----------------------------------------------------
 
-      // 3. Verificar si necesitamos generar más imágenes
-      const needMore = allImages.length < totalImages;
-      const jobKey = `${genre}-${durationSeconds}`;
+          // 👇 FALLBACK DE IMÁGENES ALEATORIAS
+          if (allImages.length < totalImages) {
+              const neededForFallback = totalImages - allImages.length;
+              this.logger.warn(
+                  `⚠️ Solo ${genreImagesCount}/${totalImages} encontradas para ${genre}. Buscando ${neededForFallback} imágenes aleatorias.`,
+              );
+              
+              const randomImages = await this.getRandomImages(neededForFallback);
+              
+              // Agregamos las imágenes aleatorias al final del array
+              allImages = [...allImages, ...randomImages];
+          }
+          // FIN DEL FALLBACK
 
-      // 4. Si no hay un job activo y necesitamos más, iniciar generación
-      if (needMore && !this.generationJobs.has(jobKey)) {
-        const imagesToGenerate = totalImages - allImages.length;
+          // 2. Marcar las imágenes con su origen (incluyendo las random)
+          const images = allImages.map((img: any) => ({
+              id: img._id,
+              imageUrl: img.imageUrl,
+              thumbnailUrl: img.thumbnailUrl,
+              generator: img.generator,
+              // source: 'precached' si el género coincide, sino 'fallback-random'
+              source: img.genre === genre ? 'precached' : 'fallback-random',
+              createdAt: img.createdAt,
+          }));
 
-        this.logger.log(`🎨 Starting background generation: ${imagesToGenerate} images needed for ${genre}`);
+          // ----------------------------------------------------
+          // 💡 Ajuste #2: Lógica de 'needMore' para la generación en background
+          
+          // needMore es TRUE si no hay suficientes imágenes precargadas del género original
+          const needMore = genreImagesCount < fromDB; 
+          
+          // Si no tenemos imágenes del género, siempre necesitamos generar
+          const imagesToGenerate = totalImages - genreImagesCount; 
 
-        // Registrar job
-        this.generationJobs.set(jobKey, {
-          genre,
-          timestamp: Date.now(),
-          counts: { fromFAL, fromReplicate, fromDALLE },
-        });
+          // La generación debe basarse en el totalImages calculado (por duración)
+          // y lo que realmente tenemos del GENERO.
 
-        // Iniciar generación en background (no esperar)
-        this.generateBalancedImagesInBackground(genre, fromFAL, fromReplicate, fromDALLE, jobKey);
+          // Usamos needToGenerate para simplificar el flujo del job.
+          const needToGenerate = genreImagesCount < totalImages;
+          const jobKey = `${genre}-${durationSeconds}`;
+          // ----------------------------------------------------
+
+
+          // 4. Si hay una necesidad real de generar (basada en el género) y no hay un job activo, iniciar.
+          if (needToGenerate && !this.generationJobs.has(jobKey)) {
+              
+              this.logger.log(`🎨 Starting background generation: ${imagesToGenerate} images needed for ${genre}`);
+
+              // Registrar job
+              this.generationJobs.set(jobKey, {
+                  genre,
+                  timestamp: Date.now(),
+                  counts: { fromFAL, fromReplicate, fromDALLE },
+              });
+
+              // Iniciar generación en background (no esperar)
+              this.generateBalancedImagesInBackground(genre, fromFAL, fromReplicate, fromDALLE, jobKey);
+          }
+
+          // 5. Retornar con breakdown
+          return {
+              images,
+              // 💡 Ajuste #3: Retornar 'generating' si la necesidad se activa
+              generating: needToGenerate && !this.generationJobs.has(jobKey), 
+              breakdown: {
+                  totalImages,
+                  durationSeconds,
+                  // Devolvemos la cantidad real de imágenes devueltas (precached + fallback)
+                  currentImages: images.length, 
+                  distribution: {
+                      // Aquí mostramos cuántas del género *debería* tener
+                      precached: { 
+                          count: fromDB, 
+                          percentage: 33, 
+                          actual: genreImagesCount // Lo que realmente se encontró del género
+                      },
+                      fal: { count: fromFAL, percentage: 42, toGenerate: needToGenerate ? fromFAL : 0 },
+                      replicate: { count: fromReplicate, percentage: 17, toGenerate: needToGenerate ? fromReplicate : 0 },
+                      dalle: { count: fromDALLE, percentage: 8, toGenerate: needToGenerate ? fromDALLE : 0 },
+                  },
+              },
+          };
+      } catch (error) {
+          this.logger.error(`Error getting balanced images: ${error.message}`);
+          throw error;
       }
-
-      // 5. Retornar con breakdown
-      return {
-        images,
-        generating: needMore,
-        breakdown: {
-          totalImages,
-          durationSeconds,
-          currentImages: allImages.length,
-          distribution: {
-            precached: { count: fromDB, percentage: 33, actual: allImages.length },
-            fal: { count: fromFAL, percentage: 42, toGenerate: needMore ? fromFAL : 0 },
-            replicate: { count: fromReplicate, percentage: 17, toGenerate: needMore ? fromReplicate : 0 },
-            dalle: { count: fromDALLE, percentage: 8, toGenerate: needMore ? fromDALLE : 0 },
-          },
-        },
-      };
-    } catch (error) {
-      this.logger.error(`Error getting balanced images: ${error.message}`);
-      throw error;
-    }
   }
 
   /**
