@@ -121,9 +121,13 @@ const PATTERNS_TO_REMOVE = [
   // "lyric video" en cualquier formato
   /\blyric\s+video\b/gi,
   /\blyrics\s+video\b/gi,
+  /\bvideo\s+lyric\b/gi, // Orden inverso
   /\(\s*lyric\s+video\s*\)/gi,
+  /\(\s*video\s+lyric\s*\)/gi, // Orden inverso
   /\[\s*lyric\s+video\s*\]/gi,
+  /\[\s*video\s+lyric\s*\]/gi, // Orden inverso
   /[-–]\s*lyric\s+video/gi,
+  /[-–]\s*video\s+lyric/gi, // Orden inverso
 
   // "official lyric video" en cualquier formato
   /\bofficial\s+lyric\s+video\b/gi,
@@ -270,6 +274,24 @@ const PATTERNS_TO_REMOVE = [
   /\(Remix\)/gi,
   /\[Remix\)/gi,
 
+  // Versiones alternativas, remasters y upscaled
+  /\(alt\.?\s+version\)/gi,
+  /\[alt\.?\s+version\]/gi,
+  /\(alternative\s+version\)/gi,
+  /\[alternative\s+version\]/gi,
+  /\(.*?remastered.*?\)/gi, // Cualquier cosa con "remastered" entre paréntesis
+  /\[.*?remastered.*?\]/gi, // Cualquier cosa con "remastered" entre corchetes
+  /\(upscaled\s+version\)/gi,
+  /\[upscaled\s+version\]/gi,
+  /\(\d+\s+upscaled\s+version\)/gi, // Con año: (2021 Upscaled Version)
+  /\[\d+\s+upscaled\s+version\]/gi,
+  /\(studio\s+version\)/gi,
+  /\[studio\s+version\]/gi,
+  /\(album\s+version\)/gi,
+  /\[album\s+version\]/gi,
+  /\(single\s+version\)/gi,
+  /\[single\s+version\]/gi,
+
   // Años entre corchetes o paréntesis
   /\[\d{4}\]/g, // [2011], [2020], etc.
   /\(\d{4}\)/g, // (2011), (2020), etc.
@@ -299,6 +321,23 @@ const PATTERNS_TO_REMOVE = [
   // Palabras entre comillas
   /"[^"]*"/g, // "Estudio", "En Vivo", etc.
   /'[^']*'/g, // 'Estudio', 'En Vivo', etc.
+
+  // Extensiones de archivo
+  /\.wmv$/gi,
+  /\.mp4$/gi,
+  /\.avi$/gi,
+  /\.flv$/gi,
+  /\.mov$/gi,
+
+  // Usuarios y canales de YouTube (metadata de videos)
+  /video\s*\(\s*[a-z0-9_]+\s*\)/gi, // video ( username )
+  /\(\s*[a-z0-9_]+\s*\)/gi, // ( username ) - solo lowercase con números/guiones
+
+  // Shows de TV y programas con fechas
+  /\(.*?tv\s+show.*?\)/gi,
+  /\[.*?tv\s+show.*?\]/gi,
+  /\(.*?show.*?\d{4}.*?\)/gi, // Shows con años
+  /\[.*?show.*?\d{4}.*?\]/gi,
 
   // Otros patrones
   /- Topic$/gi,
@@ -388,7 +427,10 @@ function cleanTitle(title, artist = '', cleanedArtist = '') {
     cleaned = parts[parts.length - 1].trim();
   }
 
-  // 4. Eliminar el nombre del artista del inicio si está duplicado
+  // 4. Normalizar paréntesis sin espacio antes (ejemplo: "title(text)" -> "title (text)")
+  cleaned = cleaned.replace(/([^\s\(])(\()/g, '$1 $2');
+
+  // 5. Eliminar el nombre del artista del inicio si está duplicado
   // Intentar primero con el artista limpio, luego con el original
   if (cleanedArtist) {
     const artistPattern = new RegExp(`^${escapeRegex(cleanedArtist)}\\s*[-–—:]\\s*`, 'i');
@@ -399,12 +441,12 @@ function cleanTitle(title, artist = '', cleanedArtist = '') {
     cleaned = cleaned.replace(artistPattern, '');
   }
 
-  // 5. Aplicar patrones de limpieza
+  // 6. Aplicar patrones de limpieza
   PATTERNS_TO_REMOVE.forEach(pattern => {
     cleaned = cleaned.replace(pattern, '');
   });
 
-  // 6. Limpiar espacios extras
+  // 7. Limpiar espacios extras
   cleaned = cleaned
     .replace(/\s+/g, ' ')
     .replace(/\s*[-–—:]\s*$/g, '')
