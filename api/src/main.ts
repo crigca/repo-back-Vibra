@@ -36,6 +36,9 @@ async function bootstrap() {
   app.enableCors({
     origin: allowedOrigins,
     credentials: true, // ⚠️ necesario para enviar cookies
+    methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization', 'Cookie'],
+  exposedHeaders: ['Set-Cookie'],
   });
 
   const port = process.env.PORT ?? 3000;
