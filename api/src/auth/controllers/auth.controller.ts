@@ -34,8 +34,8 @@ export class AuthController {
             maxAge: 1000 * 60 * 60 * 24 * 7, // 7 días
         });
 
-        // 3️⃣ Enviar respuesta al front (ya no hace falta mandar el token)
-    return { message: 'Login successful' };
+        // 3️⃣ Enviar respuesta al front con el token (para cross-domain)
+    return { message: 'Login successful', token };
     }
 
 
