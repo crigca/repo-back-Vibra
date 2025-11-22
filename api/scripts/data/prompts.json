@@ -1367,5 +1367,387 @@
       "passionate",
       "energetic"
     ]
+  },
+  "arregladores": {
+    "sceneElements": [
+      "orchestral arrangements",
+      "sheet music",
+      "conductor baton",
+      "studio sessions"
+    ],
+    "visualStyle": [
+      "elegant golds",
+      "deep browns",
+      "classical sophistication"
+    ],
+    "emotionMood": [
+      "refined",
+      "creative",
+      "masterful"
+    ]
+  },
+  "autoresCompositores": {
+    "sceneElements": [
+      "piano keys",
+      "handwritten lyrics",
+      "intimate studio",
+      "creative process"
+    ],
+    "visualStyle": [
+      "warm sepia tones",
+      "soft lighting",
+      "artistic workspace"
+    ],
+    "emotionMood": [
+      "introspective",
+      "poetic",
+      "soulful"
+    ]
+  },
+  "bluesRock": {
+    "sceneElements": [
+      "vintage guitars",
+      "blues bar stage",
+      "rock energy",
+      "soulful solos"
+    ],
+    "visualStyle": [
+      "deep blues",
+      "smoky reds",
+      "gritty textures"
+    ],
+    "emotionMood": [
+      "raw",
+      "passionate",
+      "electrifying"
+    ]
+  },
+  "clasica": {
+    "sceneElements": [
+      "symphony orchestra",
+      "grand concert hall",
+      "classical instruments",
+      "elegant audience"
+    ],
+    "visualStyle": [
+      "rich golds",
+      "deep burgundy",
+      "timeless elegance"
+    ],
+    "emotionMood": [
+      "majestic",
+      "profound",
+      "transcendent"
+    ]
+  },
+  "dembow": {
+    "sceneElements": [
+      "Dominican street party",
+      "Caribbean energy",
+      "urban dance"
+    ],
+    "visualStyle": [
+      "tropical neons",
+      "vibrant yellows",
+      "island urban fusion"
+    ],
+    "emotionMood": [
+      "explosive",
+      "party",
+      "infectious"
+    ]
+  },
+  "electronicaArgentina": {
+    "sceneElements": [
+      "Buenos Aires clubs",
+      "local DJ scene",
+      "underground raves"
+    ],
+    "visualStyle": [
+      "neon blues",
+      "urban Argentine backdrop",
+      "modern electronic"
+    ],
+    "emotionMood": [
+      "hypnotic",
+      "local pride",
+      "avant-garde"
+    ]
+  },
+  "folkloreColombia": {
+    "sceneElements": [
+      "cumbia roots",
+      "traditional Colombian dress",
+      "Caribbean coast",
+      "cultural celebration"
+    ],
+    "visualStyle": [
+      "vibrant Colombian colors",
+      "tropical warmth",
+      "folkloric patterns"
+    ],
+    "emotionMood": [
+      "festive",
+      "proud",
+      "traditional"
+    ]
+  },
+  "funkRap": {
+    "sceneElements": [
+      "bass heavy beats",
+      "street cyphers",
+      "groovy fusion"
+    ],
+    "visualStyle": [
+      "funky oranges",
+      "urban graffiti",
+      "bold patterns"
+    ],
+    "emotionMood": [
+      "groovy",
+      "confident",
+      "hybrid energy"
+    ]
+  },
+  "glamRock": {
+    "sceneElements": [
+      "glitter makeup",
+      "platform boots",
+      "theatrical stage",
+      "70s excess"
+    ],
+    "visualStyle": [
+      "sparkly golds",
+      "electric blues",
+      "androgynous glamour"
+    ],
+    "emotionMood": [
+      "theatrical",
+      "provocative",
+      "flamboyant"
+    ]
+  },
+  "heavyMetalLatino": {
+    "sceneElements": [
+      "Latin American metal scene",
+      "regional metal festivals",
+      "Spanish lyrics power"
+    ],
+    "visualStyle": [
+      "dark metallics",
+      "Latin flag accents",
+      "aggressive imagery"
+    ],
+    "emotionMood": [
+      "powerful",
+      "united",
+      "fierce"
+    ]
+  },
+  "popPunk": {
+    "sceneElements": [
+      "skate parks",
+      "Warped Tour vibes",
+      "teenage rebellion"
+    ],
+    "visualStyle": [
+      "checkerboard patterns",
+      "hot pink",
+      "black accents"
+    ],
+    "emotionMood": [
+      "angsty",
+      "fun",
+      "energetic"
+    ]
+  },
+  "progressiveRock": {
+    "sceneElements": [
+      "complex compositions",
+      "concept albums",
+      "elaborate stage shows"
+    ],
+    "visualStyle": [
+      "cosmic imagery",
+      "surreal landscapes",
+      "prog album art style"
+    ],
+    "emotionMood": [
+      "epic",
+      "cerebral",
+      "adventurous"
+    ]
+  },
+  "synthpop": {
+    "sceneElements": [
+      "vintage synthesizers",
+      "80s neon",
+      "new wave fashion"
+    ],
+    "visualStyle": [
+      "neon pinks",
+      "electric blues",
+      "retro-futuristic"
+    ],
+    "emotionMood": [
+      "nostalgic",
+      "danceable",
+      "dreamy"
+    ]
+  },
+  "trapArgentino": {
+    "sceneElements": [
+      "Buenos Aires streets",
+      "Argentine trap scene",
+      "urban youth culture"
+    ],
+    "visualStyle": [
+      "dark moody tones",
+      "Argentine urban aesthetic",
+      "modern minimalism"
+    ],
+    "emotionMood": [
+      "confident",
+      "street-smart",
+      "authentic"
+    ]
+  },
+  "vallenato": {
+    "sceneElements": [
+      "accordion",
+      "caja vallenata",
+      "Colombian Caribbean coast",
+      "storytelling tradition"
+    ],
+    "visualStyle": [
+      "warm earth tones",
+      "Caribbean sunsets",
+      "Colombian pride"
+    ],
+    "emotionMood": [
+      "romantic",
+      "nostalgic",
+      "festive"
+    ]
+  },
+  "grunge": {
+    "sceneElements": [
+      "Seattle rain",
+      "flannel shirts",
+      "distorted guitars",
+      "underground clubs"
+    ],
+    "visualStyle": [
+      "muted grays",
+      "dirty yellows",
+      "raw 90s aesthetic"
+    ],
+    "emotionMood": [
+      "angsty",
+      "raw",
+      "disillusioned"
+    ]
+  },
+  "infantil": {
+    "sceneElements": [
+      "colorful playground",
+      "animated characters",
+      "fun educational elements"
+    ],
+    "visualStyle": [
+      "bright primary colors",
+      "cartoon style",
+      "playful shapes"
+    ],
+    "emotionMood": [
+      "joyful",
+      "innocent",
+      "fun"
+    ]
+  },
+  "instrumental": {
+    "sceneElements": [
+      "abstract sound waves",
+      "floating instruments",
+      "musical notation"
+    ],
+    "visualStyle": [
+      "elegant minimalism",
+      "flowing gradients",
+      "artistic abstraction"
+    ],
+    "emotionMood": [
+      "contemplative",
+      "immersive",
+      "timeless"
+    ]
+  },
+  "musicaBrasilera": {
+    "sceneElements": [
+      "Brazilian landscapes",
+      "tropical rhythms",
+      "cultural fusion"
+    ],
+    "visualStyle": [
+      "vibrant greens",
+      "golden yellows",
+      "Brazilian flag colors"
+    ],
+    "emotionMood": [
+      "warm",
+      "festive",
+      "diverse"
+    ]
+  },
+  "newWave": {
+    "sceneElements": [
+      "80s synths",
+      "geometric patterns",
+      "new romantic fashion"
+    ],
+    "visualStyle": [
+      "electric blues",
+      "hot pinks",
+      "retro-futuristic"
+    ],
+    "emotionMood": [
+      "cool",
+      "stylish",
+      "avant-garde"
+    ]
+  },
+  "sertanejo": {
+    "sceneElements": [
+      "Brazilian countryside",
+      "cowboy culture",
+      "acoustic guitars"
+    ],
+    "visualStyle": [
+      "warm sunset tones",
+      "rustic Brazilian aesthetic",
+      "rural romance"
+    ],
+    "emotionMood": [
+      "romantic",
+      "nostalgic",
+      "passionate"
+    ]
+  },
+  "trovaCubana": {
+    "sceneElements": [
+      "Havana streets",
+      "acoustic guitar",
+      "poetic storytelling"
+    ],
+    "visualStyle": [
+      "warm Caribbean tones",
+      "vintage Cuban aesthetic",
+      "revolutionary spirit"
+    ],
+    "emotionMood": [
+      "poetic",
+      "romantic",
+      "revolutionary"
+    ]
   }
 }

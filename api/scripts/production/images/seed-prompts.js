@@ -40,12 +40,26 @@ const Prompt = mongoose.model('Prompt', promptSchema);
 const promptsPath = path.join(__dirname, '../../data/prompts.json');
 const BASE_PROMPTS = JSON.parse(fs.readFileSync(promptsPath, 'utf-8'));
 
+/**
+ * Construye el texto del prompt a partir de los datos del JSON
+ * @param {object} data - Objeto con sceneElements, visualStyle, emotionMood
+ * @param {string} genre - Nombre del género
+ * @returns {string} - Texto del prompt para la IA
+ */
+function buildPromptText(data, genre) {
+  const scenes = data.sceneElements?.join(', ') || '';
+  const styles = data.visualStyle?.join(', ') || '';
+  const moods = data.emotionMood?.join(', ') || '';
+
+  return `Abstract artistic visualization of ${genre} music featuring ${scenes}. Visual style: ${styles}. Emotional mood: ${moods}. High quality, artistic, vibrant colors, dynamic composition.`;
+}
+
 // Template de prompts por categoría
 const PROMPT_TEMPLATES = {
   base: (genre) => {
-    // Buscar prompt específico en prompts.json
+    // Buscar prompt específico en prompts.json y construir texto
     if (BASE_PROMPTS[genre]) {
-      return BASE_PROMPTS[genre];
+      return buildPromptText(BASE_PROMPTS[genre], genre);
     }
 
     // Template genérico si no existe
@@ -53,14 +67,34 @@ const PROMPT_TEMPLATES = {
   },
 
   variation: (genre) => {
+    // Usar datos del JSON si existen para crear variación
+    if (BASE_PROMPTS[genre]) {
+      const data = BASE_PROMPTS[genre];
+      const scenes = data.sceneElements?.slice(0, 2).join(', ') || '';
+      const moods = data.emotionMood?.join(', ') || '';
+      return `Alternative perspective of ${genre} music: surreal dreamlike atmosphere with ${scenes}, flowing abstract forms, color gradients. Mood: ${moods}. Artistic interpretation of sound waves and musical emotions.`;
+    }
     return `Alternative perspective of ${genre} music: surreal dreamlike atmosphere with flowing abstract forms, color gradients, and artistic interpretation of sound waves and musical emotions.`;
   },
 
   mood: (genre) => {
+    // Enfocado en las emociones del género
+    if (BASE_PROMPTS[genre]) {
+      const data = BASE_PROMPTS[genre];
+      const moods = data.emotionMood?.join(', ') || '';
+      const styles = data.visualStyle?.slice(0, 2).join(', ') || '';
+      return `Emotional essence of ${genre}: ${moods}. Atmospheric depth, layered textures with ${styles}, mood-driven color palette that evokes the feelings and spirit of the music.`;
+    }
     return `Emotional essence of ${genre}: atmospheric depth, layered textures, mood-driven color palette that evokes the feelings and spirit of the music genre.`;
   },
 
   style: (genre) => {
+    // Enfocado en el estilo visual
+    if (BASE_PROMPTS[genre]) {
+      const data = BASE_PROMPTS[genre];
+      const styles = data.visualStyle?.join(', ') || '';
+      return `Stylized artistic representation of ${genre} with ${styles}. Modern art influences, bold visual language, contemporary design elements, creative interpretation of musical identity.`;
+    }
     return `Stylized artistic representation of ${genre} with modern art influences, bold visual language, contemporary design elements, and creative interpretation of musical identity.`;
   },
 };
