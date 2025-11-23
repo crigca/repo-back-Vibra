@@ -32,6 +32,10 @@ const stats = {
     errors: 0
   },
   phase3: {
+    artistsNormalized: 0,
+    errors: 0
+  },
+  phase4: {
     groupsAnalyzed: 0,
     duplicatesRemoved: 0,
     duplicatesKept: 0,
@@ -62,6 +66,34 @@ function normalizeString(str) {
 }
 
 /**
+ * Normaliza un título para detección AGRESIVA de duplicados
+ * Quita todo lo que está entre paréntesis, corchetes, y después de guiones
+ * "Tu Eres Su Seguridad (Acústico)" → "tueressuseguridad"
+ * "Tu Eres Su Seguridad - Vorterix" → "tueressuseguridad"
+ * "05 - Tu Eres Su Seguridad" → "tueressuseguridad"
+ */
+function normalizeTitleForDuplicates(title) {
+  if (!title) return '';
+
+  let cleaned = title
+    // Quitar contenido entre paréntesis
+    .replace(/\([^)]*\)/g, '')
+    // Quitar contenido entre corchetes
+    .replace(/\[[^\]]*\]/g, '')
+    // Quitar todo después de " - " (guión con espacios)
+    .replace(/\s+-\s+.*$/, '')
+    // Quitar todo después de " – " (guión largo)
+    .replace(/\s+–\s+.*$/, '')
+    // Quitar prefijos como "05 - "
+    .replace(/^\d+\s*[-–]\s*/, '')
+    // Quitar hashtags
+    .replace(/#\w+/g, '')
+    .trim();
+
+  return normalizeString(cleaned);
+}
+
+/**
  * Crea un mapa invertido: artista normalizado → género
  */
 function createArtistGenreMap() {
@@ -78,6 +110,39 @@ function createArtistGenreMap() {
 }
 
 const artistGenreMap = createArtistGenreMap();
+
+/**
+ * Crea un mapa: artista normalizado → nombre canónico
+ * Ejemplo: "malon" → "Malón"
+ */
+function createCanonicalArtistMap() {
+  const map = new Map();
+
+  for (const [genre, artists] of Object.entries(artistsByGenre)) {
+    for (const artist of artists) {
+      const normalized = normalizeString(artist);
+      // Solo guardar el primero (el canónico)
+      if (!map.has(normalized)) {
+        map.set(normalized, artist);
+      }
+    }
+  }
+
+  console.log(`📋 Mapa de artistas canónicos creado: ${map.size} artistas\n`);
+  return map;
+}
+
+const canonicalArtistMap = createCanonicalArtistMap();
+
+/**
+ * Obtiene el nombre canónico de un artista
+ * Solo normaliza artistas que están en artists-data.js
+ */
+function getCanonicalArtist(artist) {
+  if (!artist) return artist;
+  const normalized = normalizeString(artist);
+  return canonicalArtistMap.get(normalized) || artist; // Si no está en el mapa, devolver original
+}
 
 /**
  * Detecta el género de un artista
@@ -715,19 +780,55 @@ async function phase2CleanTitles(songs) {
 }
 
 // =====================
-// FASE 3: ELIMINACIÓN DE DUPLICADOS
+// FASE 3: NORMALIZACIÓN DE ARTISTAS CANÓNICOS
 // =====================
 
-async function phase3RemoveDuplicates(songs) {
+async function phase3NormalizeArtists(songs) {
   console.log('\n' + '='.repeat(70));
-  console.log('FASE 3: ELIMINACIÓN DE DUPLICADOS (Máximo 2 por título+artista)');
+  console.log('FASE 3: NORMALIZACIÓN DE ARTISTAS CANÓNICOS');
   console.log('='.repeat(70) + '\n');
 
-  // Agrupar por título normalizado + artista normalizado
+  console.log('🔍 Normalizando nombres de artistas usando artists-data.js...\n');
+
+  for (let i = 0; i < songs.length; i++) {
+    const song = songs[i];
+    const canonicalArtist = getCanonicalArtist(song.artist);
+
+    if (canonicalArtist !== song.artist) {
+      const success = await updateSong(song.id, { artist: canonicalArtist });
+
+      if (success) {
+        console.log(`✅ [${i + 1}/${songs.length}] "${song.artist}" → "${canonicalArtist}"`);
+        song.artist = canonicalArtist; // Actualizar en memoria
+        stats.phase3.artistsNormalized++;
+      } else {
+        stats.phase3.errors++;
+      }
+
+      await new Promise(resolve => setTimeout(resolve, 20));
+    }
+  }
+
+  console.log('\n✅ Fase 3 completada!\n');
+}
+
+// =====================
+// FASE 4: ELIMINACIÓN DE DUPLICADOS
+// =====================
+
+async function phase4RemoveDuplicates(songs) {
+  console.log('\n' + '='.repeat(70));
+  console.log('FASE 4: ELIMINACIÓN DE DUPLICADOS (Máximo 2 por título+artista)');
+  console.log('='.repeat(70) + '\n');
+
+  // Agrupar por título normalizado AGRESIVO + artista normalizado
+  // Esto agrupa "Tu Eres Su Seguridad (Acústico)" con "Tu Eres Su Seguridad - Vorterix"
   const groups = new Map();
 
   for (const song of songs) {
-    const key = normalizeString(song.title) + '|||' + normalizeString(song.artist);
+    const titleNorm = normalizeTitleForDuplicates(song.title); // Usa normalización agresiva
+    const artistNorm = normalizeString(song.artist);
+    const key = titleNorm + '|||' + artistNorm;
 
     if (!groups.has(key)) {
       groups.set(key, []);
@@ -737,13 +838,21 @@ async function phase3RemoveDuplicates(songs) {
   }
 
   console.log(`📊 Total de grupos analizados: ${groups.size}\n`);
-  stats.phase3.groupsAnalyzed = groups.size;
+  stats.phase4.groupsAnalyzed = groups.size;
 
   // Procesar grupos con 3 o más canciones
-  for (const [key, groupSongs] of groups) {
+  for (const [, groupSongs] of groups) {
     if (groupSongs.length >= 3) {
-      // Ordenar por viewCount (mayor primero)
-      groupSongs.sort((a, b) => (b.viewCount || 0) - (a.viewCount || 0));
+      // Ordenar: priorizar las que tienen cloudinaryUrl, luego por viewCount
+      groupSongs.sort((a, b) => {
+        // Priorizar las que tienen cloudinaryUrl
+        const aHasCloud = a.cloudinaryUrl ? 1 : 0;
+        const bHasCloud = b.cloudinaryUrl ? 1 : 0;
+        if (bHasCloud !== aHasCloud) return bHasCloud - aHasCloud;
+
+        // Luego por viewCount
+        return (b.viewCount || 0) - (a.viewCount || 0);
+      });
 
       console.log(`\n🔍 Grupo con ${groupSongs.length} canciones:`);
       console.log(`   Título: "${groupSongs[0].title}"`);
@@ -756,37 +865,39 @@ async function phase3RemoveDuplicates(songs) {
 
       console.log(`   ✅ MANTENER (top 2):`);
       toKeep.forEach((song, i) => {
-        console.log(`      ${i + 1}. ${song.viewCount || 0} vistas - ID: ${song.id}`);
+        const hasCloud = song.cloudinaryUrl ? 'SI' : 'NO';
+        console.log(`      ${i + 1}. ${song.viewCount || 0} vistas, Cloudinary: ${hasCloud} - ID: ${song.id}`);
       });
 
       console.log(`   ❌ ELIMINAR (${toDelete.length} duplicados):`);
       for (const song of toDelete) {
-        console.log(`      - ${song.viewCount || 0} vistas - ID: ${song.id}`);
+        const hasCloud = song.cloudinaryUrl ? 'SI' : 'NO';
+        console.log(`      - ${song.viewCount || 0} vistas, Cloudinary: ${hasCloud} - ID: ${song.id}`);
 
         const success = await deleteSong(song.id);
         if (success) {
-          stats.phase3.duplicatesRemoved++;
+          stats.phase4.duplicatesRemoved++;
         } else {
-          stats.phase3.errors++;
+          stats.phase4.errors++;
         }
 
         await new Promise(resolve => setTimeout(resolve, 50));
       }
 
-      stats.phase3.duplicatesKept += 2;
+      stats.phase4.duplicatesKept += 2;
     }
   }
 
-  console.log('\n✅ Fase 3 completada!\n');
+  console.log('\n✅ Fase 4 completada!\n');
 }
 
 // =====================
-// FASE 4: GENERACIÓN DE REPORTES
+// FASE 5: GENERACIÓN DE REPORTES
 // =====================
 
-function phase4GenerateReports() {
+function phase5GenerateReports() {
   console.log('\n' + '='.repeat(70));
-  console.log('FASE 4: GENERACIÓN DE REPORTES');
+  console.log('FASE 5: GENERACIÓN DE REPORTES');
   console.log('='.repeat(70) + '\n');
 
   // Reporte JSON
@@ -839,11 +950,15 @@ function printFinalSummary() {
   console.log(`  ✅ Artistas limpiados: ${stats.phase2.artistsClean}`);
   console.log(`  ❌ Errores: ${stats.phase2.errors}\n`);
 
-  console.log('FASE 3: Eliminación de Duplicados');
-  console.log(`  📊 Grupos analizados: ${stats.phase3.groupsAnalyzed}`);
-  console.log(`  ✅ Canciones mantenidas (máx 2): ${stats.phase3.duplicatesKept}`);
-  console.log(`  ❌ Duplicados eliminados: ${stats.phase3.duplicatesRemoved}`);
+  console.log('FASE 3: Normalización de Artistas Canónicos');
+  console.log(`  ✅ Artistas normalizados: ${stats.phase3.artistsNormalized}`);
   console.log(`  ❌ Errores: ${stats.phase3.errors}\n`);
+
+  console.log('FASE 4: Eliminación de Duplicados');
+  console.log(`  📊 Grupos analizados: ${stats.phase4.groupsAnalyzed}`);
+  console.log(`  ✅ Canciones mantenidas (máx 2): ${stats.phase4.duplicatesKept}`);
+  console.log(`  ❌ Duplicados eliminados: ${stats.phase4.duplicatesRemoved}`);
+  console.log(`  ❌ Errores: ${stats.phase4.errors}\n`);
 
   if (uncategorizedSongs.length > 0) {
     console.log(`⚠️  ${uncategorizedSongs.length} canciones en CUARENTENA ("sin-categoria")`);
@@ -864,8 +979,9 @@ async function main() {
   console.log('Este script realizará:');
   console.log('  1. Asignación automática de géneros');
   console.log('  2. Limpieza de títulos y artistas');
-  console.log('  3. Eliminación de duplicados (máximo 2 por título+artista)');
-  console.log('  4. Generación de reportes');
+  console.log('  3. Normalización de artistas canónicos (Malon → Malón)');
+  console.log('  4. Eliminación de duplicados (máximo 2 por título+artista)');
+  console.log('  5. Generación de reportes');
   console.log('='.repeat(70) + '\n');
 
   // Verificar servidor
@@ -896,8 +1012,9 @@ async function main() {
     // Ejecutar fases
     await phase1AssignGenres(songs);
     await phase2CleanTitles(songs);
-    await phase3RemoveDuplicates(songs);
-    phase4GenerateReports();
+    await phase3NormalizeArtists(songs);
+    await phase4RemoveDuplicates(songs);
+    phase5GenerateReports();
 
     // Resumen final
     printFinalSummary();

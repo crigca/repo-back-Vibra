@@ -9,6 +9,8 @@
     "generate:dalle": "node scripts/production/images/generate-dalle.js",
     "generate:fal": "node scripts/production/images/generate-fal.js",
     "generate:replicate": "node scripts/production/images/generate-replicate.js",
+    "generate:missing-genres": "node scripts/claude/generate-missing-genres.js",
+    "normalize:artists-dedupe": "node scripts/claude/normalize-artists-and-dedupe.js",
     "build": "nest build",
     "format": "prettier --write \"src/**/*.ts\" \"test/**/*.ts\"",
     "start": "nest start",
