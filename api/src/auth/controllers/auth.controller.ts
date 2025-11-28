@@ -62,4 +62,15 @@ export class AuthController {
     return { message: 'Dev login successful' };
     }
 
+    // 🚪 Logout - Solo borra la cookie de sesión, NO borra datos del usuario
+    @Post('logout')
+    async logout(@Res({ passthrough: true }) res: express.Response) {
+        res.clearCookie('token_vibra', {
+            httpOnly: true,
+            secure: process.env.NODE_ENV === "production",
+            sameSite: process.env.NODE_ENV === "production" ? "none" : "lax",
+        });
+        return { message: 'Logout successful' };
+    }
+
 }
