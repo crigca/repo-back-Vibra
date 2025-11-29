@@ -73,4 +73,43 @@ export class AuthController {
         return { message: 'Logout successful' };
     }
 
+    // ✅ Registro con email y contraseña
+    @Post('register')
+    async register(
+        @Body('email') email: string,
+        @Body('password') password: string,
+        @Body('username') username: string,
+        @Res({ passthrough: true }) res: express.Response
+    ): Promise<any> {
+        const { token } = await this.AuthService.register(email, password, username);
+
+        res.cookie('token_vibra', token, {
+            httpOnly: true,
+            secure: process.env.NODE_ENV === "production",
+            sameSite: process.env.NODE_ENV === "production" ? "none" : "lax",
+            maxAge: 1000 * 60 * 60 * 24 * 7,
+        });
+
+        return { message: 'Registro exitoso', token };
+    }
+
+    // ✅ Login con email y contraseña
+    @Post('login')
+    async login(
+        @Body('email') email: string,
+        @Body('password') password: string,
+        @Res({ passthrough: true }) res: express.Response
+    ): Promise<any> {
+        const { token } = await this.AuthService.login(email, password);
+
+        res.cookie('token_vibra', token, {
+            httpOnly: true,
+            secure: process.env.NODE_ENV === "production",
+            sameSite: process.env.NODE_ENV === "production" ? "none" : "lax",
+            maxAge: 1000 * 60 * 60 * 24 * 7,
+        });
+
+        return { message: 'Login exitoso', token };
+    }
+
 }

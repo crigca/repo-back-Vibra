@@ -24,6 +24,10 @@ export class User {
   @Column({ unique: true, nullable: true })
   googleId?: string;
 
+  // ✅ Contraseña hasheada (para login con email)
+  @Column({ nullable: true })
+  password?: string;
+
   // ✅ Imagen de perfil (de Google o personalizada)
   @Column({ nullable: true })
   profileImage?: string;
