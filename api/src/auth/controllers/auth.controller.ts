@@ -43,19 +43,27 @@ export class AuthController {
     @UseGuards(JwtAuthGuard)
     async getCurrentUser(@CurrentUser() user: any) {
         const dbUser = await this.usersRepository.findOne({ where: { id: user.userId } });
-        return dbUser; // así devuelve todo lo más reciente de la DB
+        if (!dbUser) return null;
+
+        // ⚠️ SEGURIDAD: Excluir campos sensibles de la respuesta
+        const { password, googleId, ...safeUser } = dbUser;
+        return safeUser;
     }
 
     @Post('cookie-dev')
     async devLogin(@Res({ passthrough: true }) res: express.Response) {
-    // ⚠️ Solo para desarrollo: creamos un usuario de prueba
+    // ⚠️ SEGURIDAD: Solo permitido en desarrollo
+    if (process.env.NODE_ENV === 'production') {
+        throw new BadRequestException('Endpoint disabled in production');
+    }
+
     const payloadJwt = { sub: '123', email: 'dev@example.com', username: 'devuser' };
-    const token = this.AuthService.signJwtForDev(payloadJwt); // creamos un método en el service
+    const token = this.AuthService.signJwtForDev(payloadJwt);
 
     res.cookie('token_vibra', token, {
         httpOnly: true,
-        secure: process.env.NODE_ENV === "production",
-        sameSite: process.env.NODE_ENV === "production" ? "none" : "lax",
+        secure: false,
+        sameSite: "lax",
         maxAge: 1000 * 60 * 60 * 24 * 7,
     });
 

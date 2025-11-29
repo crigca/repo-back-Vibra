@@ -33,7 +33,6 @@ export class AuthService {
             });
 
             const payload = ticket.getPayload();
-            console.log('PAYLOAD DE GOOGLE:', payload);
             if (!payload) throw new UnauthorizedException('Invalid Google ID token');
 
             const { sub: googleId, email, name: username, email_verified,picture } = payload;
@@ -57,14 +56,7 @@ export class AuthService {
                   username: username ?? email.split('@')[0],
                   profileImage: picture,
                 });
-                console.log('USUARIO A CREAR O ACTUALIZAR:', {
-                  googleId,
-                  email,
-                  username,
-                  picture,
-                });
                 await this.userRepository.save(user);
-                console.log('USUARIO GUARDADO:', user);
             } else if (!user.googleId) {
                 // vincular cuenta si email existente sin googleId
                 user.googleId = googleId;
@@ -83,17 +75,11 @@ export class AuthService {
 
             return { token };
         } catch (error) {
-            // console.error('Google auth error:', error.message ?? error);
-            // ← Agregá esto para ver el error real
-            console.error('ERROR COMPLETO:', error);
-            console.error('MENSAJE:', error.message);
-            
-            if (error instanceof UnauthorizedException || 
+            if (error instanceof UnauthorizedException ||
                 error instanceof ConflictException) {
                 throw error;
             }
             throw new UnauthorizedException('Authentication failed');
-            // throw new UnauthorizedException('Google authentication failed');
         }
     }
 

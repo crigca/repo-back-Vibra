@@ -11,14 +11,20 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
   constructor(private configService: ConfigService) {
     super({
       jwtFromRequest: ExtractJwt.fromExtractors([
+        // 1. Primero intenta extraer de cookie
         (req: Request) => {
           const token = req?.cookies?.token_vibra;
-          this.logger.debug(`Extractor cookie token_vibra: ${token}`);
-          return token;
+          if (token) {
+            this.logger.debug('Token extraído de cookie');
+            return token;
+          }
+          return null;
         },
+        // 2. Si no hay cookie, intenta del header Authorization: Bearer
+        ExtractJwt.fromAuthHeaderAsBearerToken(),
       ]),
       ignoreExpiration: false,
-      secretOrKey: configService.get<string>('JWT_SECRET') || 'secret_default',
+      secretOrKey: configService.get<string>('JWT_SECRET') || 'dev_secret_only_for_local',
     });
     this.logger.log('JwtStrategy initialized');
   }

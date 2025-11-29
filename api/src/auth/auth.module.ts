@@ -16,10 +16,19 @@ import { JwtStrategy } from './strategies/jwt.strategy';
     JwtModule.registerAsync({
       imports: [ConfigModule],
       inject: [ConfigService],
-      useFactory: async (configService: ConfigService) => ({
-        secret: configService.get<string>('JWT_SECRET') || 'secret_default',
-        signOptions: { expiresIn: '7d' },
-      }),
+      useFactory: async (configService: ConfigService) => {
+        const secret = configService.get<string>('JWT_SECRET');
+
+        // ⚠️ SEGURIDAD: JWT_SECRET es obligatorio en producción
+        if (!secret && configService.get('NODE_ENV') === 'production') {
+          throw new Error('JWT_SECRET environment variable is required in production');
+        }
+
+        return {
+          secret: secret || 'dev_secret_only_for_local',
+          signOptions: { expiresIn: '7d' },
+        };
+      },
     }),
   ],
   controllers: [AuthController],
