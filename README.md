@@ -1,12 +1,14 @@
-# 🎵 VIBRA – Backend API
+# VIBRA – Backend API
 
 Backend de VIBRA, plataforma de música con descubrimiento inteligente, gestión de playlists y generación de imágenes con IA.
+Este repositorio cuenta con una wiki donde se detalla toda su documentacion en: https://deepwiki.com/crigca/repo-back-Vibra
+Asimismo, este proyecto cuenta con un informe tecnico: https://docs.google.com/document/d/1__hA0XD2aFfMkWAgLew-wv83zOdFjg64Gf1wZH8nOQQ/edit?usp=drive_link
 
-**🌐 Producción:** https://vibra-kohl.vercel.app
+**Link al proyecto en producción:** https://vibra-kohl.vercel.app
 
 ---
 
-## 🏗️ Stack Tecnológico
+## Stack Tecnológico
 
 - **NestJS 10** + **TypeScript**
 - **PostgreSQL** - Base de datos relacional (canciones, playlists, usuarios)
@@ -19,7 +21,7 @@ Backend de VIBRA, plataforma de música con descubrimiento inteligente, gestión
 
 ---
 
-## 📐 Arquitectura de Módulos
+## Arquitectura de Módulos
 
 ```
 src/
@@ -33,7 +35,7 @@ src/
 
 ---
 
-## 🚀 Instalación y Setup
+## Instalación y Setup
 
 ### **Prerequisitos**
 - Node.js 18+
@@ -98,7 +100,7 @@ El backend estará disponible en: **http://localhost:3000**
 
 ---
 
-## 🔐 Autenticación y Seguridad
+## Autenticación y Seguridad
 
 ### **Sistema de Autenticación**
 
@@ -167,7 +169,7 @@ GET    /auth/me                      - Obtener usuario actual
 
 ---
 
-## 🎵 Módulo de Música
+## Módulo de Música
 
 ### **Búsqueda Inteligente**
 
@@ -185,21 +187,21 @@ GET /music/random?genre=rock&limit=10
 
 ---
 
-## 📋 Módulo de Playlists
+## Módulo de Playlists
 
 ### **Características**
 
-- ✅ CRUD completo de playlists
-- ✅ Gestión de canciones (agregar, quitar, reordenar)
-- ✅ Playlists públicas y privadas
-- ✅ Límite de 15 playlists por usuario
-- ✅ Límite de 30 canciones por playlist
-- ✅ Validación de nombres únicos
-- ✅ Mosaico de portada (primeras 4 canciones)
+- CRUD completo de playlists
+- Gestión de canciones (agregar, quitar, reordenar)
+- Playlists públicas y privadas
+- Límite de 15 playlists por usuario
+- Límite de 30 canciones por playlist
+- Validación de nombres únicos
+- Mosaico de portada (primeras 4 canciones)
 
 ---
 
-## 🛠️ Scripts de Producción
+## Scripts de Producción
 
 ### **Gestión de Música**
 
@@ -230,7 +232,7 @@ npm run generate:replicate            # Replicate SDXL
 
 ---
 
-## 🎨 Generación de Imágenes con IA
+## Generación de Imágenes con IA
 
 VIBRA genera imágenes de portadas para playlists usando 3 servicios de IA:
 
@@ -240,7 +242,7 @@ VIBRA genera imágenes de portadas para playlists usando 3 servicios de IA:
 
 ---
 
-## 📊 Base de Datos
+## Base de Datos
 
 ### **Géneros Musicales**
 
@@ -256,7 +258,7 @@ Familias principales:
 
 ---
 
-## 📦 Build para Producción
+## Build para Producción
 
 ```bash
 npm run build        # Compilar TypeScript a JavaScript
@@ -265,7 +267,7 @@ npm run start:prod   # Iniciar en modo producción
 
 ---
 
-## 🔗 Enlaces Útiles
+## Enlaces Útiles
 
 - **Documentación NestJS**: https://docs.nestjs.com
 - **TypeORM**: https://typeorm.io
@@ -276,7 +278,7 @@ npm run start:prod   # Iniciar en modo producción
 
 ---
 
-## 👥 Autores
+## Autores
 
 - Sergio Peckerle
 - Diego Ortino
