@@ -2,6 +2,8 @@
 
 Backend de VIBRA, plataforma de música con descubrimiento inteligente, gestión de playlists y generación de imágenes con IA.
 
+**🌐 Producción:** https://vibra-kohl.vercel.app
+
 ---
 
 ## 🏗️ Stack Tecnológico
@@ -9,10 +11,11 @@ Backend de VIBRA, plataforma de música con descubrimiento inteligente, gestión
 - **NestJS 10** + **TypeScript**
 - **PostgreSQL** - Base de datos relacional (canciones, playlists, usuarios)
 - **TypeORM** - ORM para PostgreSQL
-- **Passport + JWT** - Autenticación con Google OAuth 2.0
+- **Passport + JWT** - Autenticación con Google OAuth 2.0 y Email/Password
+- **Resend API** - Envío de emails (verificación y recuperación)
 - **YouTube Data API v3** - Búsqueda de música
 - **Cloudinary** - Almacenamiento de archivos MP3
-- **Event Emitter** - Arquitectura event-driven
+- **Railway** - Deploy del backend
 
 ---
 
@@ -20,7 +23,7 @@ Backend de VIBRA, plataforma de música con descubrimiento inteligente, gestión
 
 ```
 src/
-├── auth/              # Autenticación Google OAuth + JWT
+├── auth/              # Autenticación (Google OAuth + Email/Password)
 ├── users/             # Gestión de usuarios
 ├── music/             # Búsqueda, reproducción y gestión de canciones
 ├── playlists/         # CRUD de playlists con canciones
@@ -76,6 +79,11 @@ CLOUDINARY_API_SECRET=your_api_secret
 FRONTEND_URL_LANDING=http://localhost:5173
 FRONTEND_URL_APP=http://localhost:5174
 
+# Email (Resend API)
+RESEND_API_KEY=re_your_resend_api_key
+EMAIL_FROM=Vibra <noreply@vibra.app>
+FRONTEND_URL=http://localhost:5173
+
 # Puerto del servidor
 PORT=3000
 ```
@@ -94,15 +102,23 @@ El backend estará disponible en: **http://localhost:3000**
 
 ### **Sistema de Autenticación**
 
-VIBRA usa **Google OAuth 2.0 + JWT** con cookies HTTP-only:
+VIBRA soporta **dos métodos de autenticación**:
 
-1. Usuario hace login con Google en `vibraFront` (puerto 5173)
+#### **Google OAuth 2.0**
+1. Usuario hace login con Google en `vibraFront`
 2. Frontend envía `id_token` de Google al endpoint `/auth/google`
 3. Backend verifica el token con Google OAuth2Client
 4. Backend crea o busca usuario en PostgreSQL
-5. Backend genera JWT (válido 7 días) y lo envía en cookie `token_vibra`
-6. Frontend redirige a `vibraApp` (puerto 5174)
-7. `vibraApp` envía la cookie automáticamente en cada request
+5. Backend genera JWT (válido 7 días) y lo envía
+6. Frontend redirige a `vibraApp` con el token
+
+#### **Email + Contraseña**
+1. Usuario se registra con email/password en `/auth/register`
+2. Backend envía código de verificación de 6 dígitos por email
+3. Usuario verifica su email en `/auth/verify-email`
+4. Una vez verificado, puede hacer login en `/auth/login`
+5. Si olvida la contraseña: `/auth/forgot-password` envía link de recuperación
+6. Usuario restablece contraseña en `/auth/reset-password`
 
 ### **Guards de Autenticación**
 
@@ -135,24 +151,18 @@ PATCH  /playlists/:id/regenerate     - Regenerar playlist automática
 # Usuarios
 GET    /users                        - Listar usuarios
 GET    /users/:id                    - Obtener usuario
-PATCH  /users/:id                    - Actualizar usuario
-DELETE /users/:id                    - Eliminar usuario
+PATCH  /users/:id                    - Actualizar usuario (solo propio)
+DELETE /users/:id                    - Eliminar usuario (solo propio)
+
+# Autenticación
+POST   /auth/google                  - Login con Google OAuth
+POST   /auth/register                - Registro con email/password
+POST   /auth/login                   - Login con email/password
+POST   /auth/verify-email            - Verificar código de email
+POST   /auth/resend-code             - Reenviar código de verificación
+POST   /auth/forgot-password         - Solicitar reset de contraseña
+POST   /auth/reset-password          - Restablecer contraseña con token
 GET    /auth/me                      - Obtener usuario actual
-```
-
-### **Cookies**
-
-El JWT se envía automáticamente en cookie `token_vibra` (HTTP-only, secure en producción):
-
-```typescript
-// Frontend (axios) envía cookie automáticamente
-axios.defaults.withCredentials = true;
-
-// Backend extrae token de cookie
-@UseGuards(JwtAuthGuard)
-async create(@CurrentUser() user: any) {
-  // user = { userId, username, email }
-}
 ```
 
 ---
@@ -167,32 +177,10 @@ Sistema híbrido que busca primero en BD local, luego en YouTube:
 GET /music/search-smart?query=metallica&maxResults=20
 ```
 
-**Respuesta:**
-```json
-{
-  "fromDatabase": [...],  // Canciones ya en la BD
-  "fromYoutube": [...]    // Resultados de YouTube API
-}
-```
-
 ### **Canciones Aleatorias**
 
 ```bash
 GET /music/random?genre=rock&limit=10
-```
-
-### **Guardar desde YouTube**
-
-Agrega canciones de YouTube a la base de datos:
-
-```bash
-POST /music/save-from-youtube
-{
-  "youtubeId": "dQw4w9WgXcQ",
-  "title": "Never Gonna Give You Up",
-  "artist": "Rick Astley",
-  "duration": 213
-}
 ```
 
 ---
@@ -209,38 +197,6 @@ POST /music/save-from-youtube
 - ✅ Validación de nombres únicos
 - ✅ Mosaico de portada (primeras 4 canciones)
 
-### **Crear Playlist**
-
-```bash
-POST /playlists
-Authorization: Bearer <token>
-{
-  "name": "Mi Playlist Rock",
-  "isPublic": false
-}
-```
-
-### **Agregar Canciones en Batch**
-
-```bash
-POST /playlists/:id/songs/batch
-{
-  "songs": [
-    { "songId": "uuid-1" },
-    { "songId": "uuid-2" }
-  ]
-}
-```
-
-### **Reemplazar Todas las Canciones**
-
-```bash
-PUT /playlists/:id/songs
-{
-  "songIds": ["uuid-1", "uuid-2", "uuid-3"]
-}
-```
-
 ---
 
 ## 🛠️ Scripts de Producción
@@ -248,59 +204,33 @@ PUT /playlists/:id/songs
 ### **Gestión de Música**
 
 ```bash
-# Buscar y guardar canciones desde YouTube
-npm run seed:music
-
-# Descargar MP3 y subir a Cloudinary
-npm run download:upload:cloudinary
-
-# Sincronizar URLs de Cloudinary
-npm run sync:cloudinary
-
-# Actualizar géneros de canciones
-npm run update:genres
-
-# Clasificar canciones sin género (con IA)
-npm run classify:genres
-
-# Limpiar base de datos (duplicados, inválidos)
-npm run cleanup:db
-
-# Limpieza maestra (multi-fase)
-npm run cleanup:master
-
-# Validar YouTube IDs
-npm run validate:youtube
+npm run seed:music                    # Buscar y guardar canciones desde YouTube
+npm run download:upload:cloudinary    # Descargar MP3 y subir a Cloudinary
+npm run sync:cloudinary               # Sincronizar URLs de Cloudinary
+npm run update:genres                 # Actualizar géneros de canciones
+npm run classify:genres               # Clasificar canciones sin género (con IA)
+npm run cleanup:db                    # Limpiar base de datos
+npm run validate:youtube              # Validar YouTube IDs
 ```
 
 ### **Gestión de Playlists**
 
 ```bash
-# Generar playlists por género (automáticas)
-npm run seed:playlists
-
-# Generar playlists por familia de géneros
-npm run seed:family-playlists
+npm run seed:playlists                # Generar playlists por género
+npm run seed:family-playlists         # Generar playlists por familia de géneros
 ```
 
 ### **Generación de Imágenes con IA**
 
 ```bash
-# Generar 50 imágenes con DALL-E 3 (~$2.00 USD)
-npm run generate:dalle
-
-# Generar 100 imágenes con FAL AI (económico)
-npm run generate:fal
-
-# Generar 100 imágenes con Replicate SDXL
-npm run generate:replicate
+npm run generate:dalle                # DALL-E 3 (~$2.00 USD)
+npm run generate:fal                  # FAL AI (económico)
+npm run generate:replicate            # Replicate SDXL
 ```
 
 ---
 
 ## 🎨 Generación de Imágenes con IA
-
-### **Sistema Híbrido**
 
 VIBRA genera imágenes de portadas para playlists usando 3 servicios de IA:
 
@@ -308,84 +238,9 @@ VIBRA genera imágenes de portadas para playlists usando 3 servicios de IA:
 2. **FAL AI** - Rápido y económico
 3. **Replicate SDXL** - Balance calidad/precio
 
-### **Distribución por Tiers**
-
-Las imágenes se priorizan por popularidad del género:
-
-| Tier | Descripción | Géneros Ejemplo | Prioridad |
-|------|-------------|-----------------|-----------|
-| 1 | Mainstream LATAM | Rock, Cumbia, Reggaeton, Trap | Alta |
-| 2 | Muy populares | Bachata, Tango, Techno, House | Media-Alta |
-| 3 | Audiencia dedicada | Soul, Funk, Ska, Punk | Media |
-| 4 | Nicho/experimentales | Jazz, Blues, Opera, Flamenco | Baja |
-
-### **Generación de Prompts**
-
-Los prompts se generan dinámicamente combinando:
-- Scene Elements (10+ por género)
-- Visual Style (8+ estilos)
-- Emotion/Mood (8+ emociones)
-- Artistic Styles (25+ opciones)
-- Lighting Techniques (25+ técnicas)
-- Cross-pollination (20% mezcla entre géneros relacionados)
-
 ---
 
 ## 📊 Base de Datos
-
-### **Entidades Principales**
-
-**Songs** (Canciones)
-```typescript
-{
-  id: uuid,
-  title: string,
-  artist: string,
-  youtubeId: string,
-  duration: number,
-  genre: string,  // camelCase: "rockArgentino", "deathMetal"
-  cloudinaryUrl: string | null,
-  viewCount: number,
-  createdAt: timestamp
-}
-```
-
-**Playlists**
-```typescript
-{
-  id: uuid,
-  name: string,
-  userId: uuid,
-  isPublic: boolean,
-  songCount: number,
-  totalDuration: number,
-  displayOrder: number,
-  createdAt: timestamp,
-  updatedAt: timestamp
-}
-```
-
-**PlaylistSongs** (Relación N:N)
-```typescript
-{
-  id: uuid,
-  playlistId: uuid,
-  songId: uuid,
-  position: number,
-  addedAt: timestamp
-}
-```
-
-**Users**
-```typescript
-{
-  id: uuid,
-  email: string,
-  username: string,
-  googleId: string,
-  createdAt: timestamp
-}
-```
 
 ### **Géneros Musicales**
 
@@ -401,89 +256,12 @@ Familias principales:
 
 ---
 
-## 🧪 Testing y Desarrollo
-
-### **Probar Autenticación**
-
-```bash
-# 1. Obtener token (desde frontend)
-# Login con Google → copia el JWT de la cookie
-
-# 2. Verificar usuario actual
-curl http://localhost:3000/auth/me \
-  --cookie "token_vibra=YOUR_JWT_TOKEN"
-
-# 3. Crear playlist
-curl -X POST http://localhost:3000/playlists \
-  -H "Content-Type: application/json" \
-  --cookie "token_vibra=YOUR_JWT_TOKEN" \
-  -d '{"name": "Test Playlist", "isPublic": false}'
-```
-
-### **Logs de Desarrollo**
-
-El servidor muestra logs detallados en modo desarrollo:
-
-```
-[PlaylistsController] 📋 GET /playlists - Usuario: a5c98ec0-692f...
-[PlaylistsService] ✅ Obtenidas 5 playlists
-[JwtStrategy] Payload recibido con sub: a5c98ec0-692f...
-```
-
----
-
-## 🐛 Troubleshooting
-
-### **Error: "Unauthorized" en endpoints protegidos**
-
-**Causa**: Cookie `token_vibra` no está siendo enviada
-
-**Solución**:
-```typescript
-// Frontend: Habilitar envío de cookies
-axios.defaults.withCredentials = true;
-```
-
-### **Error: "Una o más canciones no existen en la base de datos"**
-
-**Causa**: IDs de canciones inválidos o no existen en BD
-
-**Solución**: Verificar que los IDs sean UUIDs válidos de la tabla `songs`
-
-### **Error: CORS blocked**
-
-**Causa**: Frontend no está en la whitelist de CORS
-
-**Solución**: Agregar URL en `main.ts`:
-```typescript
-app.enableCors({
-  origin: ['http://localhost:5173', 'http://localhost:5174'],
-  credentials: true,
-});
-```
-
-### **YouTube API quota exceeded**
-
-**Causa**: Límite diario de 10,000 unidades alcanzado
-
-**Solución**:
-- Esperar 24 horas para renovación
-- Usar múltiples API keys
-- Reducir búsquedas
-
----
-
 ## 📦 Build para Producción
 
 ```bash
-# Compilar TypeScript a JavaScript
-npm run build
-
-# Iniciar en modo producción
-npm run start:prod
+npm run build        # Compilar TypeScript a JavaScript
+npm run start:prod   # Iniciar en modo producción
 ```
-
-**Output**: `/dist/` contiene el código compilado
 
 ---
 
@@ -494,6 +272,7 @@ npm run start:prod
 - **Passport JWT**: https://www.passportjs.org/packages/passport-jwt
 - **YouTube Data API**: https://developers.google.com/youtube/v3
 - **Cloudinary**: https://cloudinary.com/documentation
+- **Resend (Email)**: https://resend.com/docs
 
 ---
 
@@ -506,7 +285,7 @@ npm run start:prod
 
 ---
 
-**Última actualización**: 2025-11-16
-**Versión**: 3.0
+**Última actualización**: 2025-11-30
+**Versión**: 3.1
 **Puerto**: 3000
 **Proyecto**: VIBRA Backend API
