@@ -4,13 +4,15 @@ import { JwtModule } from '@nestjs/jwt';
 import { PassportModule } from '@nestjs/passport';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { User } from '../users/entities/users.entity';
+import { UserCredentials } from './entities/user-credentials.entity';
 import { AuthController } from './controllers/auth.controller';
 import { AuthService } from './services/auth.service';
+import { EmailService } from './services/email.service';
 import { JwtStrategy } from './strategies/jwt.strategy';
 
 @Module({
   imports: [
-    TypeOrmModule.forFeature([User]),
+    TypeOrmModule.forFeature([User, UserCredentials]),
     ConfigModule,
     PassportModule.register({ defaultStrategy: 'jwt' }),
     JwtModule.registerAsync({
@@ -19,7 +21,7 @@ import { JwtStrategy } from './strategies/jwt.strategy';
       useFactory: async (configService: ConfigService) => {
         const secret = configService.get<string>('JWT_SECRET');
 
-        // ⚠️ SEGURIDAD: JWT_SECRET es obligatorio en producción
+        // SEGURIDAD: JWT_SECRET es obligatorio en producción
         if (!secret && configService.get('NODE_ENV') === 'production') {
           throw new Error('JWT_SECRET environment variable is required in production');
         }
@@ -32,7 +34,7 @@ import { JwtStrategy } from './strategies/jwt.strategy';
     }),
   ],
   controllers: [AuthController],
-  providers: [AuthService, JwtStrategy],
-  exports: [AuthService, JwtStrategy, PassportModule],
+  providers: [AuthService, JwtStrategy, EmailService],
+  exports: [AuthService, JwtStrategy, PassportModule, EmailService],
 })
 export class AuthModule {}

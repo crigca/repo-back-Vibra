@@ -3,6 +3,8 @@ import { ConfigModule, ConfigService } from '@nestjs/config';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { MongooseModule } from '@nestjs/mongoose';
 import { ScheduleModule } from '@nestjs/schedule';
+import { ThrottlerModule, ThrottlerGuard } from '@nestjs/throttler';
+import { APP_GUARD } from '@nestjs/core';
 import { AuthModule } from './auth/auth.module';
 import { MusicModule } from './music/music.module';
 import { PlaylistsModule } from './playlists/playlists.module';
@@ -17,6 +19,12 @@ import { UserFollowModule } from './user-follow/user-follow.module';
       isGlobal: true,
       envFilePath: '.env',
     }),
+
+    // Rate limiting - proteccion contra brute force
+    ThrottlerModule.forRoot([{
+      ttl: 60000,  // 1 minuto
+      limit: 20,   // 20 requests por minuto por IP (global)
+    }]),
 
     // Módulo de Schedule para cron jobs
     ScheduleModule.forRoot(),
@@ -74,6 +82,13 @@ import { UserFollowModule } from './user-follow/user-follow.module';
     ImagesModule,
     UserHistoryModule,
     UserFollowModule,
+  ],
+  providers: [
+    // Activar rate limiting globalmente
+    {
+      provide: APP_GUARD,
+      useClass: ThrottlerGuard,
+    },
   ],
 })
 export class AppModule {}

@@ -1,4 +1,5 @@
 import { UserHistory } from 'src/user-history/entities/user-history.entity';
+import { UserCredentials } from 'src/auth/entities/user-credentials.entity';
 import {
   Entity,
   PrimaryGeneratedColumn,
@@ -6,6 +7,7 @@ import {
   CreateDateColumn,
   UpdateDateColumn,
   OneToMany,
+  OneToOne,
   ManyToMany,
   JoinTable,
 } from 'typeorm';
@@ -24,15 +26,11 @@ export class User {
   @Column({ unique: true, nullable: true })
   googleId?: string;
 
-  // ✅ Contraseña hasheada (para login con email)
-  @Column({ nullable: true })
-  password?: string;
-
-  // ✅ Imagen de perfil (de Google o personalizada)
+  // Imagen de perfil (de Google o personalizada)
   @Column({ nullable: true })
   profileImage?: string;
 
-  // ✅ Configuración de privacidad
+  // Configuración de privacidad
   @Column({
     type: 'enum',
     enum: ['public', 'private', 'followers', 'followed', 'mutuals'],
@@ -40,7 +38,11 @@ export class User {
   })
   privacy!: 'public' | 'private' | 'followers' | 'followed' | 'mutuals';
 
-  // ✅ Seguidores
+  // Relación con credenciales (para login con email/password)
+  @OneToOne(() => UserCredentials, credentials => credentials.user)
+  credentials?: UserCredentials;
+
+  // Seguidores
   @ManyToMany(() => User, user => user.following)
   @JoinTable({
     name: 'user_followers',
@@ -49,7 +51,7 @@ export class User {
   })
   followers!: User[];
 
-  // ✅ Seguidos
+  // Seguidos
   @ManyToMany(() => User, user => user.followers)
   following!: User[];
 
