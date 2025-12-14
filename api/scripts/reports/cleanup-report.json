@@ -1,25 +1,25 @@
 {
-  "timestamp": "2025-11-26T23:12:35.963Z",
+  "timestamp": "2025-12-14T00:16:09.463Z",
   "stats": {
-    "total": 8694,
+    "total": 9225,
     "phase1": {
       "genresAssigned": 0,
       "genresOtros": 0,
       "errors": 0
     },
     "phase2": {
-      "titlesClean": 20,
-      "artistsClean": 91,
+      "titlesClean": 0,
+      "artistsClean": 47,
       "errors": 0
     },
     "phase3": {
-      "artistsNormalized": 50,
+      "artistsNormalized": 47,
       "errors": 0
     },
     "phase4": {
-      "groupsAnalyzed": 8087,
-      "duplicatesRemoved": 2,
-      "duplicatesKept": 4,
+      "groupsAnalyzed": 8585,
+      "duplicatesRemoved": 0,
+      "duplicatesKept": 0,
       "errors": 0
     }
   },
