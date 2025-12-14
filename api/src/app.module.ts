@@ -85,10 +85,11 @@ import { UserFollowModule } from './user-follow/user-follow.module';
   ],
   providers: [
     // Activar rate limiting globalmente
-    {
-      provide: APP_GUARD,
-      useClass: ThrottlerGuard,
-    },
+    // TEMPORALMENTE DESACTIVADO - descomentar después del script
+    // {
+    //   provide: APP_GUARD,
+    //   useClass: ThrottlerGuard,
+    // },
   ],
 })
 export class AppModule {}

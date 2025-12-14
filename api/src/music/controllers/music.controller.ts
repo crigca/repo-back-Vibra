@@ -13,6 +13,7 @@ import {
   ValidationPipe,
   HttpStatus,
   HttpCode,
+  HttpException,
 } from '@nestjs/common';
 
 import { MusicService } from '../services/music.service';
@@ -286,41 +287,51 @@ export class MusicController {
   }
 
   // Crear nueva canción en BD (usado por seed script)
+  // ⚠️ DESHABILITADO: Cerramos entrada de nueva música a la BD por almacenamiento
   @Post('songs')
   @HttpCode(HttpStatus.CREATED)
   async createSong(
     @Body(ValidationPipe) createSongDto: CreateSongDto
   ): Promise<Song> {
-    this.logger.log(`💾 POST /music/songs - Título: "${createSongDto.title}"`);
+    this.logger.log(`🚫 POST /music/songs BLOQUEADO - Entrada de música cerrada`);
+    throw new HttpException(
+      'Entrada de nueva música temporalmente deshabilitada',
+      HttpStatus.FORBIDDEN
+    );
 
-    try {
-      const song = await this.musicService.createSong(createSongDto);
-
-      this.logger.log(`✅ Canción creada con ID: ${song.id}`);
-      return song;
-    } catch (error) {
-      this.logger.error(`❌ Error al crear canción: ${error.message}`);
-      throw error;
-    }
+    // Código original comentado:
+    // try {
+    //   const song = await this.musicService.createSong(createSongDto);
+    //   this.logger.log(`✅ Canción creada con ID: ${song.id}`);
+    //   return song;
+    // } catch (error) {
+    //   this.logger.error(`❌ Error al crear canción: ${error.message}`);
+    //   throw error;
+    // }
   }
 
   // Guardar canción de YouTube en BD
+  // ⚠️ DESHABILITADO: Cerramos entrada de nueva música a la BD por almacenamiento
   @Post('save-from-youtube')
   @HttpCode(HttpStatus.CREATED)
   async saveFromYoutube(
     @Body() youtubeData: { youtubeId: string }
   ): Promise<Song> {
-    this.logger.log(`💾 POST /music/save-from-youtube - YouTube ID: "${youtubeData.youtubeId}"`);
+    this.logger.log(`🚫 POST /music/save-from-youtube BLOQUEADO - Entrada de música cerrada`);
+    throw new HttpException(
+      'Entrada de nueva música temporalmente deshabilitada',
+      HttpStatus.FORBIDDEN
+    );
 
-    try {
-      const song = await this.musicService.saveFromYoutube(youtubeData.youtubeId);
-
-      this.logger.log(`✅ Canción guardada desde YouTube con ID: ${song.id}`);
-      return song;
-    } catch (error) {
-      this.logger.error(`❌ Error al guardar desde YouTube: ${error.message}`);
-      throw error;
-    }
+    // Código original comentado:
+    // try {
+    //   const song = await this.musicService.saveFromYoutube(youtubeData.youtubeId);
+    //   this.logger.log(`✅ Canción guardada desde YouTube con ID: ${song.id}`);
+    //   return song;
+    // } catch (error) {
+    //   this.logger.error(`❌ Error al guardar desde YouTube: ${error.message}`);
+    //   throw error;
+    // }
   }
 
   // Actualizar canción

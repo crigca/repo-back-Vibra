@@ -107,84 +107,107 @@ export class GenreDetectorService {
 
   /**
    * Carga los datos de artistas desde el archivo artists-data.js
+   * Si un artista está duplicado, se mantiene el PRIMER género encontrado.
    */
   private loadArtistData() {
     try {
-      // Cargar dinámicamente el archivo
       // eslint-disable-next-line @typescript-eslint/no-var-requires
       const { artistsByGenre } = require('../../../scripts/data/artists-data.js');
 
-      // Crear mapa artista -> género (normalizado)
       for (const [genre, artists] of Object.entries(artistsByGenre)) {
         for (const artist of artists as string[]) {
-          // Normalizar nombre del artista (minúsculas, sin acentos)
           const normalizedArtist = this.normalizeString(artist);
-          this.artistGenreMap.set(normalizedArtist, genre);
+          // Solo agregar si no existe (protección anti-duplicados)
+          if (!this.artistGenreMap.has(normalizedArtist)) {
+            this.artistGenreMap.set(normalizedArtist, genre);
+          }
         }
       }
-
-      this.logger.log(`📚 Cargados ${this.artistGenreMap.size} artistas con géneros asociados`);
     } catch (error) {
-      this.logger.error(`❌ Error al cargar datos de artistas: ${error.message}`);
+      this.logger.error(`Error al cargar artistas: ${error.message}`);
     }
   }
 
   /**
-   * Detecta el género de una canción basándose en el artista y/o título
-   * @param artist - Nombre del artista
-   * @param title - Título de la canción (opcional, para palabras clave)
-   * @returns Género detectado en camelCase o null si no se puede determinar
+   * Detecta el género de una canción basándose ÚNICAMENTE en el artista
+   * @param artist - Nombre del artista (puede incluir colaboraciones)
+   * @param title - Título de la canción (no se usa, solo para logging)
+   * @returns Género detectado en camelCase o null si no está en el JSON
    */
-  detectGenre(artist: string, title?: string): string | null {
-    // Normalizar artista
-    const normalizedArtist = this.normalizeString(artist);
-
-    // 1. Buscar por artista exacto
-    const genreKey = this.artistGenreMap.get(normalizedArtist);
-    if (genreKey) {
-      this.logger.log(`🎵 Género detectado para "${artist}": ${genreKey} (camelCase)`);
-      return genreKey; // Devolver en camelCase original
+  detectGenre(artist: string, _title?: string): string | null {
+    // 1. Primero intentar coincidencia exacta con el string completo
+    const normalizedFull = this.normalizeString(artist);
+    const genreExact = this.artistGenreMap.get(normalizedFull);
+    if (genreExact) {
+      this.logger.log(`🎵 Género detectado (exacto) para "${artist}": ${genreExact}`);
+      return genreExact;
     }
 
-    // 2. Buscar por coincidencia parcial en el nombre del artista
-    for (const [artistKey, genreKey] of this.artistGenreMap.entries()) {
-      if (normalizedArtist.includes(artistKey) || artistKey.includes(normalizedArtist)) {
-        this.logger.log(`🎵 Género detectado (parcial) para "${artist}": ${genreKey} (camelCase)`);
-        return genreKey; // Devolver en camelCase original
+    // 2. Extraer artistas individuales de colaboraciones
+    const artists = this.extractArtists(artist);
+
+    // 3. Buscar cada artista en el JSON (prioridad al primero que encuentre)
+    for (const singleArtist of artists) {
+      const normalizedArtist = this.normalizeString(singleArtist);
+      const genreKey = this.artistGenreMap.get(normalizedArtist);
+      if (genreKey) {
+        this.logger.log(`🎵 Género detectado para "${singleArtist}" (de "${artist}"): ${genreKey}`);
+        return genreKey;
       }
     }
 
-    // 3. Si no se encontró, devolver null (sin clasificar)
-    this.logger.warn(`⚠️ No se pudo detectar género para "${artist}" - "${title || 'sin título'}"`);
+    // Si ningún artista está en el JSON → cuarentena (null → sinCategoria)
+    this.logger.warn(`⚠️ Artista "${artist}" no está en el JSON → va a cuarentena`);
     return null;
   }
 
   /**
-   * Intenta detectar el género basándose en palabras clave en el título
+   * Extrae artistas individuales de un string con colaboraciones
+   * Ejemplo: "21 Savage & Metro Boomin" → ["21 Savage", "Metro Boomin"]
+   * Ejemplo: "Charly García, Sting" → ["Charly García", "Sting"]
    */
-  private detectGenreFromTitle(title: string): string {
-    const normalizedTitle = this.normalizeString(title);
+  private extractArtists(artistString: string): string[] {
+    // Separadores comunes en colaboraciones
+    // Orden importante: primero los más específicos
+    const separators = [
+      ' feat. ',
+      ' feat ',
+      ' ft. ',
+      ' ft ',
+      ' featuring ',
+      ' & ',
+      ' x ',
+      ' X ',
+      ' y ',
+      ' Y ',
+      ', ',
+      ' con ',
+      ' Con ',
+      ' vs ',
+      ' vs. ',
+    ];
 
-    // Palabras clave por género
-    const keywordMap: { [key: string]: string[] } = {
-      'Reggaeton': ['reggaeton', 'perreo', 'dembow'],
-      'Cumbia': ['cumbia', 'sonidero'],
-      'Salsa': ['salsa'],
-      'Rock': ['rock'],
-      'Metal': ['metal'],
-      'Electronic': ['remix', 'mix', 'dj', 'edm'],
-      'Hip-Hop': ['freestyle', 'cypher', 'rap'],
-      'Balada': ['balada', 'romantica'],
-    };
+    let artists = [artistString];
 
-    for (const [genre, keywords] of Object.entries(keywordMap)) {
-      if (keywords.some(keyword => normalizedTitle.includes(keyword))) {
-        return genre;
+    // Dividir por cada separador
+    for (const separator of separators) {
+      const newArtists: string[] = [];
+      for (const artist of artists) {
+        if (artist.includes(separator)) {
+          const parts = artist.split(separator).map(p => p.trim()).filter(p => p.length > 0);
+          newArtists.push(...parts);
+        } else {
+          newArtists.push(artist);
+        }
       }
+      artists = newArtists;
     }
 
-    return 'Sin categoría';
+    // Limpiar y eliminar duplicados
+    return [...new Set(artists.map(a => a.trim()).filter(a => a.length > 0))];
   }
+
+  // ELIMINADO: detectGenreFromTitle - Solo el artista define el género
 
   /**
    * Normaliza un string: minúsculas, sin acentos, sin caracteres especiales

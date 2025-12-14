@@ -193,14 +193,16 @@ export class MusicService {
   }
 
   // Obtiene canciones ALEATORIAS (para Descubre Nueva Música)
+  // EXCLUYE canciones en cuarentena (sinCategoria)
   async getRandomSongs(limit: number = 25): Promise<Song[]> {
-    this.logger.log(`🎲 Obteniendo ${limit} canciones aleatorias`);
+    this.logger.log(`🎲 Obteniendo ${limit} canciones aleatorias (excluyendo cuarentena)`);
 
     const songs = await this.songRepository
       .createQueryBuilder('song')
       .where('song.cloudinaryUrl IS NOT NULL')
       .andWhere('song.genre IS NOT NULL')
       .andWhere("song.genre != ''")
+      .andWhere("song.genre != 'sinCategoria'") // Excluir canciones en cuarentena
       .orderBy('RANDOM()')
       .take(limit)
       .getMany();
@@ -392,7 +394,9 @@ export class MusicService {
       }).slice(0, remainingNeeded); // Limitar a la cantidad necesaria
 
       // 5. AUTO-GUARDAR resultados filtrados de YouTube en BD (en background)
-      this.autoSaveYouTubeResults(filteredYoutubeResults);
+      // ⚠️ DESHABILITADO: Cerramos entrada de nueva música a la BD por almacenamiento
+      // this.autoSaveYouTubeResults(filteredYoutubeResults);
+      this.logger.log('🚫 Auto-guardado deshabilitado - búsquedas solo lectura');
 
       this.logger.log(`✅ Búsqueda híbrida: ${dbResults.length} de BD + ${filteredYoutubeResults.length} de YouTube (${youtubeResults.length - filteredYoutubeResults.length} filtrados por duración)`);
 

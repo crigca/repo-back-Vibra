@@ -648,24 +648,44 @@ async function getAllSongs() {
   }
 }
 
-async function updateSong(songId, updates) {
-  try {
-    await axios.patch(`${API_BASE_URL}/music/songs/${songId}`, updates);
-    return true;
-  } catch (error) {
-    console.error(`❌ Error actualizando canción ${songId}:`, error.message);
-    return false;
+async function updateSong(songId, updates, retries = 3) {
+  for (let attempt = 1; attempt <= retries; attempt++) {
+    try {
+      await axios.patch(`${API_BASE_URL}/music/songs/${songId}`, updates);
+      return true;
+    } catch (error) {
+      if (error.response?.status === 429 && attempt < retries) {
+        // Rate limited - esperar y reintentar
+        const waitTime = 1000 * attempt; // 1s, 2s, 3s
+        console.log(`⏳ Rate limit (429), esperando ${waitTime}ms antes de reintentar...`);
+        await new Promise(resolve => setTimeout(resolve, waitTime));
+        continue;
+      }
+      console.error(`❌ Error actualizando canción ${songId}:`, error.message);
+      return false;
+    }
   }
+  return false;
 }
 
-async function deleteSong(songId) {
-  try {
-    await axios.delete(`${API_BASE_URL}/music/songs/${songId}`);
-    return true;
-  } catch (error) {
-    console.error(`❌ Error eliminando canción ${songId}:`, error.message);
-    return false;
+async function deleteSong(songId, retries = 3) {
+  for (let attempt = 1; attempt <= retries; attempt++) {
+    try {
+      await axios.delete(`${API_BASE_URL}/music/songs/${songId}`);
+      return true;
+    } catch (error) {
+      if (error.response?.status === 429 && attempt < retries) {
+        // Rate limited - esperar y reintentar
+        const waitTime = 1000 * attempt; // 1s, 2s, 3s
+        console.log(`⏳ Rate limit (429), esperando ${waitTime}ms antes de reintentar...`);
+        await new Promise(resolve => setTimeout(resolve, waitTime));
+        continue;
+      }
+      console.error(`❌ Error eliminando canción ${songId}:`, error.message);
+      return false;
+    }
   }
+  return false;
 }
 
 // =====================
@@ -722,8 +742,8 @@ async function phase1AssignGenres(songs) {
       }
     }
 
-    // Pausa pequeña para no saturar
-    await new Promise(resolve => setTimeout(resolve, 30));
+    // Pausa para evitar rate limiting
+    await new Promise(resolve => setTimeout(resolve, 50));
   }
 
   console.log('\n✅ Fase 1 completada!\n');
@@ -772,7 +792,8 @@ async function phase2CleanTitles(songs) {
         stats.phase2.errors++;
       }
 
-      await new Promise(resolve => setTimeout(resolve, 30));
+      // Pausa para evitar rate limiting
+      await new Promise(resolve => setTimeout(resolve, 50));
     }
   }
 
@@ -805,7 +826,8 @@ async function phase3NormalizeArtists(songs) {
         stats.phase3.errors++;
       }
 
-      await new Promise(resolve => setTimeout(resolve, 20));
+      // Pausa para evitar rate limiting
+      await new Promise(resolve => setTimeout(resolve, 50));
     }
   }
 
@@ -881,6 +903,7 @@ async function phase4RemoveDuplicates(songs) {
           stats.phase4.errors++;
         }
 
+        // Pausa para evitar rate limiting
         await new Promise(resolve => setTimeout(resolve, 50));
       }
 
