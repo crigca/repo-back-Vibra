@@ -40,17 +40,15 @@ let stats = {
 
 /**
  * Normalizar nombre de género para carpeta
+ * IMPORTANTE: Preserva camelCase para consistencia con genres-tiers.json
  */
 function normalizeGenre(genre) {
   if (!genre) return 'unknown';
 
   return genre
-    .toLowerCase()
     .normalize('NFD')
-    .replace(/[\u0300-\u036f]/g, '')
-    .replace(/[^a-z0-9]/g, '-')
-    .replace(/-+/g, '-')
-    .replace(/^-|-$/g, '');
+    .replace(/[\u0300-\u036f]/g, '')  // Remover acentos
+    .replace(/\s+/g, '');              // Remover espacios
 }
 
 /**

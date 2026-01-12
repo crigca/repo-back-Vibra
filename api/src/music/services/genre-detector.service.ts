@@ -72,7 +72,7 @@ export class GenreDetectorService {
     ['salsa', 'Salsa'],
     ['merengue', 'Latin'],
     ['bachata', 'Latin'],
-    ['norteño', 'Regional Mexicano'],
+    ['norteno', 'Regional Mexicano'],
     ['corrido', 'Regional Mexicano'],
     ['corridostumbados', 'Regional Mexicano'],
     ['mariachi', 'Regional Mexicano'],
