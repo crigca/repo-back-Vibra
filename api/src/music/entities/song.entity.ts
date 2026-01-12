@@ -36,7 +36,13 @@ export class Song {
   publishedAt?: Date;
 
   @Column({ length: 500, nullable: true })
-  cloudinaryUrl?: string; // URL de Cloudinary (ejemplo: "https://res.cloudinary.com/.../vibra/music/rock/abc123.mp3")
+  cloudinaryUrl?: string; // URL de Cloudinary (legacy)
+
+  @Column({ length: 500, nullable: true })
+  storage_url?: string; // URL del storage actual (Tebi o R2)
+
+  @Column({ length: 20, nullable: true })
+  storage_provider?: string; // 'tebi' | 'r2' | null (cloudinary)
 
   @CreateDateColumn()
   createdAt!: Date;

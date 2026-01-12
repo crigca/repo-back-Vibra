@@ -30,6 +30,7 @@
     "normalize:artists-dedupe": "node scripts/claude/normalize-artists-and-dedupe.js"
   },
   "dependencies": {
+    "@aws-sdk/client-s3": "^3.948.0",
     "@distube/ytdl-core": "^4.16.12",
     "@nestjs/common": "^11.0.1",
     "@nestjs/config": "^4.0.2",

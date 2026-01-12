@@ -12,7 +12,6 @@ import { EventEmitter2 } from '@nestjs/event-emitter';
 import { Song } from '../entities/song.entity';
 import { YoutubeService, YouTubeSearchResult } from './youtube.service';
 import { GenreDetectorService } from './genre-detector.service';
-import { CloudinaryService } from '../../images/services/cloudinary.service';
 import { SearchSongsDto } from '../dto/search-songs.dto';
 import { CreateSongDto } from '../dto/create-song.dto';
 
@@ -26,7 +25,6 @@ export class MusicService {
     private songRepository: Repository<Song>,
     private youtubeService: YoutubeService,
     private genreDetector: GenreDetectorService,
-    private cloudinaryService: CloudinaryService,
     private eventEmitter: EventEmitter2,
   ) {}
 
@@ -172,15 +170,15 @@ export class MusicService {
     });
   }
 
-  // Obtiene canciones con paginación (SOLO las que tienen Cloudinary URL)
+  // Obtiene canciones con paginación (SOLO las que tienen audio)
   async getAllSongs(limit: number = 50, offset: number = 0): Promise<Song[]> {
     this.logger.log(
-      `📋 Obteniendo ${limit} canciones con Cloudinary URL (offset: ${offset})`,
+      `📋 Obteniendo ${limit} canciones con audio (offset: ${offset})`,
     );
 
     const songs = await this.songRepository
       .createQueryBuilder('song')
-      .where('song.cloudinaryUrl IS NOT NULL')
+      .where('song.storage_url IS NOT NULL')
       .andWhere('song.genre IS NOT NULL')
       .andWhere("song.genre != ''")
       .orderBy('song.id', 'ASC')
@@ -199,7 +197,7 @@ export class MusicService {
 
     const songs = await this.songRepository
       .createQueryBuilder('song')
-      .where('song.cloudinaryUrl IS NOT NULL')
+      .where('song.storage_url IS NOT NULL')
       .andWhere('song.genre IS NOT NULL')
       .andWhere("song.genre != ''")
       .andWhere("song.genre != 'sinCategoria'") // Excluir canciones en cuarentena
@@ -236,7 +234,7 @@ export class MusicService {
   }
 
 
-  // Busca canciones por género (SOLO las que tienen Cloudinary URL)
+  // Busca canciones por género (SOLO las que tienen audio)
   async findSongsByGenre(genre: string, limit: number = 20): Promise<Song[]> {
     this.logger.log(`🎵 Buscando canciones de género: ${genre}`);
 
@@ -246,35 +244,35 @@ export class MusicService {
     const songs = await this.songRepository
       .createQueryBuilder('song')
       .where('LOWER(song.genre) = :genre', { genre: genreLower })
-      .andWhere('song.cloudinaryUrl IS NOT NULL')
+      .andWhere('song.storage_url IS NOT NULL')
       .orderBy('song.createdAt', 'DESC')
       .take(limit)
       .getMany();
 
     this.logger.log(
-      `✅ Encontradas ${songs.length} canciones con Cloudinary de género "${genre}"`,
+      `✅ Encontradas ${songs.length} canciones con audio de género "${genre}"`,
     );
     return songs;
   }
 
-  // Busca canciones por artista (optimizado, SOLO las que tienen Cloudinary URL)
+  // Busca canciones por artista (optimizado, SOLO las que tienen audio)
   async findSongsByArtist(artist: string, limit: number = 20): Promise<Song[]> {
     this.logger.log(`👤 Buscando canciones de artista: ${artist}`);
 
     const songs = await this.songRepository
       .createQueryBuilder('song')
       .where('LOWER(song.artist) LIKE LOWER(:artist)', { artist: `%${artist}%` })
-      .andWhere('song.cloudinaryUrl IS NOT NULL')
+      .andWhere('song.storage_url IS NOT NULL')
       .orderBy('song.viewCount', 'DESC')
       .addOrderBy('song.createdAt', 'DESC')
       .take(limit)
       .getMany();
 
-    this.logger.log(`✅ Encontradas ${songs.length} canciones con Cloudinary de "${artist}"`);
+    this.logger.log(`✅ Encontradas ${songs.length} canciones con audio de "${artist}"`);
     return songs;
   }
 
-  // Búsqueda optimizada por artista y/o canción (SOLO las que tienen Cloudinary URL)
+  // Búsqueda optimizada por artista y/o canción (SOLO las que tienen audio)
   async searchByArtistAndSong(params: {
     artist?: string;
     song?: string;
@@ -286,8 +284,8 @@ export class MusicService {
 
     const query = this.songRepository.createQueryBuilder('song');
 
-    // SOLO canciones con cloudinaryUrl
-    query.where('song.cloudinaryUrl IS NOT NULL');
+    // SOLO canciones con audio (Tebi/R2)
+    query.where('song.storage_url IS NOT NULL');
 
     if (artist) {
       query.andWhere('LOWER(song.artist) LIKE LOWER(:artist)', {
@@ -334,10 +332,10 @@ export class MusicService {
     const MAX_DB_RESULTS = 15;
     const totalMaxResults = searchDto.maxResults || 20;
 
-    // 1. Buscar primero en la base de datos (máximo 15, SOLO canciones con Cloudinary URL y duración válida)
+    // 1. Buscar primero en la base de datos (máximo 15, SOLO canciones con audio y duración válida)
     const dbResults = await this.songRepository
       .createQueryBuilder('song')
-      .where('song.cloudinaryUrl IS NOT NULL')
+      .where('song.storage_url IS NOT NULL')
       .andWhere('song.duration >= :minDuration AND song.duration <= :maxDuration', {
         minDuration: 60,
         maxDuration: 600
@@ -431,7 +429,7 @@ export class MusicService {
         .createQueryBuilder('song')
         .select('DISTINCT song.artist', 'artist')
         .where('LOWER(song.artist) LIKE LOWER(:query)', { query: `%${query}%` })
-        .andWhere('song.cloudinaryUrl IS NOT NULL') // Solo artistas con canciones descargadas
+        .andWhere('song.storage_url IS NOT NULL') // Solo artistas con audio (Tebi/R2)
         .orderBy('song.artist', 'ASC')
         .limit(limit)
         .getRawMany();
@@ -689,44 +687,11 @@ export class MusicService {
     const song = await this.findSongById(id);
 
     try {
-      // Eliminar de la base de datos primero
       await this.songRepository.remove(song);
-
-      this.logger.log(`✅ Canción eliminada de BD: "${song.title}"`);
-
-      // Eliminar de Cloudinary si existe
-      if (song.cloudinaryUrl) {
-        try {
-          // Extraer publicId de la URL de Cloudinary
-          // Formato: https://res.cloudinary.com/dwafwm6uk/video/upload/v1234567/vibra/music/GENRE/YOUTUBE_ID.mp3
-          const publicIdMatch = song.cloudinaryUrl.match(/\/vibra\/music\/[^\/]+\/(.+?)\.mp3/);
-
-          if (publicIdMatch) {
-            const youtubeId = publicIdMatch[1];
-            const genre = song.genre || 'unknown';
-            const publicId = `vibra/music/${genre}/${youtubeId}`;
-
-            this.logger.log(`🗑️ Eliminando audio de Cloudinary: ${publicId}`);
-            const deleted = await this.cloudinaryService.deleteAudio(publicId);
-
-            if (deleted) {
-              this.logger.log(`✅ Audio eliminado de Cloudinary: ${publicId}`);
-            } else {
-              this.logger.warn(`⚠️ Audio no encontrado en Cloudinary: ${publicId}`);
-            }
-          } else {
-            this.logger.warn(`⚠️ No se pudo extraer publicId de URL: ${song.cloudinaryUrl}`);
-          }
-        } catch (cloudinaryError) {
-          // No fallar toda la operación si Cloudinary falla
-          this.logger.error(`❌ Error al eliminar de Cloudinary: ${cloudinaryError.message}`);
-          this.logger.warn(`⚠️ La canción fue eliminada de BD pero no de Cloudinary`);
-        }
-      }
+      this.logger.log(`✅ Canción eliminada: "${song.title}"`);
 
       // Emitir evento
       this.eventEmitter.emit('song.deleted', { song });
-
     } catch (error) {
       this.logger.error(`❌ Error al eliminar canción: ${error.message}`);
       throw error;

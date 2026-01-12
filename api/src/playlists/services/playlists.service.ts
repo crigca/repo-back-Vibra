@@ -657,11 +657,11 @@ export class PlaylistsService {
         throw new BadRequestException('La playlist no tiene un género asignado');
       }
 
-      // Obtener 24 canciones aleatorias del mismo género
+      // Obtener 24 canciones aleatorias del mismo género (Tebi/R2 only)
       const randomSongs = await manager.query(`
         SELECT id, title, artist, duration
         FROM songs
-        WHERE "cloudinaryUrl" IS NOT NULL
+        WHERE storage_url IS NOT NULL
           AND genre = $1
         ORDER BY RANDOM()
         LIMIT 24
