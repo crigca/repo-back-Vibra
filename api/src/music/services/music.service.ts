@@ -284,7 +284,7 @@ export class MusicService {
 
     const query = this.songRepository.createQueryBuilder('song');
 
-    // SOLO canciones con audio (Tebi/R2)
+    // SOLO canciones con audio (R2)
     query.where('song.storage_url IS NOT NULL');
 
     if (artist) {
@@ -429,7 +429,7 @@ export class MusicService {
         .createQueryBuilder('song')
         .select('DISTINCT song.artist', 'artist')
         .where('LOWER(song.artist) LIKE LOWER(:query)', { query: `%${query}%` })
-        .andWhere('song.storage_url IS NOT NULL') // Solo artistas con audio (Tebi/R2)
+        .andWhere('song.storage_url IS NOT NULL') // Solo artistas con audio (R2)
         .orderBy('song.artist', 'ASC')
         .limit(limit)
         .getRawMany();

@@ -84,7 +84,7 @@ export class PlaylistGeneratorService {
         .map((_, index) => `$${index + 1}`)
         .join(', ');
 
-      // Buscar 30 canciones aleatorias de los géneros de esta familia (Tebi/R2 only)
+      // Buscar 30 canciones aleatorias de los géneros de esta familia (R2 only)
       const songs = await this.dataSource.query(
         `
         SELECT id, title, artist, genre, duration
