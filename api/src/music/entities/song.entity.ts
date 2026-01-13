@@ -39,10 +39,10 @@ export class Song {
   cloudinaryUrl?: string; // URL de Cloudinary (legacy)
 
   @Column({ length: 500, nullable: true })
-  storage_url?: string; // URL del storage actual (Tebi o R2)
+  storage_url?: string; // URL del storage actual (R2)
 
   @Column({ length: 20, nullable: true })
-  storage_provider?: string; // 'tebi' | 'r2' | null (cloudinary)
+  storage_provider?: string; // 'r2' | 'cloudinary'
 
   @CreateDateColumn()
   createdAt!: Date;

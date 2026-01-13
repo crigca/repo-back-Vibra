@@ -10,7 +10,7 @@ import { MusicController } from './controllers/music.controller';
 
 /**
  * Módulo de música con integración de YouTube
- * Audio: Tebi/R2 storage
+ * Audio: R2 storage (Cloudflare)
  * Imágenes: CloudinaryService (via ImagesModule en AppModule)
  */
 @Module({
